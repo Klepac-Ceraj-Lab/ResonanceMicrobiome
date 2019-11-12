@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<HTML lang = "en">
+<HEAD>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Notebook 9: Functional Profile Omnibus Tests</title>
+  
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+      TeX: { equationNumbers: { autoNumber: "AMS" } }
+    });
+  </script>
+
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+
+  
+<style>
+pre.hljl {
+    border: 1px solid #ccc;
+    margin: 5px;
+    padding: 5px;
+    overflow-x: auto;
+    color: rgb(68,68,68); background-color: rgb(251,251,251); }
+pre.hljl > span.hljl-t { }
+pre.hljl > span.hljl-w { }
+pre.hljl > span.hljl-e { }
+pre.hljl > span.hljl-eB { }
+pre.hljl > span.hljl-o { }
+pre.hljl > span.hljl-k { color: rgb(148,91,176); font-weight: bold; }
+pre.hljl > span.hljl-kc { color: rgb(59,151,46); font-style: italic; }
+pre.hljl > span.hljl-kd { color: rgb(214,102,97); font-style: italic; }
+pre.hljl > span.hljl-kn { color: rgb(148,91,176); font-weight: bold; }
+pre.hljl > span.hljl-kp { color: rgb(148,91,176); font-weight: bold; }
+pre.hljl > span.hljl-kr { color: rgb(148,91,176); font-weight: bold; }
+pre.hljl > span.hljl-kt { color: rgb(148,91,176); font-weight: bold; }
+pre.hljl > span.hljl-n { }
+pre.hljl > span.hljl-na { }
+pre.hljl > span.hljl-nb { }
+pre.hljl > span.hljl-nbp { }
+pre.hljl > span.hljl-nc { }
+pre.hljl > span.hljl-ncB { }
+pre.hljl > span.hljl-nd { color: rgb(214,102,97); }
+pre.hljl > span.hljl-ne { }
+pre.hljl > span.hljl-neB { }
+pre.hljl > span.hljl-nf { color: rgb(66,102,213); }
+pre.hljl > span.hljl-nfm { color: rgb(66,102,213); }
+pre.hljl > span.hljl-np { }
+pre.hljl > span.hljl-nl { }
+pre.hljl > span.hljl-nn { }
+pre.hljl > span.hljl-no { }
+pre.hljl > span.hljl-nt { }
+pre.hljl > span.hljl-nv { }
+pre.hljl > span.hljl-nvc { }
+pre.hljl > span.hljl-nvg { }
+pre.hljl > span.hljl-nvi { }
+pre.hljl > span.hljl-nvm { }
+pre.hljl > span.hljl-l { }
+pre.hljl > span.hljl-ld { color: rgb(148,91,176); font-style: italic; }
+pre.hljl > span.hljl-s { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sa { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sb { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sc { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sd { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sdB { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sdC { color: rgb(201,61,57); }
+pre.hljl > span.hljl-se { color: rgb(59,151,46); }
+pre.hljl > span.hljl-sh { color: rgb(201,61,57); }
+pre.hljl > span.hljl-si { }
+pre.hljl > span.hljl-so { color: rgb(201,61,57); }
+pre.hljl > span.hljl-sr { color: rgb(201,61,57); }
+pre.hljl > span.hljl-ss { color: rgb(201,61,57); }
+pre.hljl > span.hljl-ssB { color: rgb(201,61,57); }
+pre.hljl > span.hljl-nB { color: rgb(59,151,46); }
+pre.hljl > span.hljl-nbB { color: rgb(59,151,46); }
+pre.hljl > span.hljl-nfB { color: rgb(59,151,46); }
+pre.hljl > span.hljl-nh { color: rgb(59,151,46); }
+pre.hljl > span.hljl-ni { color: rgb(59,151,46); }
+pre.hljl > span.hljl-nil { color: rgb(59,151,46); }
+pre.hljl > span.hljl-noB { color: rgb(59,151,46); }
+pre.hljl > span.hljl-oB { color: rgb(102,102,102); font-weight: bold; }
+pre.hljl > span.hljl-ow { color: rgb(102,102,102); font-weight: bold; }
+pre.hljl > span.hljl-p { }
+pre.hljl > span.hljl-c { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-ch { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-cm { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-cp { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-cpB { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-cs { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-csB { color: rgb(153,153,119); font-style: italic; }
+pre.hljl > span.hljl-g { }
+pre.hljl > span.hljl-gd { }
+pre.hljl > span.hljl-ge { }
+pre.hljl > span.hljl-geB { }
+pre.hljl > span.hljl-gh { }
+pre.hljl > span.hljl-gi { }
+pre.hljl > span.hljl-go { }
+pre.hljl > span.hljl-gp { }
+pre.hljl > span.hljl-gs { }
+pre.hljl > span.hljl-gsB { }
+pre.hljl > span.hljl-gt { }
+</style>
+
+
+
+  <style type="text/css">
+  @font-face {
+  font-style: normal;
+  font-weight: 300;
+}
+@font-face {
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-style: normal;
+  font-weight: 600;
+}
+html {
+  font-family: sans-serif; /* 1 */
+  -ms-text-size-adjust: 100%; /* 2 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+}
+body {
+  margin: 0;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+menu,
+nav,
+section,
+summary {
+  display: block;
+}
+audio,
+canvas,
+progress,
+video {
+  display: inline-block; /* 1 */
+  vertical-align: baseline; /* 2 */
+}
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+[hidden],
+template {
+  display: none;
+}
+a:active,
+a:hover {
+  outline: 0;
+}
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+b,
+strong {
+  font-weight: bold;
+}
+dfn {
+  font-style: italic;
+}
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+mark {
+  background: #ff0;
+  color: #000;
+}
+small {
+  font-size: 80%;
+}
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+sup {
+  top: -0.5em;
+}
+sub {
+  bottom: -0.25em;
+}
+img {
+  border: 0;
+}
+svg:not(:root) {
+  overflow: hidden;
+}
+figure {
+  margin: 1em 40px;
+}
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+pre {
+  overflow: auto;
+}
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+button,
+input,
+optgroup,
+select,
+textarea {
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
+}
+button {
+  overflow: visible;
+}
+button,
+select {
+  text-transform: none;
+}
+button,
+html input[type="button"], /* 1 */
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button; /* 2 */
+  cursor: pointer; /* 3 */
+}
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+input {
+  line-height: normal;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  box-sizing: border-box; /* 1 */
+  padding: 0; /* 2 */
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  height: auto;
+}
+input[type="search"] {
+  -webkit-appearance: textfield; /* 1 */
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box; /* 2 */
+  box-sizing: content-box;
+}
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+fieldset {
+  border: 1px solid #c0c0c0;
+  margin: 0 2px;
+  padding: 0.35em 0.625em 0.75em;
+}
+legend {
+  border: 0; /* 1 */
+  padding: 0; /* 2 */
+}
+textarea {
+  overflow: auto;
+}
+optgroup {
+  font-weight: bold;
+}
+table {
+  font-family: monospace, monospace;
+  font-size : 0.8em;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,
+th {
+  padding: 0;
+}
+thead th {
+    border-bottom: 1px solid black;
+    background-color: white;
+}
+tr:nth-child(odd){
+  background-color: rgb(248,248,248);
+}
+
+
+/*
+* Skeleton V2.0.4
+* Copyright 2014, Dave Gamache
+* www.getskeleton.com
+* Free to use under the MIT license.
+* http://www.opensource.org/licenses/mit-license.php
+* 12/29/2014
+*/
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box; }
+.column,
+.columns {
+  width: 100%;
+  float: left;
+  box-sizing: border-box; }
+@media (min-width: 400px) {
+  .container {
+    width: 85%;
+    padding: 0; }
+}
+@media (min-width: 550px) {
+  .container {
+    width: 80%; }
+  .column,
+  .columns {
+    margin-left: 4%; }
+  .column:first-child,
+  .columns:first-child {
+    margin-left: 0; }
+
+  .one.column,
+  .one.columns                    { width: 4.66666666667%; }
+  .two.columns                    { width: 13.3333333333%; }
+  .three.columns                  { width: 22%;            }
+  .four.columns                   { width: 30.6666666667%; }
+  .five.columns                   { width: 39.3333333333%; }
+  .six.columns                    { width: 48%;            }
+  .seven.columns                  { width: 56.6666666667%; }
+  .eight.columns                  { width: 65.3333333333%; }
+  .nine.columns                   { width: 74.0%;          }
+  .ten.columns                    { width: 82.6666666667%; }
+  .eleven.columns                 { width: 91.3333333333%; }
+  .twelve.columns                 { width: 100%; margin-left: 0; }
+
+  .one-third.column               { width: 30.6666666667%; }
+  .two-thirds.column              { width: 65.3333333333%; }
+
+  .one-half.column                { width: 48%; }
+
+  /* Offsets */
+  .offset-by-one.column,
+  .offset-by-one.columns          { margin-left: 8.66666666667%; }
+  .offset-by-two.column,
+  .offset-by-two.columns          { margin-left: 17.3333333333%; }
+  .offset-by-three.column,
+  .offset-by-three.columns        { margin-left: 26%;            }
+  .offset-by-four.column,
+  .offset-by-four.columns         { margin-left: 34.6666666667%; }
+  .offset-by-five.column,
+  .offset-by-five.columns         { margin-left: 43.3333333333%; }
+  .offset-by-six.column,
+  .offset-by-six.columns          { margin-left: 52%;            }
+  .offset-by-seven.column,
+  .offset-by-seven.columns        { margin-left: 60.6666666667%; }
+  .offset-by-eight.column,
+  .offset-by-eight.columns        { margin-left: 69.3333333333%; }
+  .offset-by-nine.column,
+  .offset-by-nine.columns         { margin-left: 78.0%;          }
+  .offset-by-ten.column,
+  .offset-by-ten.columns          { margin-left: 86.6666666667%; }
+  .offset-by-eleven.column,
+  .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
+
+  .offset-by-one-third.column,
+  .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
+  .offset-by-two-thirds.column,
+  .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
+
+  .offset-by-one-half.column,
+  .offset-by-one-half.columns     { margin-left: 52%; }
+
+}
+html {
+  font-size: 62.5%; }
+body {
+  font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #222; }
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-weight: 300; }
+h1 { font-size: 3.6rem; line-height: 1.2;  letter-spacing: -.1rem;}
+h2 { font-size: 3.4rem; line-height: 1.25; letter-spacing: -.1rem; }
+h3 { font-size: 3.2rem; line-height: 1.3;  letter-spacing: -.1rem; }
+h4 { font-size: 2.8rem; line-height: 1.35; letter-spacing: -.08rem; }
+h5 { font-size: 2.4rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
+
+p {
+  margin-top: 0; }
+a {
+  color: #1EAEDB; }
+a:hover {
+  color: #0FA0CE; }
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  display: inline-block;
+  height: 38px;
+  padding: 0 30px;
+  color: #555;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 38px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  box-sizing: border-box; }
+.button:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+.button:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+input[type="button"]:focus {
+  color: #333;
+  border-color: #888;
+  outline: 0; }
+.button.button-primary,
+button.button-primary,
+input[type="submit"].button-primary,
+input[type="reset"].button-primary,
+input[type="button"].button-primary {
+  color: #FFF;
+  background-color: #33C3F0;
+  border-color: #33C3F0; }
+.button.button-primary:hover,
+button.button-primary:hover,
+input[type="submit"].button-primary:hover,
+input[type="reset"].button-primary:hover,
+input[type="button"].button-primary:hover,
+.button.button-primary:focus,
+button.button-primary:focus,
+input[type="submit"].button-primary:focus,
+input[type="reset"].button-primary:focus,
+input[type="button"].button-primary:focus {
+  color: #FFF;
+  background-color: #1EAEDB;
+  border-color: #1EAEDB; }
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+  height: 38px;
+  padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+  background-color: #fff;
+  border: 1px solid #D1D1D1;
+  border-radius: 4px;
+  box-shadow: none;
+  box-sizing: border-box; }
+/* Removes awkward default styles on some inputs for iOS */
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none; }
+textarea {
+  min-height: 65px;
+  padding-top: 6px;
+  padding-bottom: 6px; }
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border: 1px solid #33C3F0;
+  outline: 0; }
+label,
+legend {
+  display: block;
+  margin-bottom: .5rem;
+  font-weight: 600; }
+fieldset {
+  padding: 0;
+  border-width: 0; }
+input[type="checkbox"],
+input[type="radio"] {
+  display: inline; }
+label > .label-body {
+  display: inline-block;
+  margin-left: .5rem;
+  font-weight: normal; }
+ul {
+  list-style: circle; }
+ol {
+  list-style: decimal; }
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+  margin: 1.5rem 0 1.5rem 3rem;
+  font-size: 90%; }
+li > p {margin : 0;}
+th,
+td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #E1E1E1; }
+th:first-child,
+td:first-child {
+  padding-left: 0; }
+th:last-child,
+td:last-child {
+  padding-right: 0; }
+button,
+.button {
+  margin-bottom: 1rem; }
+input,
+textarea,
+select,
+fieldset {
+  margin-bottom: 1.5rem; }
+pre,
+blockquote,
+dl,
+figure,
+table,
+p,
+ul,
+ol,
+form {
+  margin-bottom: 1.0rem; }
+.u-full-width {
+  width: 100%;
+  box-sizing: border-box; }
+.u-max-full-width {
+  max-width: 100%;
+  box-sizing: border-box; }
+.u-pull-right {
+  float: right; }
+.u-pull-left {
+  float: left; }
+hr {
+  margin-top: 3rem;
+  margin-bottom: 3.5rem;
+  border-width: 0;
+  border-top: 1px solid #E1E1E1; }
+.container:after,
+.row:after,
+.u-cf {
+  content: "";
+  display: table;
+  clear: both; }
+
+pre {
+  display: block;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.42857143;
+  word-break: break-all;
+  word-wrap: break-word;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+pre.hljl {
+  margin: 0 0 10px;
+  display: block;
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding : 5px;
+}
+
+pre.output {
+  background: #ffffff;
+}
+
+pre.code {
+  background: #ffffff;
+}
+
+pre.julia-error {
+  color : red
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 13px;
+}
+
+
+@media (min-width: 400px) {}
+@media (min-width: 550px) {}
+@media (min-width: 750px) {}
+@media (min-width: 1000px) {}
+@media (min-width: 1200px) {}
+
+h1.title {margin-top : 20px}
+img {max-width : 100%}
+div.title {text-align: center;}
+
+  </style>
+
+
+
+</HEAD>
+  <BODY>
+    <div class ="container">
+      <div class = "row">
+        <div class = "col-md-12 twelve columns">
+
+          <div class="title">
+            <h1 class="title">Notebook 9: Functional Profile Omnibus Tests</h1>
+            <h5>Kevin Bonham, PhD</h5>
+            
+          </div>
+
+          
+
+
+<pre class='hljl'>
+<span class='hljl-n'>kos</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>CSV</span><span class='hljl-oB'>.</span><span class='hljl-nf'>read</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;data/engaging/merged/batch1-10_ko_names_relab_unstratified.tsv&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-nf'>names!</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>n</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>Symbol</span><span class='hljl-p'>(</span><span class='hljl-nf'>resolve_sampleID</span><span class='hljl-p'>(</span><span class='hljl-nf'>replace</span><span class='hljl-p'>(</span><span class='hljl-nf'>String</span><span class='hljl-p'>(</span><span class='hljl-n'>n</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;_kneaddata_Abundance-RELAB&quot;</span><span class='hljl-oB'>=&gt;</span><span class='hljl-s'>&quot;&quot;</span><span class='hljl-p'>))</span><span class='hljl-oB'>.</span><span class='hljl-n'>sample</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-nf'>names</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>)))</span><span class='hljl-t'>
+</span><span class='hljl-cs'># ~ 5% prevalence filter</span><span class='hljl-t'>
+</span><span class='hljl-n'>Microbiome</span><span class='hljl-oB'>.</span><span class='hljl-nf'>prevalence</span><span class='hljl-p'>(</span><span class='hljl-n'>a</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>minabundance</span><span class='hljl-oB'>::</span><span class='hljl-n'>Float64</span><span class='hljl-oB'>=</span><span class='hljl-nfB'>0.0001</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>mean</span><span class='hljl-p'>(</span><span class='hljl-n'>x</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>present</span><span class='hljl-p'>(</span><span class='hljl-n'>x</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>minabundance</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>y</span><span class='hljl-t'> </span><span class='hljl-k'>for</span><span class='hljl-t'> </span><span class='hljl-n'>y</span><span class='hljl-t'> </span><span class='hljl-kp'>in</span><span class='hljl-t'> </span><span class='hljl-n'>a</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>kos</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>abundancetable</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>kos</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>copy</span><span class='hljl-p'>(</span><span class='hljl-nf'>view</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>species</span><span class='hljl-oB'>=</span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>prevalence</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-nf'>Not</span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-p'>)],</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>&gt;</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.05</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-nf'>occurrences</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>)))))</span>
+</pre>
+
+
+
+
+<pre class='hljl'>
+<span class='hljl-n'>allsamples</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>resolve_sampleID</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>samplenames</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>uabt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>view</span><span class='hljl-p'>(</span><span class='hljl-n'>kos</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>sites</span><span class='hljl-oB'>=</span><span class='hljl-n'>getfield</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>uniquesamples</span><span class='hljl-p'>(</span><span class='hljl-n'>allsamples</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>takefirst</span><span class='hljl-oB'>=</span><span class='hljl-kc'>true</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-sc'>:sample</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>pairwise</span><span class='hljl-p'>(</span><span class='hljl-nf'>BrayCurtis</span><span class='hljl-p'>(),</span><span class='hljl-t'> </span><span class='hljl-n'>uabt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>dims</span><span class='hljl-oB'>=</span><span class='hljl-ni'>2</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>usamples</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>resolve_sampleID</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>samplenames</span><span class='hljl-p'>(</span><span class='hljl-n'>uabt</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>metadata</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>load_metadata</span><span class='hljl-p'>(</span><span class='hljl-n'>datatoml</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>samples</span><span class='hljl-oB'>=</span><span class='hljl-n'>usamples</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>samples</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>samplenames</span><span class='hljl-p'>(</span><span class='hljl-n'>uabt</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>subject_type</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-nf'>startswith</span><span class='hljl-p'>(</span><span class='hljl-n'>s</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;M&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>?</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;Mother&quot;</span><span class='hljl-t'> </span><span class='hljl-oB'>:</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;Child&quot;</span><span class='hljl-t'> </span><span class='hljl-k'>for</span><span class='hljl-t'> </span><span class='hljl-n'>s</span><span class='hljl-t'> </span><span class='hljl-kp'>in</span><span class='hljl-t'> </span><span class='hljl-n'>samples</span><span class='hljl-p'>]</span>
+</pre>
+
+
+<pre class="output">
+615-element Array&#123;String,1&#125;:
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ &quot;Child&quot; 
+ ⋮       
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+ &quot;Mother&quot;
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>subject_type</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-oB'>:</span><span class='hljl-n'>feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-oB'>:</span><span class='hljl-n'>variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;Subject Type&quot;</span>
+</pre>
+
+
+
+<pre class="output">
+┌───────┬───────────┬─────────┬─────────┬───────┬─────────┬─────────┬──────────────┐
+│    Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │  Pr&#40;&gt;F&#41; │ feature │     variable │
+├───────┼───────────┼─────────┼─────────┼───────┼─────────┼─────────┼──────────────┤
+│   1.0 │     0.187 │   0.187 │  40.764 │ 0.062 │   0.001 │     kos │ Subject Type │
+│ 613.0 │     2.816 │   0.005 │ missing │ 0.938 │ missing │     kos │ Subject Type │
+│ 614.0 │     3.003 │ missing │ missing │   1.0 │ missing │     kos │ Subject Type │
+└───────┴───────────┴─────────┴─────────┴───────┴─────────┴─────────┴──────────────┘
+</pre>
+
+
+<p>In this table, <code>R2</code> tells us about the magnitutude of the effect &#40;<code>R2 &#61; 0.062</code> means 6.2&#37; of variation can be explained by this variable&#41;, and the <code>Pr&#40;&gt;F&#41;</code> column is the p value. The first row is what&#39;s being tested &#40;the other two account for what&#39;s left&#41;.</p>
+<p>So this table tells us that, when comparing all the samples, whether the sample from a mom or a kid &#40;aka <code>Subject Type</code>&#41; can explain ~6.2&#37; of the variation, and the result is significant &#40;p &lt; 0.001&#41;.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'># need to convert subject IDs to `String` so it&#39;s not treated as continuous variable</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>string</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>metadata</span><span class='hljl-oB'>.</span><span class='hljl-n'>subject</span><span class='hljl-p'>))</span>
+</pre>
+
+
+
+<pre class="output">
+┌───────┬───────────┬─────────┬─────────┬───────┬─────────┐
+│    Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │  Pr&#40;&gt;F&#41; │
+├───────┼───────────┼─────────┼─────────┼───────┼─────────┤
+│ 440.0 │      2.68 │   0.006 │   3.284 │ 0.893 │   0.001 │
+│ 174.0 │     0.323 │   0.002 │ missing │ 0.107 │ missing │
+│ 614.0 │     3.003 │ missing │ missing │   1.0 │ missing │
+└───────┴───────────┴─────────┴─────────┴───────┴─────────┘
+</pre>
+
+
+<p>Here, we can see that over 90&#37; of variability &#40;<code>R2</code>&#41; is attributable to who the person is. Which is to say that people are really different&#33;</p>
+<p>Because of this, the numbers from PERMANOVA tend to be small &#40;1-5&#37;&#41;, but even small differences are interesting &#40;if they&#39;re statistically significant&#41;.</p>
+<p>Now we&#39;ll concatenate this new PERMANOVA into the previous dataframe to keep the results from multiple metadata together.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;Subject ID&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span>
+</pre>
+
+
+
+<pre class="output">
+┌───────┬───────────┬─────────┬─────────┬───────┬─────────┬─────────┬──────────────┐
+│    Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │  Pr&#40;&gt;F&#41; │ feature │     variable │
+├───────┼───────────┼─────────┼─────────┼───────┼─────────┼─────────┼──────────────┤
+│   1.0 │     0.187 │   0.187 │  40.764 │ 0.062 │   0.001 │     kos │ Subject Type │
+│ 613.0 │     2.816 │   0.005 │ missing │ 0.938 │ missing │     kos │ Subject Type │
+│ 614.0 │     3.003 │ missing │ missing │   1.0 │ missing │     kos │ Subject Type │
+│ 440.0 │      2.68 │   0.006 │   3.284 │ 0.893 │   0.001 │     kos │   Subject ID │
+│ 174.0 │     0.323 │   0.002 │ missing │ 0.107 │ missing │     kos │   Subject ID │
+│ 614.0 │     3.003 │ missing │ missing │   1.0 │ missing │     kos │   Subject ID │
+└───────┴───────────┴─────────┴─────────┴───────┴─────────┴─────────┴──────────────┘
+</pre>
+
+
+<h2>Kids metadata PERMANOVAs</h2>
+<p>Now we&#39;ll focus on the kids.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>uniquekids</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>uniquesamples</span><span class='hljl-p'>(</span><span class='hljl-n'>resolve_sampleID</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>samplenames</span><span class='hljl-p'>(</span><span class='hljl-n'>uabt</span><span class='hljl-p'>)),</span><span class='hljl-t'> </span><span class='hljl-n'>samplefilter</span><span class='hljl-oB'>=</span><span class='hljl-n'>x</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>startswith</span><span class='hljl-p'>(</span><span class='hljl-n'>x</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;C&quot;</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-n'>identifiers</span><span class='hljl-oB'>=</span><span class='hljl-p'>[</span><span class='hljl-sc'>:subject</span><span class='hljl-p'>])</span><span class='hljl-t'>
+</span><span class='hljl-n'>kids</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>view</span><span class='hljl-p'>(</span><span class='hljl-n'>uabt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>sites</span><span class='hljl-oB'>=</span><span class='hljl-n'>getfield</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>uniquekids</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:sample</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>kids_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>pairwise</span><span class='hljl-p'>(</span><span class='hljl-nf'>BrayCurtis</span><span class='hljl-p'>(),</span><span class='hljl-t'> </span><span class='hljl-n'>kids</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>dims</span><span class='hljl-oB'>=</span><span class='hljl-ni'>2</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>load_metadata</span><span class='hljl-p'>(</span><span class='hljl-n'>datatoml</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>samples</span><span class='hljl-oB'>=</span><span class='hljl-n'>uniquekids</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>filter</span><span class='hljl-oB'>=.!</span><span class='hljl-n'>ismissing</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>correctedAgeDays</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;Age&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>birthType</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Vector</span><span class='hljl-p'>{</span><span class='hljl-nf'>Union</span><span class='hljl-p'>{</span><span class='hljl-n'>Missing</span><span class='hljl-p'>,</span><span class='hljl-n'>String</span><span class='hljl-p'>}}(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>birthType</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>birthType</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>filter</span><span class='hljl-oB'>=.!</span><span class='hljl-n'>ismissing</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>birthType</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;birthType&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>breastfed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>breastfeeding</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>breastfed</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;breastfed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>formulafed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>formulafeeding</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>formulafed</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;formulafed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>childGender</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>Vector</span><span class='hljl-p'>{</span><span class='hljl-nf'>Union</span><span class='hljl-p'>{</span><span class='hljl-n'>Missing</span><span class='hljl-p'>,</span><span class='hljl-n'>String</span><span class='hljl-p'>}}(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>childGender</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>childGender</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>filter</span><span class='hljl-oB'>=.!</span><span class='hljl-n'>ismissing</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>childGender</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;childGender&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>mother_HHS</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>filter</span><span class='hljl-oB'>=.!</span><span class='hljl-n'>ismissing</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>mother_HHS</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;mother_HHS&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># remove the rows that don&#39;t have p values</span><span class='hljl-t'>
+</span><span class='hljl-nf'>filter!</span><span class='hljl-p'>(</span><span class='hljl-n'>r</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>r</span><span class='hljl-p'>[</span><span class='hljl-nf'>Symbol</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;Pr(&gt;F)&quot;</span><span class='hljl-p'>)]),</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>)</span>
+</pre>
+
+
+
+<pre class="output">
+┌───────┬───────────┬─────────┬─────────┬────────┬────────┬─────────┬──────────────┐
+│    Df │ SumsOfSqs │ MeanSqs │ F_Model │     R2 │ Pr&#40;&gt;F&#41; │ feature │     variable │
+├───────┼───────────┼─────────┼─────────┼────────┼────────┼─────────┼──────────────┤
+│   1.0 │     0.187 │   0.187 │  40.764 │  0.062 │  0.001 │     kos │ Subject Type │
+│ 440.0 │      2.68 │   0.006 │   3.284 │  0.893 │  0.001 │     kos │   Subject ID │
+│   1.0 │     0.261 │   0.261 │  94.007 │  0.268 │  0.001 │     kos │          Age │
+│   1.0 │     0.001 │   0.001 │   0.205 │  0.001 │  0.663 │     kos │    birthType │
+│   1.0 │    -0.001 │  -0.001 │  -0.165 │ -0.001 │    1.0 │     kos │    breastfed │
+│   1.0 │     0.009 │   0.009 │    2.31 │  0.009 │  0.109 │     kos │   formulafed │
+│   1.0 │     0.007 │   0.007 │   1.784 │  0.007 │  0.179 │     kos │  childGender │
+│   1.0 │     0.003 │   0.003 │   0.686 │  0.004 │  0.407 │     kos │   mother_HHS │
+└───────┴───────────┴─────────┴─────────┴────────┴────────┴─────────┴──────────────┘
+</pre>
+
+
+<p>So, only age &#40;<code>R2 &#61; 0.268</code>&#41; has a significant p value &#40;<code>Pr&#40;&gt;F&#41;</code> column&#41;. This is a way larger R2 than with taxonomic profiles. What happens if we only look at the kids under 2 years old?</p>
+<h3>Young kids</h3>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'># get kids that are less than 1.5 years old</span><span class='hljl-t'>
+</span><span class='hljl-n'>young</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>a</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>a</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-n'>a</span><span class='hljl-t'> </span><span class='hljl-oB'>&lt;=</span><span class='hljl-t'> </span><span class='hljl-ni'>365</span><span class='hljl-oB'>*</span><span class='hljl-nfB'>1.5</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>correctedAgeDays</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>youngkids</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>view</span><span class='hljl-p'>(</span><span class='hljl-n'>kids</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>sites</span><span class='hljl-oB'>=</span><span class='hljl-n'>young</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># make new distance matrix</span><span class='hljl-t'>
+</span><span class='hljl-n'>youngkids_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>pairwise</span><span class='hljl-p'>(</span><span class='hljl-nf'>BrayCurtis</span><span class='hljl-p'>(),</span><span class='hljl-t'> </span><span class='hljl-n'>youngkids</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>dims</span><span class='hljl-oB'>=</span><span class='hljl-ni'>2</span><span class='hljl-p'>,)</span><span class='hljl-t'>
+</span><span class='hljl-n'>youngkidsmeta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>young</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-oB'>:</span><span class='hljl-p'>]</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># Test breasfeeding and formula feeding</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>youngkids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>youngkidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>breastfed</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-ni'>10000</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;young kids breastfed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>youngkids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>youngkidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>formulafed</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-ni'>10000</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;young kids formulafed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-nf'>filter!</span><span class='hljl-p'>(</span><span class='hljl-n'>r</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>r</span><span class='hljl-p'>[</span><span class='hljl-nf'>Symbol</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;Pr(&gt;F)&quot;</span><span class='hljl-p'>)]),</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>)</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬───────┬────────┬─────────┬───────────────────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │ Pr&#40;&gt;F&#41; │ feature │              variable │
+├─────┼───────────┼─────────┼─────────┼───────┼────────┼─────────┼───────────────────────┤
+│ 1.0 │     0.003 │   0.003 │   1.051 │ 0.016 │  0.304 │     kos │  young kids breastfed │
+│ 1.0 │     0.003 │   0.003 │   0.827 │ 0.013 │  0.371 │     kos │ young kids formulafed │
+└─────┴───────────┴─────────┴─────────┴───────┴────────┴─────────┴───────────────────────┘
+</pre>
+
+
+<p>Neither breast feeding nor formula feeding is significant; this could just be a numbers game, or a result of how we&#39;re defining it &#40;kids who get both breastmilk and formula are included&#41;.</p>
+<h3>Brain Data</h3>
+<p>One of the things making this cohort unique is that we have brain volume data collected from fMRI scans taken within one month of fecal sample collection.</p>
+<p>All of the brain volume data is really affected by the age of the kids, so we need to subtract out that variation. <code>BiobakeryUtils</code> can&#39;t handle a PERMANOVA with two variables yet, so we need to do this directly using <code>RCall.jl</code>.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'># normalize brain volume measures</span><span class='hljl-t'>
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>total_lowres</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-nf'>sum</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[[</span><span class='hljl-sc'>:white_matter_volume</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:grey_matter_volume</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:csf_volume</span><span class='hljl-p'>]]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>white_matter_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>white_matter_volume</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>total_lowres</span><span class='hljl-t'>
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>grey_matter_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>grey_matter_volume</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>total_lowres</span><span class='hljl-t'>
+</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>csf_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>csf_volume</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>total_lowres</span>
+</pre>
+
+
+<pre class="output">
+260-element Array&#123;Union&#123;Missing, Float64&#125;,1&#125;:
+ 0.23538520970778634
+ 0.23279800782433938
+ 0.23276147940817862
+ 0.2307558927565216 
+ 0.2351975883102456 
+  missing           
+ 0.24158849769177926
+ 0.2427619107727056 
+ 0.23857531438478813
+ 0.23413914400908545
+ ⋮                  
+  missing           
+  missing           
+  missing           
+  missing           
+  missing           
+  missing           
+  missing           
+  missing           
+  missing
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>RCall</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:white_matter_normed</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:white_matter_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + white_matter_normed,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span>
+</pre>
+
+
+
+<pre class="output">
+┌───────┬───────────┬─────────┬─────────┬───────┬─────────┐
+│    Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │  Pr&#40;&gt;F&#41; │
+├───────┼───────────┼─────────┼─────────┼───────┼─────────┤
+│   1.0 │     0.112 │   0.112 │  48.092 │ 0.253 │     0.0 │
+│   1.0 │     0.004 │   0.004 │   1.921 │  0.01 │   0.168 │
+│ 140.0 │     0.326 │   0.002 │ missing │ 0.737 │ missing │
+│ 142.0 │     0.442 │ missing │ missing │   1.0 │ missing │
+└───────┴───────────┴─────────┴─────────┴───────┴─────────┘
+</pre>
+
+
+<p>The second row is <code>white_matter_normed</code>.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;white_matter_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬──────┬────────┬─────────┬─────────────────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │   R2 │ Pr&#40;&gt;F&#41; │ feature │            variable │
+├─────┼───────────┼─────────┼─────────┼──────┼────────┼─────────┼─────────────────────┤
+│ 1.0 │     0.004 │   0.004 │   1.921 │ 0.01 │  0.168 │     kos │ white_matter_normed │
+└─────┴───────────┴─────────┴─────────┴──────┴────────┴─────────┴─────────────────────┘
+</pre>
+
+
+<p><strong>The effect of which is not significant</strong></p>
+<p>Let&#39;s look at some other brain measures.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'>## grey matter</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:grey_matter_normed</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:grey_matter_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + grey_matter_normed,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;grey_matter_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'>## CSF (cerebrospinal fluid volume)</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:csf_normed</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:csf_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + csf_normed,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;csf_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬───────┬────────┬─────────┬─────────────────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │ Pr&#40;&gt;F&#41; │ feature │            variable │
+├─────┼───────────┼─────────┼─────────┼───────┼────────┼─────────┼─────────────────────┤
+│ 1.0 │     0.004 │   0.004 │   1.921 │  0.01 │  0.168 │     kos │ white_matter_normed │
+│ 1.0 │       0.0 │     0.0 │   0.115 │ 0.001 │  0.772 │     kos │  grey_matter_normed │
+│ 1.0 │     0.004 │   0.004 │   1.575 │ 0.008 │  0.208 │     kos │          csf_normed │
+└─────┴───────────┴─────────┴─────────┴───────┴────────┴─────────┴─────────────────────┘
+</pre>
+
+
+<p>None of these are significant.</p>
+<p>We can also look at brain regions as identified by the hires scans. In addition to normalizing by age, we&#39;ll also divide each volume by the total brain volume.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-cs'>## Brain volume</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + hires_total,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;hires_total&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬───────┬────────┬─────────┬─────────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │ Pr&#40;&gt;F&#41; │ feature │    variable │
+├─────┼───────────┼─────────┼─────────┼───────┼────────┼─────────┼─────────────┤
+│ 1.0 │     0.015 │   0.015 │   6.681 │ 0.039 │  0.008 │     kos │ hires_total │
+└─────┴───────────┴─────────┴─────────┴───────┴────────┴─────────┴─────────────┘
+</pre>
+
+
+
+<pre class='hljl'>
+<span class='hljl-cs'>## Cerebellum</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:cerebellar</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:cerebellar</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>cerebellar_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>cerebellar</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>hires_total</span><span class='hljl-t'>
+
+
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:cerebellar_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>CSV</span><span class='hljl-oB'>.</span><span class='hljl-nf'>write</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;/home/kevin/Desktop/df.csv&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>CSV</span><span class='hljl-oB'>.</span><span class='hljl-nf'>write</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;/home/kevin/Desktop/dm.csv&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nf'>DataFrame</span><span class='hljl-p'>(</span><span class='hljl-n'>r_dm</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-n'>writeheader</span><span class='hljl-oB'>=</span><span class='hljl-kc'>false</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(terms(as.formula(&quot;r_dm ~  correctedAgeDays + cerebellar_normed&quot;), keep.order=TRUE),
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;cerebellar_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'>## Subcortical</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:subcortical</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:subcortical</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>subcortical_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>subcortical</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>hires_total</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:subcortical_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + subcortical_normed,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;subcortical_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span><span class='hljl-t'>
+
+
+</span><span class='hljl-cs'>## Neocortical</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:neocortical</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:neocortical</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>neocortical_normed</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>neocortical</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>hires_total</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:neocortical_normed</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + neocortical_normed,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;neocortical_normed&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'>## Limbic</span><span class='hljl-t'>
+</span><span class='hljl-n'>filt</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>map</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>])</span><span class='hljl-t'> </span><span class='hljl-oB'>&amp;&amp;</span><span class='hljl-t'> </span><span class='hljl-oB'>!</span><span class='hljl-nf'>ismissing</span><span class='hljl-p'>(</span><span class='hljl-n'>row</span><span class='hljl-p'>[</span><span class='hljl-sc'>:limbic</span><span class='hljl-p'>]),</span><span class='hljl-t'> </span><span class='hljl-nf'>eachrow</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:limbic</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:hires_total</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>limbic</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>limbic</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-oB'>.</span><span class='hljl-n'>hires_total</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_meta</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:correctedAgeDays</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:limbic</span><span class='hljl-p'>]]</span><span class='hljl-t'>
+</span><span class='hljl-n'>r_dm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>[</span><span class='hljl-n'>filt</span><span class='hljl-p'>,</span><span class='hljl-n'>filt</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_meta</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@rput</span><span class='hljl-t'> </span><span class='hljl-n'>r_dm</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># I don&#39;t know why, but the order is reversed here.</span><span class='hljl-t'>
+</span><span class='hljl-so'>R&quot;&quot;&quot;
+p &lt;- adonis(r_dm ~ correctedAgeDays + limbic,
+            data=r_meta, permutations = 10000)
+&quot;&quot;&quot;</span><span class='hljl-t'>
+
+</span><span class='hljl-nd'>@rget</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-sc'>:aov_tab</span><span class='hljl-p'>]</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;limbic&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>2</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
+</pre>
+
+
+
+<table class="data-frame"><thead><tr><th></th><th>Df</th><th>SumsOfSqs</th><th>MeanSqs</th><th>F_Model</th><th>R2</th><th>Pr(&gt;F)</th><th>feature</th><th>variable</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Float64⍰</th><th>Float64⍰</th><th>Float64</th><th>Float64⍰</th><th>String</th><th>String</th></tr></thead><tbody><p>18 rows × 8 columns</p><tr><th>1</th><td>1.0</td><td>0.187262</td><td>0.187262</td><td>40.7643</td><td>0.0623532</td><td>0.001</td><td>kos</td><td>Subject Type</td></tr><tr><th>2</th><td>440.0</td><td>2.6805</td><td>0.00609204</td><td>3.28441</td><td>0.892536</td><td>0.001</td><td>kos</td><td>Subject ID</td></tr><tr><th>3</th><td>1.0</td><td>0.260609</td><td>0.260609</td><td>94.0071</td><td>0.267821</td><td>0.001</td><td>kos</td><td>Age</td></tr><tr><th>4</th><td>1.0</td><td>0.000794697</td><td>0.000794697</td><td>0.205102</td><td>0.000853864</td><td>0.663</td><td>kos</td><td>birthType</td></tr><tr><th>5</th><td>1.0</td><td>-0.000638039</td><td>-0.000638039</td><td>-0.164679</td><td>-0.000638698</td><td>1.0</td><td>kos</td><td>breastfed</td></tr><tr><th>6</th><td>1.0</td><td>0.00886521</td><td>0.00886521</td><td>2.31009</td><td>0.00887437</td><td>0.109</td><td>kos</td><td>formulafed</td></tr><tr><th>7</th><td>1.0</td><td>0.0068618</td><td>0.0068618</td><td>1.78443</td><td>0.00686888</td><td>0.179</td><td>kos</td><td>childGender</td></tr><tr><th>8</th><td>1.0</td><td>0.00250105</td><td>0.00250105</td><td>0.686096</td><td>0.00419154</td><td>0.407</td><td>kos</td><td>mother_HHS</td></tr><tr><th>9</th><td>1.0</td><td>0.00348854</td><td>0.00348854</td><td>1.0513</td><td>0.0159164</td><td>0.30357</td><td>kos</td><td>young kids breastfed</td></tr><tr><th>10</th><td>1.0</td><td>0.0027525</td><td>0.0027525</td><td>0.826666</td><td>0.0125582</td><td>0.370963</td><td>kos</td><td>young kids formulafed</td></tr><tr><th>11</th><td>1.0</td><td>0.00447447</td><td>0.00447447</td><td>1.92147</td><td>0.0101123</td><td>0.167583</td><td>kos</td><td>white_matter_normed</td></tr><tr><th>12</th><td>1.0</td><td>0.000271711</td><td>0.000271711</td><td>0.115195</td><td>0.000614066</td><td>0.771523</td><td>kos</td><td>grey_matter_normed</td></tr><tr><th>13</th><td>1.0</td><td>0.00367778</td><td>0.00367778</td><td>1.57549</td><td>0.00831176</td><td>0.207779</td><td>kos</td><td>csf_normed</td></tr><tr><th>14</th><td>1.0</td><td>0.0147746</td><td>0.0147746</td><td>6.68078</td><td>0.0386638</td><td>0.00829917</td><td>kos</td><td>hires_total</td></tr><tr><th>15</th><td>1.0</td><td>0.0135705</td><td>0.0135705</td><td>6.10927</td><td>0.0355128</td><td>0.0130987</td><td>kos</td><td>cerebellar_normed</td></tr><tr><th>16</th><td>1.0</td><td>0.0114037</td><td>0.0114037</td><td>5.09338</td><td>0.0298423</td><td>0.0263974</td><td>kos</td><td>subcortical_normed</td></tr><tr><th>17</th><td>1.0</td><td>0.00699057</td><td>0.00699057</td><td>3.07305</td><td>0.0182937</td><td>0.0839916</td><td>kos</td><td>neocortical_normed</td></tr><tr><th>18</th><td>1.0</td><td>0.0132141</td><td>0.0132141</td><td>5.94106</td><td>0.0345801</td><td>0.0162984</td><td>kos</td><td>limbic</td></tr></tbody></table>
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬───────┬────────┬─────────┬────────────────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │ Pr&#40;&gt;F&#41; │ feature │           variable │
+├─────┼───────────┼─────────┼─────────┼───────┼────────┼─────────┼────────────────────┤
+│ 1.0 │     0.015 │   0.015 │   6.681 │ 0.039 │  0.008 │     kos │        hires_total │
+│ 1.0 │     0.014 │   0.014 │   6.109 │ 0.036 │  0.013 │     kos │  cerebellar_normed │
+│ 1.0 │     0.011 │   0.011 │   5.093 │  0.03 │  0.026 │     kos │ subcortical_normed │
+│ 1.0 │     0.007 │   0.007 │   3.073 │ 0.018 │  0.084 │     kos │ neocortical_normed │
+│ 1.0 │     0.013 │   0.013 │   5.941 │ 0.035 │  0.016 │     kos │             limbic │
+└─────┴───────────┴─────────┴─────────┴───────┴────────┴─────────┴────────────────────┘
+</pre>
+
+
+<h3>Cognitive Assessments</h3>
+<p>Cognitive development is measured using standard tests for certain age groups. In notebook 2, we converted these test scores so they are comparable across age groups.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>p</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>permanova</span><span class='hljl-p'>(</span><span class='hljl-n'>kids_dm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>cogScore</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>filter</span><span class='hljl-oB'>=.!</span><span class='hljl-n'>ismissing</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>kidsmeta</span><span class='hljl-oB'>.</span><span class='hljl-n'>cogScore</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:feature</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;kos&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>p</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;cogScore&quot;</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>vcat</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>p</span><span class='hljl-p'>[[</span><span class='hljl-ni'>1</span><span class='hljl-p'>],</span><span class='hljl-oB'>:</span><span class='hljl-p'>])</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────┬───────────┬─────────┬─────────┬───────┬────────┬─────────┬──────────┐
+│  Df │ SumsOfSqs │ MeanSqs │ F_Model │    R2 │ Pr&#40;&gt;F&#41; │ feature │ variable │
+├─────┼───────────┼─────────┼─────────┼───────┼────────┼─────────┼──────────┤
+│ 1.0 │      0.01 │    0.01 │   2.898 │ 0.013 │  0.085 │     kos │ cogScore │
+└─────┴───────────┴─────────┴─────────┴───────┴────────┴─────────┴──────────┘
+</pre>
+
+
+<p>Let&#39;s save the output after correcting for multiple testing. We&#39;ll use the <a href="https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini&#37;E2&#37;80&#37;93Hochberg_procedure">Benjamini-Hochberg method</a> for FDR control.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>MultipleTesting</span><span class='hljl-t'>
+
+</span><span class='hljl-n'>perm</span><span class='hljl-oB'>.</span><span class='hljl-n'>p_value</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>Float64</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-nf'>Symbol</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;Pr(&gt;F)&quot;</span><span class='hljl-p'>)])</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-oB'>.</span><span class='hljl-n'>q_value</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>adjust</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-oB'>.</span><span class='hljl-n'>p_value</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nf'>BenjaminiHochberg</span><span class='hljl-p'>())</span><span class='hljl-t'>
+</span><span class='hljl-nf'>sort!</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:q_value</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># reorder columns</span><span class='hljl-t'>
+</span><span class='hljl-n'>perm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,[</span><span class='hljl-sc'>:feature</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:R2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:p_value</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:q_value</span><span class='hljl-p'>]]</span>
+</pre>
+
+
+
+<pre class="output">
+┌─────────┬───────────────────────┬────────┬─────────┬─────────┐
+│ feature │              variable │     R2 │ p_value │ q_value │
+├─────────┼───────────────────────┼────────┼─────────┼─────────┤
+│     kos │          Subject Type │  0.062 │   0.001 │   0.006 │
+│     kos │            Subject ID │  0.893 │   0.001 │   0.006 │
+│     kos │                   Age │  0.268 │   0.001 │   0.006 │
+│     kos │           hires_total │  0.039 │   0.008 │   0.039 │
+│     kos │     cerebellar_normed │  0.036 │   0.013 │    0.05 │
+│     kos │                limbic │  0.035 │   0.016 │   0.052 │
+│     kos │    subcortical_normed │   0.03 │   0.026 │   0.072 │
+│     kos │    neocortical_normed │  0.018 │   0.084 │   0.179 │
+│     kos │              cogScore │  0.013 │   0.085 │   0.179 │
+│     kos │            formulafed │  0.009 │   0.109 │   0.207 │
+│     kos │           childGender │  0.007 │   0.179 │   0.283 │
+│     kos │   white_matter_normed │   0.01 │   0.168 │   0.283 │
+│     kos │            csf_normed │  0.008 │   0.208 │   0.304 │
+│     kos │  young kids breastfed │  0.016 │   0.304 │   0.412 │
+│     kos │ young kids formulafed │  0.013 │   0.371 │    0.47 │
+│     kos │            mother_HHS │  0.004 │   0.407 │   0.483 │
+│     kos │             birthType │  0.001 │   0.663 │   0.741 │
+│     kos │    grey_matter_normed │  0.001 │   0.772 │   0.814 │
+│     kos │             breastfed │ -0.001 │     1.0 │     1.0 │
+└─────────┴───────────────────────┴────────┴─────────┴─────────┘
+</pre>
+
+
+
+<p>Let&#39;s see what that looks like in graphical form using <code>StatsPlots</code>.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-nf'>sort!</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-sc'>:R2</span><span class='hljl-p'>])</span><span class='hljl-t'>
+
+</span><span class='hljl-cs'># [1:end-1] removes the ~80% variation explained by subject ID</span><span class='hljl-t'>
+</span><span class='hljl-nf'>bar</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-k'>end</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:R2</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-ni'>100</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>xticks</span><span class='hljl-oB'>=</span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-p'>(</span><span class='hljl-nf'>size</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>,</span><span class='hljl-ni'>1</span><span class='hljl-p'>)</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-p'>),</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-k'>end</span><span class='hljl-oB'>-</span><span class='hljl-ni'>1</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:variable</span><span class='hljl-p'>]),</span><span class='hljl-t'>
+    </span><span class='hljl-n'>xrotation</span><span class='hljl-oB'>=</span><span class='hljl-ni'>45</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>color</span><span class='hljl-oB'>=:</span><span class='hljl-n'>grey</span><span class='hljl-p'>)</span><span class='hljl-t'>
+
+</span><span class='hljl-k'>for</span><span class='hljl-t'> </span><span class='hljl-n'>i</span><span class='hljl-t'> </span><span class='hljl-kp'>in</span><span class='hljl-t'> </span><span class='hljl-nf'>eachindex</span><span class='hljl-p'>(</span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-oB'>:</span><span class='hljl-n'>R2</span><span class='hljl-p'>])</span><span class='hljl-t'>
+    </span><span class='hljl-n'>r2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-n'>i</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:R2</span><span class='hljl-p'>]</span><span class='hljl-t'> </span><span class='hljl-oB'>*</span><span class='hljl-t'> </span><span class='hljl-ni'>100</span><span class='hljl-t'>
+    </span><span class='hljl-n'>q</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-n'>i</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:q_value</span><span class='hljl-p'>]</span><span class='hljl-t'>
+    </span><span class='hljl-n'>kind</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>perm</span><span class='hljl-p'>[</span><span class='hljl-oB'>!</span><span class='hljl-p'>,</span><span class='hljl-oB'>:</span><span class='hljl-n'>variable</span><span class='hljl-p'>]</span><span class='hljl-t'>
+    </span><span class='hljl-k'>if</span><span class='hljl-t'> </span><span class='hljl-n'>q</span><span class='hljl-t'> </span><span class='hljl-oB'>&gt;</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.05</span><span class='hljl-t'>
+        </span><span class='hljl-k'>continue</span><span class='hljl-t'>
+    </span><span class='hljl-k'>elseif</span><span class='hljl-t'> </span><span class='hljl-n'>q</span><span class='hljl-t'> </span><span class='hljl-oB'>&gt;</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.01</span><span class='hljl-t'>
+        </span><span class='hljl-n'>stars</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;*&quot;</span><span class='hljl-t'>
+    </span><span class='hljl-k'>elseif</span><span class='hljl-t'> </span><span class='hljl-n'>q</span><span class='hljl-t'> </span><span class='hljl-oB'>&gt;</span><span class='hljl-t'> </span><span class='hljl-nfB'>.001</span><span class='hljl-t'>
+        </span><span class='hljl-n'>stars</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;**&quot;</span><span class='hljl-t'>
+    </span><span class='hljl-k'>else</span><span class='hljl-t'>
+        </span><span class='hljl-n'>stars</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;***&quot;</span><span class='hljl-t'>
+    </span><span class='hljl-k'>end</span><span class='hljl-t'>
+    </span><span class='hljl-nf'>annotate!</span><span class='hljl-p'>(</span><span class='hljl-n'>i</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>r2</span><span class='hljl-oB'>+</span><span class='hljl-nfB'>.2</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nf'>text</span><span class='hljl-p'>(</span><span class='hljl-n'>stars</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:center</span><span class='hljl-p'>))</span><span class='hljl-t'>
+</span><span class='hljl-k'>end</span><span class='hljl-t'>
+
+</span><span class='hljl-nf'>plot!</span><span class='hljl-p'>(</span><span class='hljl-n'>legend</span><span class='hljl-oB'>=</span><span class='hljl-kc'>false</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>title</span><span class='hljl-oB'>=</span><span class='hljl-s'>&quot;Functional Profiles (KOs) PERMANOVA&quot;</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>ylabel</span><span class='hljl-oB'>=</span><span class='hljl-s'>&quot;% Variance explainable&quot;</span><span class='hljl-p'>)</span>
+</pre>
+
+
+<img src="data:image/png;base64,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qZmwgFEU9ccffzx79mz58uV08w2E0IsXL5RKZZcuXZDOTdzS0jI4ONh0uVWnVCp5PB6uc0YLCwtLS0ssmzWXyyUIAldiBEGwWCy8i4nrCkwul+NKjKIojCtNKpVaWlriugKjV5rxoWhKpRJXNLlcbmFhgevqEONistlsjBvtR7Knq1QqDofDMJrxL1Pm8/kYt2rmTPgM7OHDh7du3Vq9erWtra1UKqXfVy2TyVatWvX69WulUnn48OEBAwaYLgEAAAAfMBNegaWnp+fn548bN0495NKlS127dvX39//555/FYnGfPn2+//570yUAAADgA2bCAjZ16tTqDTFYLJa3t7e3t7fp5gsAAOBjAD1xAAAAaJCggAEAAGiQoIABAABokKCAAQAAaJCggAEAAGiQoIABAABokKCAAQAAaJCggAEAAGiQoIABAABokKCAAQAAaJCggAEAAGiQoIABAABokKCAAQAAaJCggAEAAGiQoIABAABokPR4H9ibN2+ioqIePnwoEAh2796dkJDQr1+/Dh06mC45AAAAQBumV2D5+flz5869deuWi4uLUqlECGVkZISGhr548cKU6QEAAAA1Y1rAoqKizM3N9+/fv3r1anrIypUrnZycjh49arLcAAAAAK2YFrC0tLRJkybZ29urh5ibm3t6ej579sw0iQEAAAC6MC1gKpXK1ta2ykA7OzupVIo7JQAAAKB2TAtY586dU1JSqgy8e/duu3btcKcEAAAA1I5pAQsODr5169a2bdsePXqEEHr16tWff/555cqVGTNmmDI9AAAAoGZMC5iTk9O+ffvYbHZERISZmdmOHTsyMzMjIiI+//xzk+YHAAAA1EiP34HZ2dl9//33pksFAAAAYK6WApabm1triNatW2NKBgAAAGCqlgI2a9asWkNcunQJUzIAAAAAU7UUsOrFSSaTVVZWNmvWjMfjmSwrAAAAoBZ6PAOLj4//+++/8/PzEUIsFsvFxeXbb791d3c3WW4AAACAVkxbIV64cCE8PLxv37779+8/f/78n3/+2bVr159//vnatWsmzQ8AAACoEdMrsNOnT48cOTIoKIj+08nJKSgoSCQSHT16dNCgQSZLDwAAAKgZ0yuw0tLSbt26VRnYo0ePd+/e4U4JAAAAqB3TAtahQ4enT59WGfjs2bNOnTrhTgkAAACoHdNbiPPmzVu0aJGV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"  />
+
+
+
+
+          <HR/>
+          <div class="footer"><p>
+          Published from <a href="09-func-omnibus-tests.jmd">09-func-omnibus-tests.jmd</a> using
+          <a href="http://github.com/mpastell/Weave.jl">Weave.jl</a>
+           on 2019-10-21.
+          <p></div>
+
+
+        </div>
+      </div>
+    </div>
+  </BODY>
+</HTML>
