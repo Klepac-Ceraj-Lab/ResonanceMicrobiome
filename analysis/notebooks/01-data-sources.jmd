@@ -57,6 +57,8 @@ to get the metadata associated with timepoints,
 
 ### Metadata Scrub
 
+**TODO: Update section for split repos**
+
 Once you have this file,
 run the `metascrub.jl` script contained in the `bin/` folder.
 This script does a few things.
@@ -130,6 +132,18 @@ $ julia --project=@. bin/metascrub.jl data/metadata/filemakerall.xlsx \
 
 Additional transformations of the metadata to get it into a usable form
 can be found in the next notebook.
+
+```julia
+using SQLite
+using CSV
+using Pkg: TOML
+
+config = TOML.parsefile("data/data.toml")
+
+db = SQLite.DB(config["sqlite"]["metadata"]["path"])
+SQLite.drop!(db, "all", ifexists=true)
+CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(db, "all")
+```
 
 ## Metagenome data
 

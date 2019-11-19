@@ -7,7 +7,8 @@ options:
 ---
 
 In the previous notebook,
-we extracted metadata tables from FilemakerPro.
+we extracted metadata tables from FilemakerPro
+and added them to a `sqlite` database.
 Now, we'll get these into a more usable format for analysis.
 
 ## Accessing TOML data in julia
