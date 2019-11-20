@@ -136,13 +136,18 @@ can be found in the next notebook.
 ```julia
 using SQLite
 using CSV
-using Pkg: TOML
+using Pkg.TOML: paresfile
 
 config = TOML.parsefile("data/data.toml")
 
 db = SQLite.DB(config["sqlite"]["metadata"]["path"])
-SQLite.drop!(db, "all", ifexists=true)
-CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(db, "all")
+SQLite.drop!(db, "filemakermetadata", ifexists=true)
+SQLite.dropindex!(db, "filemakermetadata_subject_idx", ifexists=true)
+SQLite.dropindex!(db, "filemakermetadata_metadatum_idx", ifexists=true)
+
+CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(db, "filemakermetadata")
+SQLite.createindex!(db, "filemakermetadata", "subject", "filemakermetadata_subject_idx", unique=false)
+SQLite.createindex!(db, "filemakermetadata", "metadatum", "filemakermetadata_metadatum_idx", unique=false)
 ```
 
 ## Metagenome data
