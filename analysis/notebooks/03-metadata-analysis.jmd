@@ -12,20 +12,26 @@ Now that we have the metadata in long form,
 it's a bit easier to query it for the stuff we want.
 
 ```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+
 ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
+using SQLite
 using StatsPlots
 using PrettyTables
 using CSV
 using Pkg.TOML: parsefile
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
 
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120)
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
 config = parsefile("data/data.toml")
-widemeta = CSV.read(config["tables"]["sample_metadata_wide"]["path"])
+widemeta = ECHOAnalysis.getmgxmetadata()
 figures = config["output"]["figures"]
 isdir(figures) || mkpath(figures)
 ```
@@ -151,7 +157,8 @@ p1 = ColorBrewer.palette("Set1", 8)
 toplot = filter(row-> !any(ismissing, [row.cogScore, row.correctedAgeDays]), umeta)
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, group=toplot.cogAssessment,
     color=p1[2:end]', xlabel="age (years)", ylabel="Composite Score",
-    title="Cognitive Assessments", legend=:topright)
+    title="Cognitive Assessments", legend=:topright,
+    )
 ```
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-cogscore_age_scatter.png"))
@@ -172,6 +179,9 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.zscore,
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.png"))
 ```
+
+Checking if any of the outliers are correlated with batch number:
+
 ```julia
 toplot = filter(row-> !any(ismissing, [row.Mgx_batch, row.correctedAgeDays, row.cogScore]), umeta)
 batchnum = [parse(Int, match(r"[Bb]atch (\d+)", b).captures[1]) for b in toplot.Mgx_batch]

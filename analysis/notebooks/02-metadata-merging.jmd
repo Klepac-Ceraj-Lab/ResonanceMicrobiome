@@ -48,6 +48,12 @@ using PrettyTables
 
 # make a formatter for PrettyTables to round long numbers
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+# make a row filter that picks ~15 rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
+
+@ptconfclean # clear previous configuration
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
+
 # set configuration for printing tables
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120)
 
@@ -131,8 +137,8 @@ we want to use a normalized score that's comparable across tests.
 cogcols = [
     "languageComposite", # this is from Bayleys
     "motorComposite", # also Bayleys
-    # "mullen_EarlyLearningComposite",
-    "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
+    "mullen_EarlyLearningComposite",
+    # "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
     "fullScaleComposite", # this is from WSSPI
     "FSIQ_Composite",  # this is from WISC
     ]
@@ -149,7 +155,7 @@ cogscores = by(allmeta, [:subject, :timepoint]) do sample
         else
             nrow(cogs) != 1 && throw(ErrorException("Wrong number of rows for $parent"))
             metadatum = cogs.metadatum[1]
-            if metadatum == "mullen_NonVerbalComposite"
+            if metadatum == "mullen_EarlyLearningComposite"
                 assessment = "Mullen"
             elseif metadatum == "fullScaleComposite"
                 assessment = "WSSPI"
@@ -348,7 +354,7 @@ permutecols!(allmeta, [:sample, :subject, :timepoint, :metadatum, :value, :paren
 dropmissing!(allmeta)
 allmeta.metadatum = string.(allmeta.metadatum)
 allmeta.value = string.(allmeta.value)
-@pt allmeta()
+@pt allmeta
 ```
 
 ## Save to SQLite

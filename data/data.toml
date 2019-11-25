@@ -2,6 +2,8 @@ title = "ECHO RESONANCE Paper 1 - data description"
 authors = ["Kevin S. Bonham", "Sophie Rowland", "Vanja Klepac-Ceraj"]
 description = "This file contains machine-readable information about data files and repositories (eg DataDeps) used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
 
+[files.biobakery]
+path="data/engaging"
 
 [tables.metadata]
 path = "data/metadata/filemakerdb.csv"
@@ -16,7 +18,6 @@ hires_key = "data/brain/brain_region_key.csv"
 
 [tables.sample_metadata_wide]
 path = "data/metadata/metadatawide.csv"
-
 
 [tables.functional_profiles]
 path="data/engaging"
