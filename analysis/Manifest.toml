@@ -214,9 +214,7 @@ version = "0.8.1"
 
 [[ECHOAnalysis]]
 deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Microbiome", "SQLite"]
-git-tree-sha1 = "bd09a2e972f1b300310f95818464677e1f3b3962"
-repo-rev = "split-code"
-repo-url = "../echo_analysis/"
+path = "../../echo_analysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
 version = "0.0.1"
 

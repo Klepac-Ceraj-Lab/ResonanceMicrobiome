@@ -6,6 +6,18 @@ description = "This file contains machine-readable information about data files 
 [tables.metadata]
 path = "data/metadata/filemakerdb.csv"
 
+[tables.fecal_samples]
+path = "data/metadata/fecal_samples_master.csv"
+
+[tables.brain_structure]
+lowres = "data/brain/brain_volumes.csv"
+hires = "data/brain/microbiome_corticalVolumes_bambam.csv"
+hires_key = "data/brain/brain_region_key.csv"
+
+[tables.sample_metadata_wide]
+path = "data/metadata/metadatawide.csv"
+
+
 [tables.functional_profiles]
 path="data/engaging"
 filter="output/humann2"
@@ -22,3 +34,7 @@ path="/lovelace/echo/sqldatabases/taxa.sqlite"
 
 [sqlite.functions]
 path="/lovelace/echo/sqldatabases/functional_profiles.sqlite"
+
+[output]
+figures="data/analysis/figures"
+tables="data/analysis/tables"
