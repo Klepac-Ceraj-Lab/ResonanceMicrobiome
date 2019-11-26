@@ -10,80 +10,61 @@ Taxonomic profiles come from [MetaPhlAn2](https://bitbucket.org/biobakery/metaph
 Each sample is run separately, and needs to be joined in a single table.
 I'll use the function `load_taxonomic_profiles`
 
-```julia; echo=false; results="hidden"
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+```
+```julia
 ENV["GKSwstype"] = "100"
-
 using ECHOAnalysis
 using DataFrames
+using SQLite
+using StatsPlots
+using PrettyTables
 using CSV
 using Microbiome
-using MultivariateStats
-using StatsPlots
-using MicrobiomePlots
-using BiobakeryUtils
 using Distances
+using MultivariateStats
+using Pkg.TOML: parsefile
 using Clustering
-using PrettyTables
+using MicrobiomePlots
 
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+# print ~15 random rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120)
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-outpath, figures = notebookpaths!(5)
+includet("accessories.jl")
+
+config = parsefile("data/data.toml")
+widemeta = getmgxmetadata()
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
 ```
 ```julia
-tax = load_taxonomic_profiles()
-@pt tax
+db = SQLite.DB(config["sqlite"]["taxa"]["path"])
+species = sqlprofile(db, tablename="taxa", kind="species")
+phyla = sqlprofile(db, tablename="taxa", kind="phylum")
+@pt species
 ```
-
-Some analysis of the fungi:
-
-```julia
-euk = filter(tax) do row
-    occursin(r"^k__Eukaryota", row[1])
-end
-
-# remove columns that don't have any fungi
-euk = euk[!, map(c->
-    !(eltype(euk[!,c]) <: Number) || sum(euk[!,c]) > 0, names(euk))]
-
-CSV.write(joinpath(outpath, "euk.csv"), euk)
-# get a df with only species
-taxfilter!(euk)
-CSV.write(joinpath(outpath, "euk_sp.csv"), euk)
-
-print(euk)
-@pt euk
-```
-
-Those numbers are out of 100
-and there are only results in 10 samples,
-so really not much fungi at all,
-at least according to metaphlan.
-There are some other methods to look more specifically at fungi,
-which will have to wait for another time.
 
 ### PCoA Plots
 
 For an initial overview,
 let's look at the PCoA plots using BrayCurtis dissimilarity.
 
-#### All Samples
-
-```julia
-spec = taxfilter(tax)
-phyla = taxfilter(tax, :phylum)
-@pt spec
-```
-
-Now I'll convert these to the `AbundanceTable` type from `Microbiome.jl`
+First, I'll convert these to the `AbundanceTable` type from `Microbiome.jl`
 for easier maniplation, and do Total Sum Scaling (convert to relative abundance).
 
 
 ```julia; results="hidden"
-abt = abundancetable(spec)
+sabt = abundancetable(species)
 pabt = abundancetable(phyla)
-relativeabundance!(abt)
+relativeabundance!(sabt)
 relativeabundance!(pabt)
 ```
 
@@ -92,18 +73,45 @@ we perform classical multidimensional scaling (which is the same thing
 as principal coordinates analysis).
 
 ```julia
-dm = pairwise(BrayCurtis(), abt)
+dm = pairwise(BrayCurtis(), sabt, dims=2)
 mds = fit(MDS, dm, distances=true)
+@recipe function f(mds::MDS{<:Real}; mds_axes=(1,2))
+    length(mds_axes) in [2,3] || throw(ArgumentError("Can only accept 2 or 3 mds axes"))
+    xax = mds_axes[1]
+    yax = mds_axes[2]
+    ev = eigvals(mds)
+    var_explained = [v / sum(ev) for v in ev]
+    tfm = collect(transform(mds)')
 
-# The `src/pcoa_recipe.jl` file has some code for a plot recipe,
-# but will not be necessary after https://github.com/JuliaPlots/StatsPlots.jl/pull/230/
-# gets merged
+    xlabel --> "MDS$xax"
+    ylabel --> "MDS$yax"
+    seriestype := :scatter
+    aspect_ratio --> 1
+
+    if length(mds_axes) == 3
+        zax = mds_axes[3]
+        zlabel --> "MDS$zax"
+        tfm[:,xax], tfm[:,yax], tfm[:,zax]
+    else
+        tfm[:,xax], tfm[:,yax]
+    end
+end
 plot(mds, primary=false)
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "basic_pcoa.svg"));
+savefig(joinpath(figures, "05-basic_pcoa.png"));
 ```
+
+```julia
+widemeta = getmgxmetadata(samples=samplenames(sabt))
+plot(mds, group=[ismissing(l) ? "missing" : l for l in widemeta.ageLabel],
+    color=color2')
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "05-taxonomic-profiles-ageLabel.png"));
+```
+
 
 A scree plot can be used to visualize how many dimensions are necessary
 to explain the bulk of the variance.
@@ -123,7 +131,7 @@ xlabel!("Principal coordinate axis")
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "scree.svg"));
+savefig(joinpath(figures, "05-scree.png"));
 ```
 
 It looks like there are a couple of "elbows" in the plot,
@@ -139,8 +147,8 @@ We can identify the difference by the "C" or "M"
 at the beginning of the sample ID.
 
 ```julia
-# colors defined in `startup.jl`
-c = [startswith(x, "C") ? color2[1] : color2[2] for x in samplenames(abt)]
+# colors defined in `accessories.jl`
+c = [startswith(x, "C") ? color2[1] : color2[2] for x in samplenames(sabt)]
 
 p1 = plot(mds, marker=3, line=1, framestyle=1,
     color=c, primary=false, ticks=false)
@@ -150,7 +158,7 @@ title!("All samples taxonomic profiles")
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-moms-kids.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-moms-kids.png"));
 ```
 
 ##### Diversity
@@ -159,11 +167,11 @@ The `shannon` function can calculate Shannon diversity for the entire `Abundance
 
 ```julia
 p2 = plot(mds, marker=3, line=1, ticks=false,
-    zcolor=shannon(abt), primary = false, color=:viridis,
+    zcolor=shannon(sabt), primary = false, color=:viridis,
     title="All samples, shannon diversity")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-shannon.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-shannon.png"));
 ```
 
 Neat! It looks like both of the first 2 axes of variation are related
@@ -186,7 +194,7 @@ p3 = plot(mds, marker=3, line=1, ticks=false,
     title="All samples, Bacteroidetes")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-bacteroidetes.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-bacteroidetes.png"));
 ```
 
 Often, the first axis of variation in the gut microbiome of westerners
@@ -195,7 +203,7 @@ Let's see what _P. copri_ is doing:
 
 ```julia
 plot(mds, marker=3, line=1, ticks=false,
-    zcolor=permutedims(collect(occurrences(view(abt, species=["Prevotella_copri"])))),
+    zcolor=permutedims(collect(occurrences(view(sabt, species=["Prevotella_copri"])))),
     primary = false, color=:plasma,
     title="All samples, P. copri")
 ```
@@ -208,12 +216,12 @@ p4 = plot(mds, marker=3, line=1, ticks=false,
     title="All samples, Firmicutes")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-firmicutes.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-firmicutes.png"));
 ```
 
 ```julia; echo=false; results="hidden"
 plot(p1, p2, p3, p4, marker = 2, markerstroke=0, size=(800, 800))
-savefig(joinpath(figures, "taxonomic-profiles-grid.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-grid.png"));
 ```
 
 So that balance is somewhat visible, but there's something else going on too.
@@ -225,9 +233,9 @@ but let's just see what they look like on their own
 
 ```julia
 # use the `uniquesamples` function to get a single sample per mom
-unique_moms = uniquesamples(samplenames(abt), samplefilter=x->startswith(x, "M"))
+unique_moms = uniquetimepoints(samplenames(sabt), samplefilter=ismom)
 
-umoms = view(abt, sites=getfield.(unique_moms, :sample))
+umoms = view(sabt, sites=sampleid.(unique_moms))
 
 # get pairwise Bray Curtis distance matrix
 umoms_dm = pairwise(BrayCurtis(), umoms)
@@ -240,7 +248,7 @@ abundanceplot(umoms, srt=umoms_hcl.order, topabund=11, title="Moms, top 11 speci
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "moms-abundanceplot.svg"));
+savefig(joinpath(figures, "05-moms-abundanceplot.png"));
 ```
 
 ```julia
@@ -248,7 +256,7 @@ abundanceplot(umoms, srt=umoms_hcl.order, topabund=11, title="Moms, top 11 speci
     xticks=false, color=color4', legend=false, linecolor=:match, linestyle=:dot)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "moms-abundanceplot-nolegend.svg"));
+savefig(joinpath(figures, "05-moms-abundanceplot-nolegend.png"));
 ```
 
 Those look like normal adult microbiomes.
@@ -263,27 +271,25 @@ The `uniquesamples` function identifies the first sample for each kid
 when we use `identifiers=[:subject]` (and `takefirst=true` by default)
 
 ```julia
-kids_samples = uniquesamples(samplenames(abt), samplefilter=x-> startswith(x, "C"))
-kids = view(abt, sites=getfield.(kids_samples, :sample))
+kids_samples = uniquetimepoints(samplenames(sabt), samplefilter=iskid)
+kids = view(sabt, sites=sampleid.(kids_samples))
 nsp = map(sample -> count(x-> x > 0.001, sample), eachcol(occurrences(kids)))
 
 kids_dm = pairwise(BrayCurtis(), kids)
 kids_mds = fit(MDS, kids_dm, distances=true)
-kidsmeta = getfocusmetadata(datatoml["tables"]["metadata"]["all"]["path"], kids_samples)
+kidsmeta = getmgxmetadata(samples=kids_samples)
 
 scatter(kidsmeta.correctedAgeDays ./ 365, nsp,
     title="Samples by age", xlabel="Age (years)",
     ylabel="N species", legend=false, color=:lightgrey)
-
-
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "species-by-age.svg"))
+savefig(joinpath(figures, "05-species-by-age.png"))
 ```
 
 ```julia
-firstkids_samples = uniquesamples(samplenames(abt), identifiers=[:subject], samplefilter=x-> startswith(x, "C"))
-kids = view(abt, sites=getfield.(firstkids_samples, :sample))
+firstkids_samples = uniquetimepoints(samplenames(sabt), samplefilter=iskid, takefirst=true)
+kids = view(sabt, sites=sampleid.(firstkids_samples))
 
 kids_dm = pairwise(BrayCurtis(), kids)
 kids_mds = fit(MDS, kids_dm, distances=true)
@@ -294,13 +300,13 @@ p5 = plot(kids_mds, marker=3, line=1, ticks=false,
 ```
 
 ```julia
-savefig(joinpath(figures, "taxonomic-profiles-kids-shannon.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-kids-shannon.png"));
 ```
 
 Let's look at the phyla too:
 
 ```julia
-pkids = view(pabt, sites=getfield.(firstkids_samples, :sample))
+pkids = view(pabt, sites=sampleid.(firstkids_samples))
 
 kids_bact = vec(collect(occurrences(view(pkids, species=occursin.("Bact", speciesnames(pkids))))))
 kids_firm = vec(collect(occurrences(view(pkids, species=occursin.("Firm", speciesnames(pkids))))))
@@ -334,43 +340,40 @@ p9 = plot(kids_mds, marker=4, line=1, ticks=false,
 ```julia; echo=false; results="hidden"
 plot(p6,p7,p8,p9)
 
-savefig(joinpath(figures, "taxonomic-profiles-kids-phyla.svg"))
+savefig(joinpath(figures, "05-taxonomic-profiles-kids-phyla.png"))
 ```
 
 In order to decorate these PCoA plots with other useful information,
 we need to return to the metadata.
-I'll use the [`getfocusmetadata`]@ref function.
 
 ```julia
-focusmeta = getfocusmetadata(datatoml["tables"]["metadata"]["all"]["path"], firstkids_samples)
-focusmeta[!,:shannon] = shannon(kids)
-focusmeta[!,:ginisimpson] = ginisimpson(kids)
+fkidsmeta = getmgxmetadata(samples=firstkids_samples)
+fkidsmeta[!,:shannon] = shannon(kids)
+fkidsmeta[!,:ginisimpson] = ginisimpson(kids)
 
-eigenvalues, var_explained, pco_axes = ECHOAnalysis.mds_axis_values(kids_mds)
-
-scatter(pco_axes[:, 1], focusmeta[!, :correctedAgeDays] ./365, xticks=false,
-    primary=false, zcolor = focusmeta[!,:shannon], color=:viridis)
+scatter(projection(kids_mds)[:, 1], fkidsmeta[!, :correctedAgeDays] ./365, xticks=false,
+    primary=false, zcolor = fkidsmeta[!,:shannon], color=:viridis)
 ylabel!("Age (years)")
-xlabel!("MDS1 ($(round(var_explained[1] * 100, digits = 2))%)")
+xlabel!("MDS1")
 title!("All kids age / MDS axis1 / Alpha diversity")
 ```
 ```julia
-savefig(joinpath(figures, "taxonomic-profiles-kids-age-pco1-diversity.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-kids-age-pco1-diversity.png"));
 ```
 
 Here we can see that alpha diversity increases with age (not too surprising).
 Another way to look at it is to plot the alpha diversity at each age:
 
 ```julia
-focusmeta.floorAge = [ismissing(x) ? missing : Int(floor(x / 365)) for x in focusmeta.correctedAgeDays]
+fkidsmeta.floorAge = [ismissing(x) ? missing : Int(floor(x / 365)) for x in fkidsmeta.correctedAgeDays]
 
-boxplot(collect(skipmissing(focusmeta.floorAge)),
-    focusmeta.ginisimpson[.!ismissing.(focusmeta.floorAge)],
+boxplot(collect(skipmissing(fkidsmeta.floorAge)),
+    fkidsmeta.ginisimpson[.!ismissing.(fkidsmeta.floorAge)],
     color=:lightgrey, legend=false, xlabel="Age in Years",
     yaxis=(0:0.1:1.1, "Alpha diversity (GiniSimpson)"))
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-alpha-diversity-box.svg"));
+savefig(joinpath(figures, "05-kids-alpha-diversity-box.png"));
 ```
 
 
@@ -382,7 +385,7 @@ abundanceplot(kids, srt = kids_hcl.order, topabund=11,
     xticks=false, color=color4', linecolor=:match, linestyle=:dot)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-abundanceplot.svg"))
+savefig(joinpath(figures, "05-kids-abundanceplot.png"))
 ```
 ```julia
 abundanceplot(kids, srt = kids_hcl.order, topabund=11,
@@ -391,7 +394,7 @@ abundanceplot(kids, srt = kids_hcl.order, topabund=11,
     legend=false)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-abundanceplot-nolegend.svg"));
+savefig(joinpath(figures, "05-kids-abundanceplot-nolegend.png"));
 ```
 
 These also look like adult microbiomes, with a smattering of young-kids
@@ -403,29 +406,30 @@ We can also annotate this plot with the age of the kids
 plot(
     abundanceplot(kids, srt = kids_hcl.order, topabund=11, title="Kids, top 11 species",
         xticks=false, color=color4', legend=false, linecolor=:match, linestyle=:dot),
-    plot(annotationbar(String.(focusmeta.ageLabel[kids_hcl.order]), color2)),
+    plot(annotationbar(string.(fkidsmeta.ageLabel[kids_hcl.order]), color2)),
     layout = grid(2,1,heights=[0.9, 0.1])
     )
 
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-abundanceplot-age.svg"));
+savefig(joinpath(figures, "05-kids-abundanceplot-age.png"));
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-abundanceplot-age-legend.svg"));
+plot(annotationbar(string.(fkidsmeta.ageLabel[kids_hcl.order]), color2))
+savefig(joinpath(figures, "05-kids-abundanceplot-age-legend.png"));
 ```
 
 ```julia
-x = pco_axes[.!ismissing.(focusmeta.correctedAgeDays), 1]
-y = pco_axes[.!ismissing.(focusmeta.correctedAgeDays), 2]
+x = projection(kids_mds)[.!ismissing.(fkidsmeta.correctedAgeDays), 1]
+y = projection(kids_mds)[.!ismissing.(fkidsmeta.correctedAgeDays), 2]
 
-scatter(x, y, zcolor=focusmeta[.!ismissing.(focusmeta.correctedAgeDays), :correctedAgeDays] ./365,
+scatter(x, y, zcolor=fkidsmeta[.!ismissing.(fkidsmeta.correctedAgeDays), :correctedAgeDays] ./365,
     primary=false, color=:PuBu, title = "Unique Kids Taxonomic Profiles, Age", ticks=false)
-xlabel!("MDS1 ($(round(var_explained[1]*100, digits = 2))%)")
-ylabel!("MDS2 ($(round(var_explained[2]*100, digits = 2))%)")
+xlabel!("MDS1")
+ylabel!("MDS2")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-mds-kids-age.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-mds-kids-age.png"));
 ```
 
 Here it looks like the outlying tail is the youngest kids.
@@ -435,7 +439,7 @@ over the first years of life.
 Let's focus on just the youngest kids:
 
 ```julia
-youngkids = map(x-> !ismissing(x) && x/365 < 2, focusmeta.correctedAgeDays)
+youngkids = map(x-> !ismissing(x) && x/365 < 2, fkidsmeta.correctedAgeDays)
 
 ykids = view(kids, sites = youngkids)
 ykids_dm = pairwise(BrayCurtis(), ykids)
@@ -446,7 +450,7 @@ abundanceplot(ykids, srt = ykids_hcl.order, topabund=11, title="Kids under 2, to
     xticks=false, color=color4', linecolor=:match, linestyle=:dot)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "young-kids-abundanceplot.svg"));
+savefig(joinpath(figures, "05-young-kids-abundanceplot.png"));
 ```
 
 ```julia
@@ -456,7 +460,7 @@ abundanceplot(ykids, srt = ykids_hcl.order, topabund=11, title="Kids under 2, to
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "young-kids-abundanceplot-nolegend.svg"));
+savefig(joinpath(figures, "05-young-kids-abundanceplot-nolegend.png"));
 ```
 
 ### Other Metadata Overviews
@@ -481,19 +485,19 @@ function colorquartile(arr, clrs)
     end
 end
 
-scatter(pco_axes[:, 1], focusmeta.correctedAgeDays ./ 365,
-    color=colorquartile(focusmeta.grey_matter_volume, color2[[1,2,3,4,end]]),
+scatter(projection(kids_mds)[:, 1], fkidsmeta.correctedAgeDays ./ 365,
+    color=colorquartile(fkidsmeta.grey_matter_volume, color2[[1,2,3,4,end]]),
     markersize=5, primary=false, xticks=false)
 scatter!([],[], color=color2[1], label="25th percentile")
 scatter!([],[], color=color2[2], label="50th percentile")
 scatter!([],[], color=color2[3], label="75th percentile")
 scatter!([],[], color=color2[4], label="99th percentile")
 scatter!([],[], color=color2[end], label="missing", legend=:topleft)
-xlabel!("MDS1 ($(round(var_explained[1]*100, digits = 2))%)")
+xlabel!("MDS1")
 ylabel!("Age (years)")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "kids-brain-quartiles.svg"));
+savefig(joinpath(figures, "05-kids-brain-quartiles.png"));
 ```
 
 
@@ -504,16 +508,16 @@ microbiomes. Let's see where that falls in our data:
 
 ```julia
 plot(kids_mds, line=1,
-    color=metacolor(focusmeta.birthType, color2[4:5], missing_color=color2[end]),
+    color=ECHOAnalysis.metacolor(fkidsmeta.birthType, color2[4:5], missing_color=color2[end]),
     title="Kids, BirthType", primary=false, ticks=false)
-scatter!([],[], color=color2[4], label=unique(focusmeta.birthType)[1])
-scatter!([],[], color=color2[5], label=unique(focusmeta.birthType)[2])
+scatter!([],[], color=color2[4], label=unique(fkidsmeta.birthType)[1])
+scatter!([],[], color=color2[5], label=unique(fkidsmeta.birthType)[2])
 scatter!([],[], color=color2[end], label="missing", legend=:bottomleft)
 
-sum(!ismissing, focusmeta.cogScore)
+sum(!ismissing, fkidsmeta.cogScore)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-kids-birth.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-kids-birth.png"));
 ```
 
 #### Breastfeeding
@@ -537,11 +541,11 @@ and [`formulafeeding`](https://klepac-ceraj-lab.github.io/echo_analysis/dev/meta
 to calculate these values.
 
 ```julia
-focusmeta.breastfed = map(breastfeeding, eachrow(focusmeta))
-focusmeta.formulafed = map(formulafeeding, eachrow(focusmeta))
+fkidsmeta.breastfed = map(breastfeeding, eachrow(fkidsmeta))
+fkidsmeta.formulafed = map(formulafeeding, eachrow(fkidsmeta))
 
 bfcolor = let bf = []
-    for row in eachrow(focusmeta)
+    for row in eachrow(fkidsmeta)
         if row[:breastfed] && row[:formulafed]
             push!(bf, color1[1])
         elseif row[:breastfed]
@@ -564,26 +568,8 @@ scatter!([],[], color=color1[1], label="both")
 scatter!([],[], color=color1[end], label="missing", legend=:bottomleft)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-kids-breastfeeding.svg"));
+savefig(joinpath(figures, "05-taxonomic-profiles-kids-breastfeeding.png"));
 ```
 
 Nothing obvious from this level, but that's not necessarily surprising.
 We need stats!
-
-
-```julia; echo=false; results="hidden"
-allsamples = resolve_sampleID.(samplenames(abt))
-uabt = view(abt, sites=getfield.(uniquesamples(allsamples, takefirst=true), :sample))
-usamples = resolve_sampleID.(samplenames(uabt))
-umeta = load_metadata(datatoml, samples=usamples)
-
-notmissing = .!ismissing.(umeta.ageLabel)
-
-udm = pairwise(BrayCurtis(), uabt)
-nmumds = fit(MDS, udm[notmissing, notmissing], distances=true)
-plot(nmumds, group=String.(umeta.ageLabel[notmissing]), legend=:topright)
-title!("Taxonomic Profiles")
-```
-```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "taxonomic-profiles-ageLabel.svg"));
-```
