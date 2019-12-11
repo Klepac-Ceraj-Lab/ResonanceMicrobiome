@@ -12,12 +12,18 @@ that is, what genes are present in a given community.
 
 These profiles were generated with [HUMANn2](http://huttenhower.sph.harvard.edu/humann2).
 
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+```
 ```julia; echo=false; results="hidden"
 ENV["GKSwstype"] = "100" # hide
 
 using ECHOAnalysis
 using Microbiome
 using BiobakeryUtils
+using SQLite
 using Statistics
 using StatsBase
 using StatsPlots
@@ -30,10 +36,19 @@ using MultipleTesting
 using Interpolations
 using CSV
 
-rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=4) : v)
+# print ~15 random rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120)
-(outpath, figures) = notebookpaths!(8)
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
+
+includet("accessories.jl")
+
+config = Pkg.TOML.parsefile("data/data.toml")
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
 ```
 
 There are a few different ways to classify genes,
@@ -44,133 +59,31 @@ but many of those labels have no actual information associated with them.
 By contrast, InterPro's `PFam` and Kegg Orthology (KO) databases
 are much smaller, but each annotation has some information associated with it.
 
-This also means that the uniref90 files are _much_ larger.
+This also means that the uniref90 tables are _much_ larger.
 
 ```julia
-uniref_path = "data/engaging/merged/batch1-10_genefamilies_relab.tsv"
-pfam_path = "data/engaging/merged/batch1-10_pfam_names_relab.tsv"
-ko_path = "data/engaging/merged/batch1-10_ko_names_relab.tsv"
+db = SQLite.DB(config["sqlite"]["functions"]["path"])
 
-# UniRef90s Gb
-filesize(uniref_path) / 1e9
+unirefs = sqlprofile(db, tablename="genefamilies_relab", kind="genefamilies_relab")
 ```
-
-```julia
-# Pfam Gb
-filesize(pfam_path) / 1e9
-```
-
-```julia
-# KEGG Orthology Gb
-filesize(ko_path) / 1e9
-```
-
-```julia
-filesamples = samples_from_file(uniref_path)
-filesamples[1:5]
-```
-
-Each of these tables is taxonomically stratified - that is,
-each gene group is also split by the organism that contributed it.
-For now, we don't need that information,
-and the unstratified tables are much smaller.
-
-
-```julia
-uniref_unstrat = "data/engaging/merged/batch1-10_genefamilies_relab_unstratified.tsv"
-@assert samples_from_file(uniref_unstrat) == filesamples
-filesize(uniref_unstrat) / 1e9
-```
-Even still, this file is so large
-that the typical CSV parsers have issues dealing with it.
-Since I know the first column is strings (the features)
-and every other column is floats, I can just do this manually.
 
 
 ```julia; results="hidden"
+samples = stoolsample.(names(unirefs)[2:end])
+widemeta = getmgxmetadata(samples=samples)
 #Get unique samples for each subject and subset by type
-kidallsamples = uniquesamples(filesamples, samplefilter=s-> startswith(s, "C"))
-momallsamples = uniquesamples(filesamples, samplefilter=s-> startswith(s, "M"))
-kidallmeta = load_metadata(datatoml, samples=kidallsamples)
-momallmeta = load_metadata(datatoml, samples=momallsamples)
+kidallsamples = uniquetimepoints(samples, samplefilter=iskid)
+momallsamples = uniquetimepoints(samples, samplefilter=ismom)
+kidallmeta = getmgxmetadata(samples=kidallsamples)
+momallmeta = getmgxmetadata(samples=momallsamples)
 ```
-
-```julia
-function filter_tsv(filename, keep)
-    colnames = Symbol.(split(first(eachline(filename)), '\t'))[keep]
-
-    df = DataFrame(colnames[1]=>String[], (c=>Float64[] for c in colnames[2:end])...)
-    for row in CSV.Rows(filename)
-        row = row[keep]
-        rownums = (parse(Float64, row[i]) for i in 2:length(row))
-        all(isequal(0.), rownums) && continue
-        push!(df, (row[1], rownums...))
-    end
-    return df
-end
-
-
-keepers = Set([kidallsamples; momallsamples])
-keep = [true, map(s-> in(s, keepers), filesamples)...]
-
-function normalize_colname(col)
-    c = String(col)
-    c = replace(c, r"_S\d{1,2}.*$"=>"")
-    c = replace(c, "-"=>"_")
-    return Symbol(c)
-end
-```
-
-For easier loading later,
-
-```julia; results="hidden"
-tabledir = "data/tables"
-uuniref_path = joinpath(tabledir, "unique_samples_uniref90.csv")
-if !isfile(uuniref_path)
-    unirefs = filter_tsv(uniref_unstrat, keep)
-
-    # some checks to make sure different gene types didn't make it through
-    @assert !any(row-> occursin("GeneID", row[1]), eachrow(unirefs))
-    @assert !any(row-> occursin("UniRef50", row[1]), eachrow(unirefs))
-
-    names!(unirefs, [:uniref, (normalize_colname(col) for col in names(unirefs)[2:end])...])
-    permutecols!(unirefs, [:uniref, (Symbol(getfield(s, :sample)) for s in [kidallsamples; momallsamples])...])
-    !isdir(tabledir) && mkdir(tabledir)
-    CSV.write(uuniref_path, unirefs)
-else
-    unirefs = CSV.read(uuniref_path)
-end
-
-# Make sure everything is relative abundance
-@assert all(col-> isapprox(sum(col), 1, rtol=1e-6), eachcol(unirefs[!,2:end]))
-```
-
-```julia
-prevalence_filter_path = joinpath(tabledir, "unique_samples_uniref90_prevalence.csv")
-uniref_meta = load_metadata(datatoml, samples=[kidallsamples; momallsamples])
-Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, minabundance), (y for y in a))
-
-if !isfile(prevalence_filter_path)
-    prevfilt = map(eachrow(unirefs) do row
-        row = row[2:end]
-        u1_prev = prevalence(row[map(x-> x == "1 and under", uniref_meta.ageLabel)], 0.)
-        o1_prev = prevalence(row[map(x-> x != "mom" && x != "1 and under", uniref_meta.ageLabel)], 0.)
-        mom_prev = prevalence(row[map(x-> x == "mom", uniref_meta.ageLabel)], 0.)
-
-        return (any(>(0.05), [u1_prev, o1_prev, mom_prev]), all(<(0.9), [u1_prev, o1_prev, mom_prev]) )
-    end
-
-
-
-```
-
-
 
 ```julia; results="hidden"
 unirefs = abundancetable(unirefs)
-uniref_meta = load_metadata(datatoml, samples=[kidallsamples; momallsamples])
+```
 
-moms = view(unirefs, sites=getfield.(momallsamples, :sample))
+```julia
+moms = view(unirefs, sites=sampleid.(momallsamples))
 moms = view(moms, species= map(row-> !all(isequal(0.), row), eachrow(occurrences(moms))))
 
 dropmissing!(kidallmeta, :correctedAgeDays)

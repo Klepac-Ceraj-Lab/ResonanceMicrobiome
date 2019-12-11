@@ -33,8 +33,17 @@ path="/lovelace/echo/sqldatabases/metadata.sqlite"
 [sqlite.taxa]
 path="/lovelace/echo/sqldatabases/taxa.sqlite"
 
-[sqlite.functions]
-path="/lovelace/echo/sqldatabases/functional_profiles.sqlite"
+[sqlite.uniref90]
+path="/lovelace/echo/sqldatabases/uniref90_profiles.sqlite"
+
+[sqlite.pfam]
+path="/lovelace/echo/sqldatabases/pfam_profiles.sqlite"
+
+[sqlite.ec]
+path="/lovelace/echo/sqldatabases/ec_profiles.sqlite"
+
+[sqlite.ko]
+path="/lovelace/echo/sqldatabases/ko_profiles.sqlite"
 
 [output]
 figures="data/analysis/figures"
