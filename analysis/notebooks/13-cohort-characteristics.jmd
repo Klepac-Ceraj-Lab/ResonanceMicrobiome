@@ -1,0 +1,277 @@
+# Table 1 - Cohort characteristics
+
+
+```julia; echo=false; results="hidden"
+using Pkg
+Pkg.activate("analysis")
+using Revise
+```
+
+```julia; results="hidden"
+using ECHOAnalysis
+using DataFrames
+using PrettyTables
+using SQLite
+using Statistics
+using CSV
+
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=4) : v)
+# # print ~15 random rows
+# randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
+@ptconfclean # clear previous configuration
+@ptconf formatter = rounder
+@ptconf nosubheader=true
+@ptconf screen_size=(20,70) # change to (20, 120) for weave
+# @ptconf filters_row=(randrowfilter,)
+
+includet("accessories.jl")
+
+config = Pkg.TOML.parsefile("data/data.toml")
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
+```
+
+```julia
+widemeta = getmgxmetadata()
+@assert all(!ismissing, widemeta.DOM)
+
+# Skip duplicates, ethanol samples etc
+analyzedsamples = uniquetimepoints(widemeta.sample)
+analyzedmeta = getmgxmetadata(samples=analyzedsamples)
+@pt analyzedmeta
+```
+
+```julia
+count(iskid, analyzedsamples)
+```
+```julia
+count(ismom, analyzedsamples)
+```
+```julia
+length(unique(analyzedmeta.subject))
+```
+
+```julia; results="hidden"
+kidssamples = uniquetimepoints(widemeta.sample, samplefilter=iskid)
+kidsmeta = getmgxmetadata(samples=kidssamples)
+momssamples = uniquetimepoints(widemeta.sample, samplefilter=ismom)
+momsmeta = getmgxmetadata(samples=momssamples)
+```
+```julia
+length(unique(kidsmeta.subject))
+```
+```julia
+length(unique(momsmeta.subject))
+```
+
+## Kids
+
+```julia; results="hidden"
+uniquekidssamples = uniquetimepoints(widemeta.sample, samplefilter=iskid, takefirst=true)
+uniquekidsmeta = getmgxmetadata(samples=uniquekidssamples)
+```
+```julia
+describe(kidsmeta.correctedAgeDays ./ 365)
+```
+```julia
+bmi = let bmi = copy(kidsmeta.BMI)
+    for (i, b) in enumerate(bmi)
+        ismissing(b) && continue
+        if !occursin(r"^\d+(\.\d+)?$", b)
+            @warn "Index $i: $b"
+            bmi[i] = missing
+            continue
+        end
+        f = parse(Float64, b)
+        bmi[i] = f
+    end
+    [b for b in bmi]
+end
+@pt kidsmeta[57, [:subject, :timepoint, :BMI]]
+```
+```julia
+describe(bmi)
+```
+
+```julia
+bmi = let bmi = copy(uniquekidsmeta.BMI)
+    for (i, b) in enumerate(bmi)
+        ismissing(b) && continue
+        if !occursin(r"^\d+(\.\d+)?$", b)
+            @warn "Index $i: $b"
+            bmi[i] = missing
+            continue
+        end
+        f = parse(Float64, b)
+        bmi[i] = f
+    end
+    [b for b in bmi]
+end
+```
+```julia
+describe(bmi)
+```
+```julia
+weight = map(x-> ismissing(x) ? x : parse(Float64, x), kidsmeta.childWeight)
+height = kidsmeta.childHeight
+bmi = weight ./ (height .^ 2) .* 703
+describe(weight)
+```
+```julia
+describe(height)
+```
+```julia
+describe(bmi)
+```
+
+```julia
+weight = map(x-> ismissing(x) ? x : parse(Float64, x), uniquekidsmeta.childWeight)
+height = uniquekidsmeta.childHeight
+bmi = weight ./ (height .^ 2) .* 703
+
+describe(weight)
+```
+```julia
+describe(height)
+```
+```julia
+describe(bmi)
+```
+```julia
+describe(kidsmeta.mother_HHS)
+```
+```julia
+describe(uniquekidsmeta.mother_HHS)
+```
+
+## Brain Stuff
+
+```julia
+describe(kidsmeta.cogScore)
+```
+```julia
+describe(uniquekidsmeta.cogScore)
+```
+```julia
+describe(kidsmeta.hires_total)
+```
+```julia
+describe(uniquekidsmeta.hires_total)
+```
+```julia
+count(ismissing, kidsmeta.white_matter_volume)
+```
+```julia
+count(ismissing, uniquekidsmeta.white_matter_volume)
+```
+
+
+
+```julia
+count(ismissing, kidsmeta.childGivenAntibiotics)
+```
+```julia
+count(x-> !ismissing(x) && x,
+    map(kidsmeta.childGivenAntibiotics) do s
+        if ismissing(s)
+            return missing
+        elseif s == "Yes"
+            return true
+        elseif s == "No"
+            return false
+        else
+            error("unknown value $s")
+        end
+    end)
+```
+```julia
+count(ismissing, uniquekidsmeta.childGivenAntibiotics)
+```
+```julia
+count(x-> !ismissing(x) && x,
+    map(uniquekidsmeta.childGivenAntibiotics) do s
+        if ismissing(s)
+            return missing
+        elseif s == "Yes"
+            return true
+        elseif s == "No"
+            return false
+        else
+            error("unknown value $s")
+        end
+    end)
+```
+```julia
+let ns = names(kidsmeta)
+    for n in ns[findall(n-> occursin(r"[Bb]iotics", string(n)), ns)]
+        println(n)
+    end
+end
+
+metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
+parenttables = map(row-> row.parent_table, SQLite.Query(metadb, "SELECT DISTINCT parent_table FROM filemakermetadata"))
+biotics = filter(t-> occursin("biotics", t), parenttables)
+biotics = SQLite.Query(metadb,
+            """SELECT DISTINCT parent_table, metadatum
+                 FROM filemakermetadata
+                 WHERE parent_table IN ($(SQLite.esc_id(biotics)))""") |> DataFrame
+biotics
+```
+```julia
+count(ismissing, kidsmeta.antibioticOrPrescription)
+```
+```julia
+count(x->!ismissing(x) && x == "Antibiotics", kidsmeta.antibioticOrPrescription)
+```
+```julia
+count(x->!ismissing(x) && x == "Prescription", kidsmeta.antibioticOrPrescription)
+```
+```julia
+count(ismissing, uniquekidsmeta.antibioticOrPrescription)
+```
+```julia
+count(x->!ismissing(x) && x == "Antibiotics", uniquekidsmeta.antibioticOrPrescription)
+```
+```julia
+count(x->!ismissing(x) && x == "Prescription", uniquekidsmeta.antibioticOrPrescription)
+```
+```julia
+# PrebioticsProbiotics
+count(ismissing, kidsmeta.type)
+```
+```julia
+for t in kidsmeta.type |> unique
+    !ismissing(t) && println(t)
+end
+```
+
+```julia
+# PrebioticsProbiotics
+count(ismissing, uniquekidsmeta.type)
+```
+```julia
+for t in uniquekidsmeta.type |> unique
+    !ismissing(t) && println(t)
+end
+```
+```julia
+count(ismissing, kidsmeta.agent___PregnancyProbioticsVitamins)
+```
+```julia
+count(x-> !ismissing(x) && occursin(r"[Pp]robiotics?", x), kidsmeta.agent___PregnancyProbioticsVitamins)
+```
+```julia
+count(ismissing, uniquekidsmeta.agent___PregnancyProbioticsVitamins)
+```
+```julia
+count(x-> !ismissing(x) && occursin(r"[Pp]robiotics?", x), uniquekidsmeta.agent___PregnancyProbioticsVitamins)
+```
+
+## Save
+
+```julia
+CSV.write(joinpath(tables, "all_kids_fecal.csv"), kidsmeta[!,[:subject, :timepoint]])
+CSV.write(joinpath(tables, "unique_kids_fecal.csv"), uniquekidsmeta[!,[:subject, :timepoint]])
+```
