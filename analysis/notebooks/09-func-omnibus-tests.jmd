@@ -6,24 +6,38 @@ options:
     wrap : false
 ---
 
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+```
 ```julia; echo=false; results="hidden"
 ENV["GKSwstype"] = "100" # hide
 
 using ECHOAnalysis
-using DataFrames
 using Microbiome
-using Distances
-using MultivariateStats
-using StatsPlots
-using CSV
 using BiobakeryUtils
+using SQLite
+using Statistics
+using StatsBase
+using StatsPlots
+using DataFrames
+using Distances
 using PrettyTables
+using MultivariateStats
+using HypothesisTests
+using MultipleTesting
+using Interpolations
+using ProgressMeter
+using CSV
 
-outpath, figures = notebookpaths!(9)
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=4) : v)
+# print ~15 random rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 
 function sigp(data, i, j)
     col = names(data)[j]
-    if col == Symbol("Pr(>F)") || col == :p_value || col == :qvalue
+    if col == Symbol("Pr(>F)") || col == :p_value || col == :q_value
         dat = data[i,j]
         return !ismissing(dat) && dat < 0.05
     else
@@ -33,33 +47,60 @@ end
 
 sigp_hl = Highlighter(sigp, Crayon(bold = true, background = :dark_gray))
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(-1,120) highlighters=sigp_hl # highlighters don't work in Weave
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,) highlighters=sigp_hl
+
+includet("accessories.jl")
+
+config = Pkg.TOML.parsefile("data/data.toml")
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
 ```
 
+
+
 ```julia; results="hidden"
-kos = CSV.read("data/engaging/merged/batch1-10_ko_names_relab_unstratified.tsv")
-names!(kos, map(n-> Symbol(resolve_sampleID(replace(String(n), "_kneaddata_Abundance-RELAB"=>"")).sample), names(kos)))
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+SQLite.Query(pfamdb, "SELECT DISTINCT function FROM pfam_names_relab") |> DataFrame
+SQLite.Query(pfamdb, "SELECT function FROM distinct_functions") |> DataFrame
+pfams = sqlprofile(pfamdb, tablename="pfam_names_relab", kind="pfam_names_relab")
+
 # ~ 5% prevalence filter
 Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, minabundance), (y for y in a))
-kos = abundancetable(kos)
-kos = copy(view(kos, species=map(row-> prevalence(row[Not(1)], 0.) > 0.05, eachrow(occurrences(kos)))))
+pfams = copy(view(pfams, species=map(row-> prevalence(row, 0.) > 0.01, eachrow(occurrences(pfams)))))
+```
+```julia; results="hidden"
+samples = stoolsample.(samplenames(pfams))
+widemeta = getmgxmetadata(samples=samples)
+let notmissingage = .!ismissing.(widemeta.ageLabel)
+    global samples = samples[notmissingage]
+    global widemeta = widemeta[notmissingage, :]
+    global pfams = view(pfams, sites=notmissingage) |> copy
+end
+
+#Get unique samples for each subject and subset by type
+kidallsamples = uniquetimepoints(samples, samplefilter=iskid)
+momallsamples = uniquetimepoints(samples, samplefilter=ismom)
+kidallmeta = getmgxmetadata(samples=kidallsamples)
+momallmeta = getmgxmetadata(samples=momallsamples)
 ```
 
 ```julia
-allsamples = resolve_sampleID.(samplenames(kos))
-uabt = view(kos, sites=getfield.(uniquesamples(allsamples, takefirst=true), :sample))
-dm = pairwise(BrayCurtis(), uabt, dims=2)
+dm = pairwise(BrayCurtis(), pfams)
+samples = stoolsample.(samplenames(pfams))
+upfams = view(pfams, sites=sampleid.(uniquetimepoints(samples, takefirst=true)))
+udm = pairwise(BrayCurtis(), upfams, dims=2)
 
-usamples = resolve_sampleID.(samplenames(uabt))
-metadata = load_metadata(datatoml, samples=usamples)
-
-samples = samplenames(uabt)
-subject_type = [startswith(s, "M") ? "Mother" : "Child" for s in samples]
+usamples = stoolsample.(samplenames(upfams))
+umeta = getmgxmetadata(samples=usamples)
+subject_type = [ismom(s) ? "mom" : "child" for s in samples]
 ```
 ```julia; results="hidden"
 perm = permanova(dm, subject_type)
-perm[!,:feature] .= "kos"
+perm[!,:feature] .= "pfams"
 perm[!,:variable] .= "Subject Type"
 ```
 ```julia; echo=false
@@ -67,25 +108,25 @@ perm[!,:variable] .= "Subject Type"
 ```
 
 In this table, `R2` tells us about the magnitutude of the effect
-(`R2 = 0.062` means 6.2% of variation can be explained by this variable),
+(`R2 = 0.0448` means 4.5% of variation can be explained by this variable),
 and the `Pr(>F)` column is the p value.
 The first row is what's being tested (the other two account for what's left).
 
 So this table tells us that, when comparing all the samples,
 whether the sample from a mom or a kid (aka `Subject Type`)
-can explain ~6.2% of the variation,
+can explain ~4.5% of the variation,
 and the result is significant (p < 0.001).
 
 ```julia; results="hidden"
 # need to convert subject IDs to `String` so it's not treated as continuous variable
-p = permanova(dm, string.(metadata.subject))
+p = permanova(dm, string.(widemeta.subject))
 ```
 ```julia; echo=false
 @pt p
 ```
 
 
-Here, we can see that over 90% of variability (`R2`) is attributable to who the person is.
+Here, we can see that over 75% of variability (`R2`) is attributable to who the person is.
 Which is to say that people are really different!
 
 Because of this, the numbers from PERMANOVA tend to be small (1-5%),
@@ -96,7 +137,7 @@ Now we'll concatenate this new PERMANOVA into the previous dataframe
 to keep the results from multiple metadata together.
 
 ```julia; results="hidden"
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "Subject ID"
 perm = vcat(perm, p)
 ```
@@ -109,43 +150,37 @@ perm = vcat(perm, p)
 Now we'll focus on the kids.
 
 ```julia; results="hidden"
-uniquekids = uniquesamples(resolve_sampleID.(samplenames(uabt)), samplefilter=x-> startswith(x, "C"), identifiers=[:subject])
-kids = view(uabt, sites=getfield.(uniquekids, :sample))
-kids_dm = pairwise(BrayCurtis(), kids, dims=2)
+ukidssamples = uniquetimepoints(kidallsamples, samplefilter=iskid, takefirst=true)
+ukids = view(pfams, sites=sampleid.(ukidssamples))
+ukids_dm = pairwise(BrayCurtis(), ukids, dims=2)
 
-kidsmeta = load_metadata(datatoml, samples=uniquekids)
+ukidsmeta = getmgxmetadata(samples=ukidssamples)
 
-p = permanova(kids_dm, kidsmeta.correctedAgeDays, filter=.!ismissing.(kidsmeta.correctedAgeDays))
-p[!, :feature] .= "kos"
+p = permanova(ukids_dm, ukidsmeta.correctedAgeDays, filter=.!ismissing.(ukidsmeta.correctedAgeDays))
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "Age"
 perm = vcat(perm, p)
 
-kidsmeta.birthType = Vector{Union{Missing,String}}(kidsmeta.birthType)
-p = permanova(kids_dm, kidsmeta.birthType, filter=.!ismissing.(kidsmeta.birthType))
-p[!, :feature] .= "kos"
+ukidsmeta.birthType = Vector{Union{Missing,String}}(ukidsmeta.birthType)
+p = permanova(ukids_dm, ukidsmeta.birthType, filter=.!ismissing.(ukidsmeta.birthType))
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "birthType"
 perm = vcat(perm, p)
 
-kidsmeta.breastfed = breastfeeding.(eachrow(kidsmeta))
-p = permanova(kids_dm, kidsmeta.breastfed)
-p[!, :feature] .= "kos"
-p[!, :variable] .= "breastfed"
-perm = vcat(perm, p)
+# ukidsmeta.breastfed = breastfeeding.(eachrow(ukidsmeta))
+# p = permanova(ukids_dm, ukidsmeta.breastfed)
+# p[!, :feature] .= "pfams"
+# p[!, :variable] .= "breastfed"
+# perm = vcat(perm, p)
 
-kidsmeta.formulafed = formulafeeding.(eachrow(kidsmeta))
-p = permanova(kids_dm, kidsmeta.formulafed)
-p[!, :feature] .= "kos"
-p[!, :variable] .= "formulafed"
-perm = vcat(perm, p)
-
-kidsmeta.childGender = Vector{Union{Missing,String}}(kidsmeta.childGender)
-p = permanova(kids_dm, kidsmeta.childGender, filter=.!ismissing.(kidsmeta.childGender))
-p[!, :feature] .= "kos"
+ukidsmeta.childGender = Vector{Union{Missing,String}}(ukidsmeta.childGender)
+p = permanova(ukids_dm, ukidsmeta.childGender, filter=.!ismissing.(ukidsmeta.childGender))
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "childGender"
 perm = vcat(perm, p)
 
-p = permanova(kids_dm, kidsmeta.mother_HHS, filter=.!ismissing.(kidsmeta.mother_HHS))
-p[!, :feature] .= "kos"
+p = permanova(ukids_dm, ukidsmeta.mother_HHS, filter=.!ismissing.(ukidsmeta.mother_HHS))
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "mother_HHS"
 perm = vcat(perm, p)
 
@@ -156,7 +191,7 @@ filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
 ```julia; echo=false
 @pt perm
 ```
-So, only age (`R2 = 0.268`) has a significant p value (`Pr(>F)` column).
+So, only age (`R2 = 0.2167`) has a significant p value (`Pr(>F)` column).
 This is a way larger R2 than with taxonomic profiles.
 What happens if we only look at the kids under 2 years old?
 
@@ -164,25 +199,28 @@ What happens if we only look at the kids under 2 years old?
 
 ```julia; results="hidden"
 # get kids that are less than 1.5 years old
-young = map(a-> !ismissing(a) && a <= 365*1.5, kidsmeta.correctedAgeDays)
-youngkids = view(kids, sites=young)
+young = map(a-> !ismissing(a) && a <= 365*2, ukidsmeta.correctedAgeDays)
+youngkids = view(ukids, sites=young)
 
 # make new distance matrix
-youngkids_dm = pairwise(BrayCurtis(), youngkids, dims=2,)
-youngkidsmeta = kidsmeta[young, :]
+youngukids_dm = pairwise(BrayCurtis(), youngkids, dims=2,)
+youngukidsmeta = ukidsmeta[young, :]
 
-# Test breasfeeding and formula feeding
-p = permanova(youngkids_dm, youngkidsmeta.breastfed, 10000)
-p[!, :feature] .= "kos"
-p[!, :variable] .= "young kids breastfed"
-perm = vcat(perm, p)
-
-p = permanova(youngkids_dm, youngkidsmeta.formulafed, 10000)
-p[!, :feature] .= "kos"
-p[!, :variable] .= "young kids formulafed"
+p = permanova(youngukids_dm, youngukidsmeta.birthType, 10000,filter=.!ismissing.(youngukidsmeta.birthType))
+p[!, :feature] .= "pfams"
+p[!, :variable] .= "young kids birthtype"
 perm = vcat(perm, p)
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
+
+#
+# # Test breasfeeding and formula feeding
+# p = permanova(youngukids_dm, youngukidsmeta.breastfed, 10000)
+# p[!, :feature] .= "pfams"
+# p[!, :variable] .= "young kids breastfed"
+# perm = vcat(perm, p)
+#
+# filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
 ```
 
 ```julia; echo=false
@@ -208,19 +246,19 @@ so we need to do this directly using `RCall.jl`.
 
 ```julia
 # normalize brain volume measures
-kidsmeta.total_lowres = map(row-> sum(row[[:white_matter_volume, :grey_matter_volume, :csf_volume]]), eachrow(kidsmeta))
+ukidsmeta.total_lowres = map(row-> sum(row[[:white_matter_volume, :grey_matter_volume, :csf_volume]]), eachrow(ukidsmeta))
 
-kidsmeta.white_matter_normed = kidsmeta.white_matter_volume ./ kidsmeta.total_lowres
-kidsmeta.grey_matter_normed = kidsmeta.grey_matter_volume ./ kidsmeta.total_lowres
-kidsmeta.csf_normed = kidsmeta.csf_volume ./ kidsmeta.total_lowres
+ukidsmeta.white_matter_normed = ukidsmeta.white_matter_volume ./ ukidsmeta.total_lowres
+ukidsmeta.grey_matter_normed = ukidsmeta.grey_matter_volume ./ ukidsmeta.total_lowres
+ukidsmeta.csf_normed = ukidsmeta.csf_volume ./ ukidsmeta.total_lowres
 ```
 
 ```julia; results="hidden"
 using RCall
 
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:white_matter_normed]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :white_matter_normed]]
-r_dm = kids_dm[filt,filt]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:white_matter_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :white_matter_normed]]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -239,7 +277,7 @@ p = p[:aov_tab]
 The second row is `white_matter_normed`.
 
 ```julia; results="hidden"
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "white_matter_normed"
 perm = vcat(perm, p[[2],:])
 ```
@@ -247,15 +285,13 @@ perm = vcat(perm, p[[2],:])
 @pt perm[[end],:]
 ```
 
-**The effect of which is not significant**
-
 Let's look at some other brain measures.
 
 ```julia; results="hidden"
 ## grey matter
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:grey_matter_normed]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :grey_matter_normed]]
-r_dm = kids_dm[filt,filt]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:grey_matter_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :grey_matter_normed]]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -266,14 +302,14 @@ p <- adonis(r_dm ~ correctedAgeDays + grey_matter_normed,
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "grey_matter_normed"
 perm = vcat(perm, p[[2],:])
 
 ## CSF (cerebrospinal fluid volume)
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:csf_normed]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :csf_normed]]
-r_dm = kids_dm[filt,filt]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:csf_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :csf_normed]]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -284,7 +320,7 @@ p <- adonis(r_dm ~ correctedAgeDays + csf_normed,
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "csf_normed"
 perm = vcat(perm, p[[2],:])
 ```
@@ -300,9 +336,9 @@ we'll also divide each volume by the total brain volume.
 
 ```julia; results="hidden"
 ## Brain volume
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:hires_total]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :hires_total]]
-r_dm = kids_dm[filt,filt]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:hires_total]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :hires_total]]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 R"""
@@ -313,7 +349,7 @@ p <- adonis(r_dm ~ correctedAgeDays + hires_total,
 @rget p
 
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "hires_total"
 perm = vcat(perm, p[[2],:])
 ```
@@ -323,16 +359,14 @@ perm = vcat(perm, p[[2],:])
 
 ```julia
 ## Cerebellum
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:cerebellar]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :cerebellar, :hires_total]]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:cerebellar]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :cerebellar, :hires_total]]
 r_meta.cerebellar_normed = r_meta.cerebellar ./ r_meta.hires_total
 
 
 r_meta = r_meta[!, [:correctedAgeDays, :cerebellar_normed]]
-r_dm = kids_dm[filt,filt]
+r_dm = ukids_dm[filt,filt]
 
-CSV.write("/home/kevin/Desktop/df.csv", r_meta)
-CSV.write("/home/kevin/Desktop/dm.csv", DataFrame(r_dm), writeheader=false)
 @rput r_meta
 @rput r_dm
 
@@ -343,16 +377,16 @@ p <- adonis(terms(as.formula("r_dm ~  correctedAgeDays + cerebellar_normed"), ke
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "cerebellar_normed"
 perm = vcat(perm, p[[2],:])
 
 ## Subcortical
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:subcortical]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :subcortical, :hires_total]]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:subcortical]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :subcortical, :hires_total]]
 r_meta.subcortical_normed = r_meta.subcortical ./ r_meta.hires_total
 r_meta = r_meta[!, [:correctedAgeDays, :subcortical_normed]]
-r_dm = kids_dm[filt,filt]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -363,17 +397,17 @@ p <- adonis(r_dm ~ correctedAgeDays + subcortical_normed,
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "subcortical_normed"
 perm = vcat(perm, p[[2],:])
 
 
 ## Neocortical
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:neocortical]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :neocortical, :hires_total]]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:neocortical]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :neocortical, :hires_total]]
 r_meta.neocortical_normed = r_meta.neocortical ./ r_meta.hires_total
 r_meta = r_meta[!, [:correctedAgeDays, :neocortical_normed]]
-r_dm = kids_dm[filt,filt]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -384,16 +418,16 @@ p <- adonis(r_dm ~ correctedAgeDays + neocortical_normed,
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "neocortical_normed"
 perm = vcat(perm, p[[2],:])
 
 ## Limbic
-filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:limbic]), eachrow(kidsmeta))
-r_meta = kidsmeta[filt, [:correctedAgeDays, :limbic, :hires_total]]
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:limbic]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :limbic, :hires_total]]
 r_meta.limbic = r_meta.limbic ./ r_meta.hires_total
 r_meta = r_meta[!, [:correctedAgeDays, :limbic]]
-r_dm = kids_dm[filt,filt]
+r_dm = ukids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
@@ -405,7 +439,7 @@ p <- adonis(r_dm ~ correctedAgeDays + limbic,
 
 @rget p
 p = p[:aov_tab]
-p[!, :feature] .= "kos"
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "limbic"
 perm = vcat(perm, p[[2],:])
 ```
@@ -421,8 +455,8 @@ In notebook 2, we converted these test scores
 so they are comparable across age groups.
 
 ```julia; results="hidden"
-p = permanova(kids_dm, kidsmeta.cogScore, filter=.!ismissing.(kidsmeta.cogScore))
-p[!, :feature] .= "kos"
+p = permanova(ukids_dm, ukidsmeta.cogScore, filter=.!ismissing.(ukidsmeta.cogScore))
+p[!, :feature] .= "pfams"
 p[!, :variable] .= "cogScore"
 perm = vcat(perm, p[[1],:])
 ```
@@ -450,7 +484,7 @@ perm = perm[!,[:feature, :variable, :R2, :p_value, :q_value]]
 
 
 ```julia; echo=false; results="hidden"
-CSV.write(joinpath(outpath, "func_permanovas.csv"), perm)
+CSV.write(joinpath(tables, "09-pfam_permanovas.csv"), perm)
 ```
 
 Let's see what that looks like in graphical form using `StatsPlots`.
@@ -483,5 +517,384 @@ plot!(legend=false, title="Functional Profiles (KOs) PERMANOVA",
     ylabel="% Variance explainable")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "func_permanovas.svg"))
+savefig(joinpath(figures, "09-pfam_permanovas.svg"))
+```
+
+## KOs
+
+```julia; results="hidden"
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
+
+# ~ 5% prevalence filter
+kos = copy(view(kos, species=map(row-> prevalence(row, 0.) > 0.01, eachrow(occurrences(kos)))))
+```
+```julia; results="hidden"
+samples = stoolsample.(samplenames(kos))
+widemeta = getmgxmetadata(samples=samples)
+let notmissingage = .!ismissing.(widemeta.ageLabel)
+    global samples = samples[notmissingage]
+    global widemeta = widemeta[notmissingage, :]
+    global kos = view(kos, sites=notmissingage) |> copy
+end
+
+#Get unique samples for each subject and subset by type
+kidallsamples = uniquetimepoints(samples, samplefilter=iskid)
+momallsamples = uniquetimepoints(samples, samplefilter=ismom)
+kidallmeta = getmgxmetadata(samples=kidallsamples)
+momallmeta = getmgxmetadata(samples=momallsamples)
+```
+
+```julia
+dm = pairwise(BrayCurtis(), kos)
+ukos = view(kos, sites=sampleid.(uniquetimepoints(samples, takefirst=true)))
+udm = pairwise(BrayCurtis(), ukos, dims=2)
+
+usamples = stoolsample.(samplenames(ukos))
+umeta = getmgxmetadata(samples=usamples)
+subject_type = [ismom(s) ? "mom" : "child" for s in samples]
+```
+```julia; results="hidden"
+perm = permanova(dm, subject_type)
+perm[!,:feature] .= "kos"
+perm[!,:variable] .= "Subject Type"
+```
+```julia; echo=false
+@pt perm
+```
+
+```julia; results="hidden"
+# need to convert subject IDs to `String` so it's not treated as continuous variable
+p = permanova(dm, string.(widemeta.subject))
+```
+```julia; echo=false
+@pt p
+```
+
+```julia; results="hidden"
+p[!, :feature] .= "kos"
+p[!, :variable] .= "Subject ID"
+perm = vcat(perm, p)
+```
+```julia; echo=false
+@pt perm
+```
+
+## Kids metadata PERMANOVAs
+
+```julia; results="hidden"
+ukidssamples = uniquetimepoints(kidallsamples, samplefilter=iskid, takefirst=true)
+ukids = view(kos, sites=sampleid.(ukidssamples))
+ukids_dm = pairwise(BrayCurtis(), ukids, dims=2)
+
+ukidsmeta = getmgxmetadata(samples=ukidssamples)
+
+p = permanova(ukids_dm, ukidsmeta.correctedAgeDays, filter=.!ismissing.(ukidsmeta.correctedAgeDays))
+p[!, :feature] .= "kos"
+p[!, :variable] .= "Age"
+perm = vcat(perm, p)
+
+ukidsmeta.birthType = Vector{Union{Missing,String}}(ukidsmeta.birthType)
+p = permanova(ukids_dm, ukidsmeta.birthType, filter=.!ismissing.(ukidsmeta.birthType))
+p[!, :feature] .= "kos"
+p[!, :variable] .= "birthType"
+perm = vcat(perm, p)
+
+# ukidsmeta.breastfed = breastfeeding.(eachrow(ukidsmeta))
+# p = permanova(ukids_dm, ukidsmeta.breastfed)
+# p[!, :feature] .= "kos"
+# p[!, :variable] .= "breastfed"
+# perm = vcat(perm, p)
+
+ukidsmeta.childGender = Vector{Union{Missing,String}}(ukidsmeta.childGender)
+p = permanova(ukids_dm, ukidsmeta.childGender, filter=.!ismissing.(ukidsmeta.childGender))
+p[!, :feature] .= "kos"
+p[!, :variable] .= "childGender"
+perm = vcat(perm, p)
+
+p = permanova(ukids_dm, ukidsmeta.mother_HHS, filter=.!ismissing.(ukidsmeta.mother_HHS))
+p[!, :feature] .= "kos"
+p[!, :variable] .= "mother_HHS"
+perm = vcat(perm, p)
+
+# remove the rows that don't have p values
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
+```
+
+```julia; echo=false
+@pt perm
+```
+
+```julia
+# normalize brain volume measures
+ukidsmeta.total_lowres = map(row-> sum(row[[:white_matter_volume, :grey_matter_volume, :csf_volume]]), eachrow(ukidsmeta))
+
+ukidsmeta.white_matter_normed = ukidsmeta.white_matter_volume ./ ukidsmeta.total_lowres
+ukidsmeta.grey_matter_normed = ukidsmeta.grey_matter_volume ./ ukidsmeta.total_lowres
+ukidsmeta.csf_normed = ukidsmeta.csf_volume ./ ukidsmeta.total_lowres
+```
+
+```julia; results="hidden"
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:white_matter_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :white_matter_normed]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + white_matter_normed,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+```
+```julia; echo=false
+@pt p
+```
+
+The second row is `white_matter_normed`.
+
+```julia; results="hidden"
+p[!, :feature] .= "kos"
+p[!, :variable] .= "white_matter_normed"
+perm = vcat(perm, p[[2],:])
+```
+```julia; echo=false
+@pt perm[[end],:]
+```
+
+Let's look at some other brain measures.
+
+```julia; results="hidden"
+## grey matter
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:grey_matter_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :grey_matter_normed]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + grey_matter_normed,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "grey_matter_normed"
+perm = vcat(perm, p[[2],:])
+
+## CSF (cerebrospinal fluid volume)
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:csf_normed]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :csf_normed]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + csf_normed,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "csf_normed"
+perm = vcat(perm, p[[2],:])
+```
+```julia; echo=false
+@pt perm[end-2:end,:]
+```
+
+None of these are significant.
+
+We can also look at brain regions as identified by the hires scans.
+In addition to normalizing by age,
+we'll also divide each volume by the total brain volume.
+
+```julia; results="hidden"
+## Brain volume
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:hires_total]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :hires_total]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + hires_total,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "hires_total"
+perm = vcat(perm, p[[2],:])
+```
+```julia; echo=false
+@pt perm[end:end,:]
+```
+
+```julia
+## Cerebellum
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:cerebellar]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :cerebellar, :hires_total]]
+r_meta.cerebellar_normed = r_meta.cerebellar ./ r_meta.hires_total
+
+
+r_meta = r_meta[!, [:correctedAgeDays, :cerebellar_normed]]
+r_dm = ukids_dm[filt,filt]
+
+CSV.write("/home/kevin/Desktop/df.csv", r_meta)
+CSV.write("/home/kevin/Desktop/dm.csv", DataFrame(r_dm), writeheader=false)
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(terms(as.formula("r_dm ~  correctedAgeDays + cerebellar_normed"), keep.order=TRUE),
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "cerebellar_normed"
+perm = vcat(perm, p[[2],:])
+
+## Subcortical
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:subcortical]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :subcortical, :hires_total]]
+r_meta.subcortical_normed = r_meta.subcortical ./ r_meta.hires_total
+r_meta = r_meta[!, [:correctedAgeDays, :subcortical_normed]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + subcortical_normed,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "subcortical_normed"
+perm = vcat(perm, p[[2],:])
+
+
+## Neocortical
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:neocortical]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :neocortical, :hires_total]]
+r_meta.neocortical_normed = r_meta.neocortical ./ r_meta.hires_total
+r_meta = r_meta[!, [:correctedAgeDays, :neocortical_normed]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + neocortical_normed,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "neocortical_normed"
+perm = vcat(perm, p[[2],:])
+
+## Limbic
+filt = map(row-> !ismissing(row[:correctedAgeDays]) && !ismissing(row[:limbic]), eachrow(ukidsmeta))
+r_meta = ukidsmeta[filt, [:correctedAgeDays, :limbic, :hires_total]]
+r_meta.limbic = r_meta.limbic ./ r_meta.hires_total
+r_meta = r_meta[!, [:correctedAgeDays, :limbic]]
+r_dm = ukids_dm[filt,filt]
+@rput r_meta
+@rput r_dm
+
+# I don't know why, but the order is reversed here.
+R"""
+p <- adonis(r_dm ~ correctedAgeDays + limbic,
+            data=r_meta, permutations = 10000)
+"""
+
+@rget p
+p = p[:aov_tab]
+p[!, :feature] .= "kos"
+p[!, :variable] .= "limbic"
+perm = vcat(perm, p[[2],:])
+```
+```julia; echo=false
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
+@pt perm[end-4:end,:]
+```
+
+### Cognitive Assessments
+
+Cognitive development is measured using standard tests for certain age groups.
+In notebook 2, we converted these test scores
+so they are comparable across age groups.
+
+```julia; results="hidden"
+p = permanova(ukids_dm, ukidsmeta.cogScore, filter=.!ismissing.(ukidsmeta.cogScore))
+p[!, :feature] .= "kos"
+p[!, :variable] .= "cogScore"
+perm = vcat(perm, p[[1],:])
+```
+```julia; echo=false
+@pt perm[[end],:]
+```
+
+Let's save the output after correcting for multiple testing.
+We'll use the [Benjamini-Hochberg method](https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini%E2%80%93Hochberg_procedure)
+for FDR control.
+
+```julia; results="hidden"
+perm.p_value = Float64.(perm[!,Symbol("Pr(>F)")])
+perm.q_value = adjust(perm.p_value, BenjaminiHochberg())
+sort!(perm, :q_value)
+
+# reorder columns
+perm = perm[!,[:feature, :variable, :R2, :p_value, :q_value]]
+```
+```julia; echo=false
+@pt perm
+```
+
+
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "09-ko_permanovas.csv"), perm)
+```
+
+Let's see what that looks like in graphical form using `StatsPlots`.
+
+```julia
+sort!(perm, [:R2])
+
+# [1:end-1] removes the ~80% variation explained by subject ID
+bar(perm[1:end-1, :R2] .* 100,
+    xticks=(1:(size(perm,1)-1), perm[1:end-1, :variable]),
+    xrotation=45, color=:grey)
+
+for i in eachindex(perm[!,:R2])
+    r2 = perm[i, :R2] * 100
+    q = perm[i, :q_value]
+    kind = perm[!,:variable]
+    if q > 0.05
+        continue
+    elseif q > 0.01
+        stars = "*"
+    elseif q > .001
+        stars = "**"
+    else
+        stars = "***"
+    end
+    annotate!(i, r2+.2, text(stars, :center))
+end
+
+plot!(legend=false, title="Functional Profiles (KOs) PERMANOVA",
+    ylabel="% Variance explainable")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "09-ko_permanovas.svg"))
 ```

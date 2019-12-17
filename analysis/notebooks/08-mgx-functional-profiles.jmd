@@ -64,7 +64,6 @@ This also means that the uniref90 tables are _much_ larger.
 
 ```julia
 unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
-features = [x[1] for x in SQLite.Query(unirefdb, "SELECT * FROM distinct_functions")]
 
 unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab"
     )
@@ -790,6 +789,278 @@ display(plt)
 savefig(joinpath(figures, "08_uniref90_cog_correlations_neuroactive_boxplot.svg"))
 ```
 
+
+
+# Cortical size
+
+```julia
+neocortical_filter = map(row-> !ismissing(row.neocortical), eachrow(ukidsmeta))
+neocorticalmeta = ukidsmeta[neocortical_filter, :]
+neocorticalmeta.neocortical_normed = neocorticalmeta.neocortical ./ neocorticalmeta.hires_total
+
+neocortical = view(ukids, sites=neocortical_filter)
+neocortical = copy(view(neocortical, species=map(row->any(>(0.), row), eachrow(occurrences(neocortical)))))
+
+occ = occurrences(neocortical)
+
+neocorticalcors = cor(neocorticalmeta.neocortical_normed, occ, dims=2)'
+@assert !any(isnan, neocorticalcors)
+neocorticalrank = sortperm(neocorticalcors)
+describe(neocorticalcors)
+```
+
+
+```julia
+itp = LinearInterpolation(eachindex(neocorticalcors), neocorticalcors[neocorticalrank])
+
+plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+    markersize=1, xlabel="rank", ylabel="Pearson correlation with Cognitive Score",
+    label="all genes", color=color1[2], title="UniRef90 neocortical_normed correlations", legend=:bottomright)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_neocortical_correlations.svg"))
+```
+
+```julia; results="hidden"
+features = match.(r"UniRef90_(\w+)", featurenames(neocortical))
+@assert !any(isnothing, features)
+features = [f.captures[1] for f in features]
+
+neocorticalnadf = DataFrame(description=String[], n_unirefs = Int[], median=Float64[], pvalue=Float64[], idx=[])
+
+@showprogress for (desc, (mgbs, kos)) in neuroactive
+    urs = []
+    for ko in kos
+        ko in keys(kos2uniref) && append!(urs, kos2uniref[ko])
+    end
+    urs = Set(urs)
+    pos = findall(f-> f in urs, features)
+
+    n = length(pos)
+    n > 2 || continue
+
+    mwu = MannWhitneyUTest(neocorticalcors[pos], neocorticalcors[Not(pos)])
+    m = round(median(neocorticalcors[pos]), sigdigits=4)
+    p = round(pvalue(mwu), sigdigits=4)
+
+    push!(neocorticalnadf, (desc, n, m, p, pos))
+    plt = plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+        xlabel="rank", ylabel="Pearson correlation with neocortical_normed", legend=:bottomright,
+        label="all genes", color=color1[2], title = "UniRef90 neocortical_normed correlations")
+    scatter!(invperm(neocorticalrank)[pos], neocorticalcors[pos],
+        markersize=4, color=color1[1],
+        label="$desc")
+    annotate!(1000, 0.2, "n = $n\nmedian = $m\npvalue=$p", :left)
+    display(plt)
+    savefig(joinpath(figures, "08_uniref90_neocortical_correlations_neuroactive_$(replace(desc, r"[^\w]+"=>'-')).svg"))
+end
+neocorticalnadf.qvalue = adjust(neocorticalnadf.pvalue, BenjaminiHochberg())
+@pt neocorticalnadf
+```
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "08-neocortical_normed_neuroactive_correlations.csv"), neocorticalnadf)
+```
+```julia
+sort!(neocorticalnadf, :median)
+plt = boxplot([neocorticalcors[pos] for pos in neocorticalnadf.idx], color=:lightgrey,
+    legend=false, xticks=(1:nrow(nadf), neocorticalnadf.description), xrotation=45,
+    ylabel="Median neocortical_normed Correlation")
+for (i, row) in enumerate(eachrow(neocorticalnadf))
+    if row.qvalue < 0.005
+        annotate!(i, 0.3, "**", align=:center)
+    # elseif row.qvalue < 0.01
+    #     annotate!(i, 0.3, "**", align=:center)
+elseif row.qvalue < 0.05
+        annotate!(i, 0.3, "*", align=:center)
+    end
+end
+display(plt)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_neocortical_correlations_neuroactive_boxplot.svg"))
+```
+
+
+# Subcortical size
+
+```julia
+subcortical_filter = map(row-> !ismissing(row.subcortical), eachrow(ukidsmeta))
+subcorticalmeta = ukidsmeta[subcortical_filter, :]
+subcorticalmeta.subcortical_normed = subcorticalmeta.subcortical ./ subcorticalmeta.hires_total
+
+subcortical = view(ukids, sites=subcortical_filter)
+subcortical = copy(view(subcortical, species=map(row->any(>(0.), row), eachrow(occurrences(subcortical)))))
+
+occ = occurrences(subcortical)
+
+subcorticalcors = cor(subcorticalmeta.subcortical_normed, occ, dims=2)'
+@assert !any(isnan, subcorticalcors)
+subcorticalrank = sortperm(subcorticalcors)
+describe(subcorticalcors)
+```
+
+
+```julia
+itp = LinearInterpolation(eachindex(subcorticalcors), subcorticalcors[subcorticalrank])
+
+plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+    markersize=1, xlabel="rank", ylabel="Pearson correlation with Cognitive Score",
+    label="all genes", color=color1[2], title="UniRef90 subcortical_normed correlations", legend=:bottomright)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_subcortical_correlations.svg"))
+```
+
+```julia; results="hidden"
+features = match.(r"UniRef90_(\w+)", featurenames(subcortical))
+@assert !any(isnothing, features)
+features = [f.captures[1] for f in features]
+
+subcorticalnadf = DataFrame(description=String[], n_unirefs = Int[], median=Float64[], pvalue=Float64[], idx=[])
+
+@showprogress for (desc, (mgbs, kos)) in neuroactive
+    urs = []
+    for ko in kos
+        ko in keys(kos2uniref) && append!(urs, kos2uniref[ko])
+    end
+    urs = Set(urs)
+    pos = findall(f-> f in urs, features)
+
+    n = length(pos)
+    n > 2 || continue
+
+    mwu = MannWhitneyUTest(subcorticalcors[pos], subcorticalcors[Not(pos)])
+    m = round(median(subcorticalcors[pos]), sigdigits=4)
+    p = round(pvalue(mwu), sigdigits=4)
+
+    push!(subcorticalnadf, (desc, n, m, p, pos))
+    plt = plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+        xlabel="rank", ylabel="Pearson correlation with subcortical_normed", legend=:bottomright,
+        label="all genes", color=color1[2], title = "UniRef90 subcortical_normed correlations")
+    scatter!(invperm(subcorticalrank)[pos], subcorticalcors[pos],
+        markersize=4, color=color1[1],
+        label="$desc")
+    annotate!(1000, 0.2, "n = $n\nmedian = $m\npvalue=$p", :left)
+    display(plt)
+    savefig(joinpath(figures, "08_uniref90_subcortical_correlations_neuroactive_$(replace(desc, r"[^\w]+"=>'-')).svg"))
+end
+subcorticalnadf.qvalue = adjust(subcorticalnadf.pvalue, BenjaminiHochberg())
+@pt subcorticalnadf
+```
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "08-subcortical_normed_neuroactive_correlations.csv"), subcorticalnadf)
+```
+```julia
+sort!(subcorticalnadf, :median)
+plt = boxplot([subcorticalcors[pos] for pos in subcorticalnadf.idx], color=:lightgrey,
+    legend=false, xticks=(1:nrow(nadf), subcorticalnadf.description), xrotation=45,
+    ylabel="Median subcortical_normed Correlation")
+for (i, row) in enumerate(eachrow(subcorticalnadf))
+    if row.qvalue < 0.005
+        annotate!(i, 0.45, "**", align=:center)
+    # elseif row.qvalue < 0.01
+    #     annotate!(i, 0.3, "**", align=:center)
+elseif row.qvalue < 0.05
+        annotate!(i, 0.45, "*", align=:center)
+    end
+end
+display(plt)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_subcortical_correlations_neuroactive_boxplot.svg"))
+```
+
+# Limbic size
+
+```julia
+limbic_filter = map(row-> !ismissing(row.limbic), eachrow(ukidsmeta))
+limbicmeta = ukidsmeta[limbic_filter, :]
+
+countmap(limbicmeta.ageLabel)
+
+limbicmeta.limbic_normed = limbicmeta.limbic ./ limbicmeta.hires_total
+
+limbic = view(ukids, sites=limbic_filter)
+limbic = copy(view(limbic, species=map(row->any(>(0.), row), eachrow(occurrences(limbic)))))
+
+occ = occurrences(limbic)
+
+limbiccors = cor(limbicmeta.limbic_normed, occ, dims=2)'
+@assert !any(isnan, limbiccors)
+limbicrank = sortperm(limbiccors)
+describe(limbiccors)
+```
+
+
+```julia
+itp = LinearInterpolation(eachindex(limbiccors), limbiccors[limbicrank])
+
+plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+    markersize=1, xlabel="rank", ylabel="Pearson correlation with Cognitive Score",
+    label="all genes", color=color1[2], title="UniRef90 limbic_normed correlations", legend=:bottomright)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_limbic_correlations.svg"))
+```
+
+```julia; results="hidden"
+features = match.(r"UniRef90_(\w+)", featurenames(limbic))
+@assert !any(isnothing, features)
+features = [f.captures[1] for f in features]
+
+limbicnadf = DataFrame(description=String[], n_unirefs = Int[], median=Float64[], pvalue=Float64[], idx=[])
+
+@showprogress for (desc, (mgbs, kos)) in neuroactive
+    urs = []
+    for ko in kos
+        ko in keys(kos2uniref) && append!(urs, kos2uniref[ko])
+    end
+    urs = Set(urs)
+    pos = findall(f-> f in urs, features)
+
+    n = length(pos)
+    n > 2 || continue
+
+    mwu = MannWhitneyUTest(limbiccors[pos], limbiccors[Not(pos)])
+    m = round(median(limbiccors[pos]), sigdigits=4)
+    p = round(pvalue(mwu), sigdigits=4)
+
+    push!(limbicnadf, (desc, n, m, p, pos))
+    plt = plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+        xlabel="rank", ylabel="Pearson correlation with limbic_normed", legend=:bottomright,
+        label="all genes", color=color1[2], title = "UniRef90 limbic_normed correlations")
+    scatter!(invperm(limbicrank)[pos], limbiccors[pos],
+        markersize=4, color=color1[1],
+        label="$desc")
+    annotate!(1000, 0.2, "n = $n\nmedian = $m\npvalue=$p", :left)
+    display(plt)
+    savefig(joinpath(figures, "08_uniref90_limbic_correlations_neuroactive_$(replace(desc, r"[^\w]+"=>'-')).svg"))
+end
+limbicnadf.qvalue = adjust(limbicnadf.pvalue, BenjaminiHochberg())
+@pt limbicnadf
+```
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "08-limbic_normed_neuroactive_correlations.csv"), limbicnadf)
+```
+```julia
+sort!(limbicnadf, :median)
+plt = boxplot([limbiccors[pos] for pos in limbicnadf.idx], color=:lightgrey,
+    legend=false, xticks=(1:nrow(nadf), limbicnadf.description), xrotation=45,
+    ylabel="Median limbic_normed Correlation")
+for (i, row) in enumerate(eachrow(limbicnadf))
+    if row.qvalue < 0.005
+        annotate!(i, 0.6, "**", align=:center)
+    # elseif row.qvalue < 0.01
+    #     annotate!(i, 0.6, "**", align=:center)
+elseif row.qvalue < 0.05
+        annotate!(i, 0.6, "*", align=:center)
+    end
+end
+display(plt)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_limbic_correlations_neuroactive_boxplot.svg"))
+```
 
 # Pfams
 ```julia; results="hidden"
