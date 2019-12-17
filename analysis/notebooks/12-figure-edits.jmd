@@ -8,79 +8,97 @@ options:
 
 ## Cohort descriptions
 
-```julia
+
+```julia; echo=false; results="hidden"
+using Pkg
+Pkg.activate("analysis")
+using Revise
+```
+
+```julia; results="hidden"
 using ECHOAnalysis
-using Microbiome
-using BiobakeryUtils
 using DataFrames
-using Distances
-using Clustering
-using MultivariateStats
+using PrettyTables
+using SQLite
 using Statistics
-using StatsBase
-using Combinatorics
-using StatsPlots
-using Random
 using CSV
+using Microbiome
+using StatsPlots
+using MultivariateStats
+using Distances
+using Combinatorics
 
-(outpath, figures) = notebookpaths!(12)
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=4) : v)
+# # print ~15 random rows
+# randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
+@ptconfclean # clear previous configuration
+@ptconf formatter = rounder
+@ptconf nosubheader=true
+@ptconf screen_size=(20,70) # change to (20, 120) for weave
+# @ptconf filters_row=(randrowfilter,)
+
+includet("accessories.jl")
+
+config = Pkg.TOML.parsefile("data/data.toml")
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
 ```
 ```julia; results="hidden"
-tax = load_taxonomic_profiles()
-taxfilter!(tax)
+taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
+species = sqlprofile(taxdb, tablename="taxa", kind="species")
 
-abt = abundancetable(tax)
-relativeabundance!(abt)
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+pfams = sqlprofile(pfamdb, tablename="pfam_names_relab", kind="pfam_names_relab")
 
-ss = samplenames(abt)
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
 
-allsamples = resolve_sampleID.(samplenames(abt))
+shared = stoolsample.(intersect(samplenames(species), samplenames(pfams), samplenames(kos)))
+sharedmeta = getmgxmetadata(samples=shared)
+filter!(row-> !ismissing(row.ageLabel), sharedmeta)
+shared = stoolsample.(sharedmeta.sample)
 
-
-kidsamples = uniquesamples(allsamples, samplefilter=s-> startswith(s, "C"), identifiers=[:subject])
-momsamples = uniquesamples(allsamples, samplefilter=s-> startswith(s, "M"), identifiers=[:subject])
-firstsamples = [kidsamples; momsamples]
-
-firsts = view(abt, sites=getfield.(firstsamples, :sample))
-kids = view(abt, sites=getfield.(kidsamples, :sample))
-moms = view(abt, sites=getfield.(momsamples, :sample))
-
-firstsmeta = load_metadata(datatoml, samples=firstsamples)
-kidsmeta = load_metadata(datatoml, samples=kidsamples)
-momsmeta = load_metadata(datatoml, samples=momsamples)
-```
-
-
-```julia
-uniref_unstrat = "data/engaging/merged/batch1-10_genefamilies_relab_unstratified.tsv"
-uniref_samples = samples_from_file(uniref_unstrat)
-
-unirefs = DataFrame(:uniref=>String[], (Symbol(getfield(s, :sample))=>Float64[] for s in firstsamples)...)
-
-keep = [[1]; map(s-> findfirst(isequal(s), uniref_samples), firstsamples) .+ 1 ]
-for row in CSV.Rows(uniref_unstrat)
-    row = row[keep]
-    rownums = (parse(Float64, row[i]) for i in 2:length(row))
-    all(isequal(0.), rownums) && continue
-    push!(unirefs, (row[1], (parse(Float64, row[i]) for i in 2:length(row))...))
-end
-
-
-unirefs=abundancetable(unirefs)
-
-accessory = view(unirefs, species = [0.05 < prevalence(row, 0.) < 0.85 for row in eachrow(occurrences(unirefs))]
-    )
+species = view(species, sites=sharedmeta.sample) |> copy
+pfams = view(pfams, sites=sharedmeta.sample) |> copy
+kos = view(kos, sites=sharedmeta.sample) |> copy
 ```
 
 ```julia; results="hidden"
-taxdm = pairwise(BrayCurtis(), firsts)
-unirefdm = pairwise(BrayCurtis(), unirefs)
-accessorydm = pairwise(BrayCurtis(), accessory)
-
-taxmds = fit(MDS, taxdm, distances=true)
-unirefmds = fit(MDS, unirefdm, distances=true)
-accessorymds = fit(MDS, accessorydm, distances=true)
+kidssamples = uniquetimepoints(shared, samplefilter=iskid)
+kidsmeta = getmgxmetadata(samples=kidssamples)
+momssamples = uniquetimepoints(shared, samplefilter=ismom)
+momsmeta = getmgxmetadata(samples=momssamples)
+uniquekidssamples = uniquetimepoints(shared, samplefilter=iskid, takefirst=true)
+uniquekidsmeta = getmgxmetadata(samples=uniquekidssamples)
+uniquemomssamples = uniquetimepoints(shared, samplefilter=ismom, takefirst=true)
+uniquemomsmeta = getmgxmetadata(samples=uniquemomssamples)
 ```
+
+```julia; results="hidden"
+upfams = view(pfams, sites=[uniquekidsmeta.sample; uniquemomsmeta.sample])
+ukos = view(kos, sites=[uniquekidsmeta.sample; uniquemomsmeta.sample])
+uspecies = view(species, sites=[uniquekidsmeta.sample; uniquemomsmeta.sample])
+```
+
+```julia; results="hidden"
+speciesdm = pairwise(BrayCurtis(), species)
+speciesmds = fit(MDS, speciesdm, distances=true)
+pfamsdm = pairwise(BrayCurtis(), pfams)
+pfamsmds = fit(MDS, pfamsdm, distances=true)
+kosdm = pairwise(BrayCurtis(), kos)
+kosmds = fit(MDS, kosdm, distances=true)
+
+uspeciesdm = pairwise(BrayCurtis(), uspecies)
+uspeciesmds = fit(MDS, uspeciesdm, distances=true)
+upfamsdm = pairwise(BrayCurtis(), upfams)
+upfamsmds = fit(MDS, upfamsdm, distances=true)
+ukosdm = pairwise(BrayCurtis(), ukos)
+ukosmds = fit(MDS, ukosdm, distances=true)
+```
+
+
 
 ```julia; results="hidden"
 function labeldiff(dm, labels)
@@ -96,32 +114,118 @@ function labeldiff(dm, labels)
     d
 end
 
-taxdiffs = labeldiff(taxdm, String.(firstsmeta.ageLabel))
-funcdiffs = labeldiff(unirefdm, String.(firstsmeta.ageLabel))
+speciesdiffs = labeldiff(uspeciesdm, [uniquekidsmeta.ageLabel; uniquemomsmeta.ageLabel])
+pfamsdiffs = labeldiff(upfamsdm, [uniquekidsmeta.ageLabel; uniquemomsmeta.ageLabel])
+kosdiffs = labeldiff(ukosdm, [uniquekidsmeta.ageLabel; uniquemomsmeta.ageLabel])
 
-keypairs = multiset_permutations(repeat(sort(collect(keys(taxdiffs))),2), 2)
+keypairs = multiset_permutations(repeat(sort(collect(keys(speciesdiffs))),2), 2)
 ```
 ```julia
-boxplot([filter(>(0.), taxdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+boxplot([filter(>(0.), speciesdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
     xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
-    ylims=(0., 1.))
+    ylims=(0., 1.), title="Species Diffs")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "tax-diffs-boxplot.svg"))
+savefig(joinpath(figures, "12-species-diffs-boxplot.svg"))
 ```
 
 ```julia
-boxplot([filter(>(0.), funcdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+boxplot([filter(>(0.), pfamsdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
     xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
-    ylims=(0., 1.))
+    ylims=(0., 1.), title="Pfam Diffs")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "func-diffs-boxplot.svg"))
+savefig(joinpath(figures, "12-pfams-diffs-boxplot.svg"))
+```
+
+```julia
+boxplot([filter(>(0.), kosdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="KO Diffs")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "12-kos-diffs-boxplot.svg"))
+```
+
+```julia; results="hidden"
+Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, minabundance), (y for y in a))
+upfamsaccessory = view(upfams, species=map(row-> prevalence(row, 0.) < 0.9, eachrow(occurrences(upfams)))) |> copy
+ukosaccessory = view(ukos, species=map(row-> prevalence(row, 0.) < 0.9, eachrow(occurrences(ukos)))) |> copy
+
+upfamsaccessorydm = pairwise(BrayCurtis(), upfamsaccessory)
+upfamsaccessorymds = fit(MDS, upfamsaccessorydm, distances=true)
+ukosaccessorydm = pairwise(BrayCurtis(), ukosaccessory)
+ukosaccessorymds = fit(MDS, ukosaccessorydm, distances=true)
+
+pfamsaccessorydiffs = labeldiff(upfamsaccessorydm, [uniquekidsmeta.ageLabel; uniquemomsmeta.ageLabel])
+kosaccessorydiffs = labeldiff(ukosaccessorydm, [uniquekidsmeta.ageLabel; uniquemomsmeta.ageLabel])
+```
+
+```julia
+boxplot([filter(>(0.), pfamsaccessorydiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="Pfam Accessory Diffs")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "12-pfams-accessory-diffs-boxplot.svg"))
+```
+
+```julia
+boxplot([filter(>(0.), kosaccessorydiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="KO Accessory Diffs")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "12-kos-accessory-diffs-boxplot.svg"))
+```
+
+
+## PERMANOVA heatmaps
+
+```julia
+permanovas = filter(t-> occursin("permanova", t), readdir(tables))
+permanovas =vcat(CSV.read.(joinpath.(tables, permanovas))...)
+perm2 = filter(row-> row.variable != "Subject ID", permanovas)
+
+r2 = unstack(permanovas, :variable, :feature, :R2)
+r2m = Matrix(r2[!,[:species,:pfams, :kos]])
+q = unstack(permanovas, :variable, :feature, :q_value)
+qm = Matrix(q[!,[:species,:pfams, :kos]])
+
+qa = let M = fill("", size(qm))
+    for i in eachindex(qm)
+        ismissing(qm[i]) && continue
+        if qm[i] < 0.001
+            M[i] = "***"
+        elseif qm[i] < 0.01
+            M[i] = "**"
+        elseif qm[i] < 0.1
+            M[i] = "*"
+        end
+    end
+    M
+end
+
+hm = heatmap(r2m, color=:PuBu, clims=(0.,0.2),
+    yticks=(1:size(r2m, 1), r2[:variable]),
+    xticks=(1:size(r2m, 2), names(r2)[2:end]))
+
+
+for (i, col) in enumerate(eachcol(qa))
+    annotate!(hm, [(i, c+.2, text(col[c], 8)) for c in eachindex(col)])
+    annotate!(hm, [(i, c, text(
+                    ismissing(r2m[c,i]) ?
+                    "missing" :
+                    "$(round(r2m[c,i] *100, digits=2))%",
+                    8)) for c in eachindex(col)])
+end
+display(hm)
 ```
 ```julia
-scatter(projection(taxmds)[:, 1], projection(unirefmds)[:, 1],
-    xlabel="taxonomic", ylabel="all unirefs", group=firstsmeta.ageLabel)
+savefig(joinpath(figures, "12-permanovas-heatmap.svg"))
 ```
+
+
 
 
 ## Cluster/permutation analysis
