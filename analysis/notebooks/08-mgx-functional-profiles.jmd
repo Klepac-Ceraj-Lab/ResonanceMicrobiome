@@ -427,6 +427,8 @@ let (mgb, desc) = ("", "")
         if startswith(line[1], "MGB")
             (mgb, desc) = line
             desc = rstrip(replace(desc, r"\bI+\b.*$"=>""))
+            desc = replace(desc, r" \([\w\s]+\)$"=>"")
+            desc = replace(desc, r"^.+ \((\w+)\) (.+)$"=>s"\1 \2")
             if desc in keys(neuroactive)
                 push!(neuroactive[desc].mgbs, mgb)
             else
@@ -595,7 +597,7 @@ CSV.write(joinpath(tables, "age_metab_correlations.csv"), nadf)
 sort!(nadf, :median)
 plt = boxplot([agecors[pos] for pos in nadf.idx], color=:lightgrey,
     legend=false, xticks=(1:nrow(nadf), nadf.description), xrotation=45,
-    ylabel="Median Age Correlation")
+    ylabel="Median Age Correlation", size=(800,600))
 for (i, row) in enumerate(eachrow(nadf))
     if row.qvalue < 0.005
         annotate!(i, 0.47, "**", align=:center)

@@ -133,6 +133,12 @@ $ julia --project=@. bin/metascrub.jl data/metadata/filemakerall.xlsx \
 Additional transformations of the metadata to get it into a usable form
 can be found in the next notebook.
 
+```julia; echo=false; results="hidden"
+using Pkg
+Pkg.activate("analysis")
+using Revise
+```
+
 ```julia
 using SQLite
 using CSV
@@ -187,20 +193,26 @@ $ snakemake -s /home/vklepacc/software/repos/snakemake_workflows/biobakery_all.s
 using SQLite
 using CSV
 using Pkg.TOML: parsefile
+using ECHOAnalysis
 
 config = parsefile("data/data.toml")
 
 taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
 add_taxonomic_profiles(taxdb, config["files"]["biobakery"]["path"], replace=true)
 
-using ECHOAnalysis
 allsamples = readdir("/lovelace/echo/sequencing/mgx/rawfastq")
 filter!(f-> occursin(r"^[CM]\d+[_\-]\d[EF]", f), allsamples)
 allsamples = unique(stoolsample.(allsamples))
 samples = uniquetimepoints(allsamples, takefirst=false)
 
-funcdb = SQLite.DB(config["sqlite"]["functions"]["path"])
+funcdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
 add_functional_profiles(funcdb, config["files"]["biobakery"]["path"], kind="genefamilies_relab", replace=true, samples=samples)
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+add_functional_profiles(kodb, config["files"]["biobakery"]["path"], kind="ko_names_relab", replace=true, samples=samples)
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+add_functional_profiles(pfamdb, config["files"]["biobakery"]["path"], kind="pfam_names_relab", replace=true, samples=samples)
+ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
+add_functional_profiles(ecdb, config["files"]["biobakery"]["path"], kind="ec_names_relab", replace=true, samples=samples)
 ```
 
 ### Concatenating raw sequencing files
