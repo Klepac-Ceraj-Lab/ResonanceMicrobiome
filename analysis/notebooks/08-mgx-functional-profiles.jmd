@@ -64,9 +64,7 @@ This also means that the uniref90 tables are _much_ larger.
 
 ```julia
 unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
-
-unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab"
-    )
+unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
 ```
 
 
@@ -105,13 +103,38 @@ occ = occurrences(kids)
 occ_srt = view(occ, :, sortperm(kidallmeta.correctedAgeDays))
 
 num_genes = map(col-> sum(x-> x > 0, col), eachcol(occ_srt))
-scatter(sort(kidallmeta.correctedAgeDays), num_genes,
+scatter(sort(kidallmeta.correctedAgeDays ./ 365), num_genes,
     legend=false, xlabel="Age (days)", ylabel="Identified UniRef90s",
     title="Genes by age", color=:lightgrey)
 ```
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "08_num_genes_age.svg"))
 ```
+```julia
+taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
+species = sqlprofile(taxdb, tablename="taxa", kind="species")
+species = view(species, sites=sitenames(kids))
+spec_occ = occurrences(species)
+spec_occ_srt = view(spec_occ, :, sortperm(kidallmeta.correctedAgeDays))
+num_spec = map(col-> sum(x-> x > 0, col), eachcol(spec_occ_srt))
+
+scatter(num_spec, num_genes,
+    primary=false, xlabel="N species", ylabel="Identified UniRef90s",
+    title="Genes by age", zcolor=sort(kidallmeta.correctedAgeDays ./ 365), color=:plasma)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "n-genes-vs-species-age.svg"))
+```
+```julia
+scatter(num_spec, num_genes,
+    xlabel="N species", ylabel="Identified UniRef90s",
+    title="Genes by age", group=String.(sort(kidallmeta, :correctedAgeDays).ageLabel),
+    legend=:left, color=color2')
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "n-genes-vs-species-ageLabel.svg"))
+```
+
 
 Going forward, we don't *really* care about genes that are very rare,
 or are present in nearly everyone.
@@ -428,7 +451,7 @@ let (mgb, desc) = ("", "")
             (mgb, desc) = line
             desc = rstrip(replace(desc, r"\bI+\b.*$"=>""))
             desc = replace(desc, r" \([\w\s]+\)$"=>"")
-            desc = replace(desc, r"^.+ \((\w+)\) (.+)$"=>s"\1 \2")
+            desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
             if desc in keys(neuroactive)
                 push!(neuroactive[desc].mgbs, mgb)
             else
@@ -769,13 +792,13 @@ CSV.write(joinpath(tables, "08-cogscore_neuroactive_correlations.csv"), cognadf)
 ```julia
 boxplot([cogcors[pos] for pos in (abx_pos, carbs_pos, fa_pos, 1:length(cogcors))], color=:lightgrey,
     legend=false, xticks=(1:4, ["abx", "carbs", "fa", "all"]),
-    ylabel="Median cogScore Correlation")
+    ylabel="Median cogScore Correlation", size=(800,600))
 ```
 ```julia
 sort!(cognadf, :median)
 plt = boxplot([cogcors[pos] for pos in cognadf.idx], color=:lightgrey,
     legend=false, xticks=(1:nrow(nadf), cognadf.description), xrotation=45,
-    ylabel="Median cogScore Correlation")
+    ylabel="Median cogScore Correlation", size=(800,600))
 for (i, row) in enumerate(eachrow(cognadf))
     if row.qvalue < 0.005
         annotate!(i, 0.22, "**", align=:center)
@@ -866,7 +889,7 @@ CSV.write(joinpath(tables, "08-neocortical_normed_neuroactive_correlations.csv")
 sort!(neocorticalnadf, :median)
 plt = boxplot([neocorticalcors[pos] for pos in neocorticalnadf.idx], color=:lightgrey,
     legend=false, xticks=(1:nrow(nadf), neocorticalnadf.description), xrotation=45,
-    ylabel="Median neocortical_normed Correlation")
+    ylabel="Median neocortical_normed Correlation", size=(800,600))
 for (i, row) in enumerate(eachrow(neocorticalnadf))
     if row.qvalue < 0.005
         annotate!(i, 0.3, "**", align=:center)
@@ -956,7 +979,7 @@ CSV.write(joinpath(tables, "08-subcortical_normed_neuroactive_correlations.csv")
 sort!(subcorticalnadf, :median)
 plt = boxplot([subcorticalcors[pos] for pos in subcorticalnadf.idx], color=:lightgrey,
     legend=false, xticks=(1:nrow(nadf), subcorticalnadf.description), xrotation=45,
-    ylabel="Median subcortical_normed Correlation")
+    ylabel="Median subcortical_normed Correlation", size=(800,600))
 for (i, row) in enumerate(eachrow(subcorticalnadf))
     if row.qvalue < 0.005
         annotate!(i, 0.45, "**", align=:center)
@@ -977,8 +1000,6 @@ savefig(joinpath(figures, "08_uniref90_subcortical_correlations_neuroactive_boxp
 ```julia
 limbic_filter = map(row-> !ismissing(row.limbic), eachrow(ukidsmeta))
 limbicmeta = ukidsmeta[limbic_filter, :]
-
-countmap(limbicmeta.ageLabel)
 
 limbicmeta.limbic_normed = limbicmeta.limbic ./ limbicmeta.hires_total
 
@@ -1063,6 +1084,85 @@ display(plt)
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "08_uniref90_limbic_correlations_neuroactive_boxplot.svg"))
 ```
+
+```julia
+allnadf = vcat(nadf, cognadf, neocorticalnadf, subcorticalnadf, limbicnadf)
+```
+
+
+
+```julia
+hascopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].cogScore) && x[2].ageLabel == "2 and over" && pcopri[x[1]] > 0.001, enumerate(eachrow(ukidsmeta)))
+end
+nocopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].cogScore) && x[2].ageLabel == "2 and over" && pcopri[x[1]] <= 0.001, enumerate(eachrow(ukidsmeta)))
+end
+
+copridf = vcat(DataFrame(cogScore=ukidsmeta[hascopri,:cogScore], copri=fill(true, sum(hascopri))),
+     DataFrame(cogScore=ukidsmeta[nocopri,:cogScore], copri=fill(false, sum(nocopri))))
+
+@df copridf boxplot(:copri, :cogScore, xticks=([0,1], ["no", "yes"]),
+                    xlabel="P. copri", ylabel="cogScore")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08-pcopri-cogScore.svg"))
+```
+```julia
+hascopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].neocortical) && x[2].ageLabel == "2 and over" && pcopri[x[1]] > 0.001, enumerate(eachrow(ukidsmeta)))
+end
+nocopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].neocortical) && x[2].ageLabel == "2 and over" && pcopri[x[1]] <= 0.001, enumerate(eachrow(ukidsmeta)))
+end
+
+copridf = vcat(DataFrame(neocortical=ukidsmeta[hascopri,:neocortical], copri=fill(true, sum(hascopri))),
+     DataFrame(neocortical=ukidsmeta[nocopri,:neocortical], copri=fill(false, sum(nocopri))))
+
+@df copridf boxplot(:copri, :neocortical, xticks=([0,1], ["no", "yes"]),
+                    xlabel="P. copri", ylabel="neocortical")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08-pcopri-neocortical.svg"))
+```
+```julia
+hascopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].subcortical) && x[2].ageLabel == "2 and over" && pcopri[x[1]] > 0.001, enumerate(eachrow(ukidsmeta)))
+end
+nocopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].subcortical) && x[2].ageLabel == "2 and over" && pcopri[x[1]] <= 0.001, enumerate(eachrow(ukidsmeta)))
+end
+
+copridf = vcat(DataFrame(subcortical=ukidsmeta[hascopri,:subcortical], copri=fill(true, sum(hascopri))),
+     DataFrame(subcortical=ukidsmeta[nocopri,:subcortical], copri=fill(false, sum(nocopri))))
+
+@df copridf boxplot(:copri, :subcortical, xticks=([0,1], ["no", "yes"]),
+                    xlabel="P. copri", ylabel="subcortical")
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08-pcopri-subcortical.svg"))
+```
+```julia
+hascopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].limbic) && x[2].ageLabel == "2 and over" && pcopri[x[1]] > 0.001, enumerate(eachrow(ukidsmeta)))
+end
+nocopri = let pcopri = [x for x in occurrences(view(species, species=["Prevotella_copri"]))'][:,1]
+    map(x-> !ismissing(x[2].limbic) && x[2].ageLabel == "2 and over" && pcopri[x[1]] <= 0.001, enumerate(eachrow(ukidsmeta)))
+end
+
+copridf = vcat(DataFrame(limbic=ukidsmeta[hascopri,:limbic], copri=fill(true, sum(hascopri))),
+     DataFrame(limbic=ukidsmeta[nocopri,:limbic], copri=fill(false, sum(nocopri))))
+
+@df copridf boxplot(:copri, :limbic, xticks=([0,1], ["no", "yes"]),
+                    xlabel="P. copri", ylabel="limbic")
+count(hascopri)
+count(nocopri)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08-pcopri-limbic.svg"))
+```
+
+
 
 # Pfams
 ```julia; results="hidden"
