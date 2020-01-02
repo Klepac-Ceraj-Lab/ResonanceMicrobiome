@@ -67,9 +67,8 @@ species = sqlprofile(db, tablename="taxa", kind="species")
 
 
 ```julia; results="hidden"
-abt = abundancetable(species)
-relativeabundance!(abt)
-samples = stoolsample.(samplenames(abt))
+relativeabundance!(species)
+samples = stoolsample.(samplenames(species))
 
 widemeta = getmgxmetadata(samples=samples)
 
@@ -78,7 +77,7 @@ widemeta = getmgxmetadata(samples=samples)
 ```
 
 ```julia; results="hidden"
-dm = pairwise(BrayCurtis(), abt, dims=2)
+dm = pairwise(BrayCurtis(), species, dims=2)
 subject_type = [ismom(s) ? "Mother" :
                 iskid(s) ? "Child"  :
                 error("Not mom or kid: $s") for s in samples]
@@ -91,6 +90,18 @@ perm[!,:variable] .= "Subject Type"
 ```julia; echo=false
 @pt perm
 ```
+
+```julia
+exclude_young = view(species, sites=.!in.(widemeta.ageLabel, Ref(["1 and under", "1 to 2"])))
+eydm = pairwise(BrayCurtis(), exclude_young, dims=2)
+eysubject_type = [ismom(s) ? "Mother" :
+                iskid(s) ? "Child"  :
+                error("Not mom or kid: $s") for s in sitenames(exclude_young)]
+perm = permanova(eydm, eysubject_type)
+perm[!,:feature] .= "species"
+perm[!,:variable] .= "Subject Type (excluding young)"
+```
+
 
 In this table, `R2` tells us about the magnitutude of the effect
 (`R2 = 0.0202` means 2.02% of variation can be explained by this variable),
@@ -145,7 +156,7 @@ Now we'll focus on the kids.
 
 ```julia; results="hidden"
 uniquekids = uniquetimepoints(samples, samplefilter=iskid)
-kids = view(abt, sites=sampleid.(uniquekids))
+kids = view(species, sites=sampleid.(uniquekids))
 kids_dm = pairwise(BrayCurtis(), kids, dims=2)
 
 kidsmeta = getmgxmetadata(samples=uniquekids)
@@ -155,6 +166,13 @@ p = permanova(kids_dm, kidsmeta.correctedAgeDays, filter=.!ismissing.(kidsmeta.c
 p[!, :feature] .= "species"
 p[!, :variable] .= "Age"
 perm = vcat(perm, p)
+
+p = permanova(kids_dm, kidsmeta.correctedAgeDays,
+    filter=map(row-> !ismissing(row.ageLabel) && row.ageLabel == "2 and over", eachrow(kidsmeta)))
+p[!, :feature] .= "species"
+p[!, :variable] .= "Age"
+perm = vcat(perm, p)
+
 
 kidsmeta.birthType = Vector{Union{Missing,String}}(kidsmeta.birthType)
 p = permanova(kids_dm, kidsmeta.birthType, filter=.!ismissing.(kidsmeta.birthType))

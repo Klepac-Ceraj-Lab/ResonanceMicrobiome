@@ -65,7 +65,7 @@ histogram(sampleinfo.nsamples, legend=false,
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "03-samples-per-subject.png"))
+savefig(joinpath(figures, "03-samples-per-subject.svg"))
 ```
 
 Wow - there are a couple of subjects that have a lot of samples.
@@ -161,7 +161,7 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, group=toplot.cogAssessm
     )
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "03-cogscore_age_scatter.png"))
+savefig(joinpath(figures, "03-cogscore_age_scatter.svg"))
 ```
 
 ```julia
@@ -177,7 +177,7 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.zscore,
     title="Cognitive Assessments")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.png"))
+savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.svg"))
 ```
 
 Checking if any of the outliers are correlated with batch number:
@@ -190,5 +190,5 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, primary=false,
     title="Cognitive Assessments", legend=:topright)
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "03-cogscore_age_scatter_batchnum.png"))
+savefig(joinpath(figures, "03-cogscore_age_scatter_batchnum.svg"))
 ```

@@ -329,7 +329,8 @@ fkidsmeta[!,:shannon] = shannon(kids)
 fkidsmeta[!,:ginisimpson] = ginisimpson(kids)
 
 scatter(projection(kids_mds)[:, 1], fkidsmeta[!, :correctedAgeDays] ./365, xticks=false,
-    primary=false, zcolor = fkidsmeta[!,:shannon], color=:viridis)
+    primary=false, zcolor = fkidsmeta[!,:shannon], color=:viridis,
+    yticks=0:2:14)
 ylabel!("Age (years)")
 xlabel!("MDS1")
 title!("All kids age / MDS axis1 / Alpha diversity")
