@@ -13,20 +13,26 @@ is explainable by different bits of metadata.
 `BiobakeryUtils.jl` uses `RCall` to call the R package [`vegan`](https://cran.r-project.org/web/packages/vegan/index.html)
 for their implementation.
 
-```julia; echo=false; results="hidden"
-ENV["GKSwstype"] = "100" # hide
-
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+```
+```julia
+ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
+using SQLite
+using StatsPlots
+using PrettyTables
+using CSV
 using Microbiome
 using Distances
 using MultivariateStats
-using StatsPlots
-using CSV
+using Pkg.TOML: parsefile
+using Clustering
+using MicrobiomePlots
 using BiobakeryUtils
-using PrettyTables
-
-outpath, figures = notebookpaths!(6)
 
 function sigp(data, i, j)
     col = names(data)[j]
@@ -39,20 +45,42 @@ function sigp(data, i, j)
 end
 
 sigp_hl = Highlighter(sigp, Crayon(bold = true, background = :dark_gray))
-rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=4) : v)
+# print ~15 random rows
+# randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(-1,120) highlighters=sigp_hl # highlighters don't work in Weave
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) highlighters=sigp_hl # filters_row=(randrowfilter,)
+
+includet("accessories.jl")
+
+config = parsefile("data/data.toml")
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
+```
+```julia
+db = SQLite.DB(config["sqlite"]["taxa"]["path"])
+species = sqlprofile(db, tablename="taxa", kind="species")
+```
+
+
+```julia; results="hidden"
+relativeabundance!(species)
+samples = stoolsample.(samplenames(species))
+
+widemeta = getmgxmetadata(samples=samples)
+
+# would throw error if false
+@assert widemeta.sample == sampleid.(samples)
 ```
 
 ```julia; results="hidden"
-tax = load_taxonomic_profiles()
-abt = abundancetable(tax)
-relativeabundance!(abt)
-dm = pairwise(BrayCurtis(), abt, dims=2)
-
-
-samples = samplenames(abt)
-subject_type = [startswith(s, "M") ? "Mother" : "Child" for s in samples]
+dm = pairwise(BrayCurtis(), species, dims=2)
+subject_type = [ismom(s) ? "Mother" :
+                iskid(s) ? "Child"  :
+                error("Not mom or kid: $s") for s in samples]
 ```
 ```julia; results="hidden"
 perm = permanova(dm, subject_type)
@@ -63,14 +91,26 @@ perm[!,:variable] .= "Subject Type"
 @pt perm
 ```
 
+```julia
+exclude_young = view(species, sites=.!in.(widemeta.ageLabel, Ref(["1 and under", "1 to 2"])))
+eydm = pairwise(BrayCurtis(), exclude_young, dims=2)
+eysubject_type = [ismom(s) ? "Mother" :
+                iskid(s) ? "Child"  :
+                error("Not mom or kid: $s") for s in sitenames(exclude_young)]
+perm = permanova(eydm, eysubject_type)
+perm[!,:feature] .= "species"
+perm[!,:variable] .= "Subject Type (excluding young)"
+```
+
+
 In this table, `R2` tells us about the magnitutude of the effect
-(`R2 = 0.029` means 2.9% of variation can be explained by this variable),
+(`R2 = 0.0202` means 2.02% of variation can be explained by this variable),
 and the `Pr(>F)` column is the p value.
 The first row is what's being tested (the other two account for what's left).
 
 So this table tells us that, when comparing all the samples,
 whether the sample from a mom or a kid (aka `Subject Type`)
-can explain ~3% of the variation,
+can explain ~2% of the variation,
 and the result is significant (p < 0.001).
 
 Technically, this p value is a bit anti-conservative,
@@ -83,10 +123,8 @@ One way to demonstrate why mulitple measures are a problem
 is to look at how much of the variation is attributable to the subject ID.
 
 ```julia; results="hidden"
-metadata = load_metadata(datatoml, samples=resolve_sampleID.(samplenames(abt)))
-
 # need to convert subject IDs to `String` so it's not treated as continuous variable
-p = permanova(dm, string.(metadata.subject))
+p = permanova(dm, string.(widemeta.subject))
 ```
 ```julia; echo=false
 @pt p
@@ -117,16 +155,24 @@ perm = vcat(perm, p)
 Now we'll focus on the kids.
 
 ```julia; results="hidden"
-uniquekids = uniquesamples(samplenames(abt), samplefilter=x-> startswith(x, "C"), identifiers=[:subject])
-kids = view(abt, sites=getfield.(uniquekids, :sample))
+uniquekids = uniquetimepoints(samples, samplefilter=iskid)
+kids = view(species, sites=sampleid.(uniquekids))
 kids_dm = pairwise(BrayCurtis(), kids, dims=2)
 
-kidsmeta = load_metadata(datatoml, samples=uniquekids)
+kidsmeta = getmgxmetadata(samples=uniquekids)
+@assert kidsmeta.sample == samplenames(kids)
 
 p = permanova(kids_dm, kidsmeta.correctedAgeDays, filter=.!ismissing.(kidsmeta.correctedAgeDays))
 p[!, :feature] .= "species"
 p[!, :variable] .= "Age"
 perm = vcat(perm, p)
+
+p = permanova(kids_dm, kidsmeta.correctedAgeDays,
+    filter=map(row-> !ismissing(row.ageLabel) && row.ageLabel == "2 and over", eachrow(kidsmeta)))
+p[!, :feature] .= "species"
+p[!, :variable] .= "Age"
+perm = vcat(perm, p)
+
 
 kidsmeta.birthType = Vector{Union{Missing,String}}(kidsmeta.birthType)
 p = permanova(kids_dm, kidsmeta.birthType, filter=.!ismissing.(kidsmeta.birthType))
@@ -134,17 +180,17 @@ p[!, :feature] .= "species"
 p[!, :variable] .= "birthType"
 perm = vcat(perm, p)
 
-kidsmeta.breastfed = breastfeeding.(eachrow(kidsmeta))
-p = permanova(kids_dm, kidsmeta.breastfed)
-p[!, :feature] .= "species"
-p[!, :variable] .= "breastfed"
-perm = vcat(perm, p)
-
-kidsmeta.formulafed = formulafeeding.(eachrow(kidsmeta))
-p = permanova(kids_dm, kidsmeta.formulafed)
-p[!, :feature] .= "species"
-p[!, :variable] .= "formulafed"
-perm = vcat(perm, p)
+# kidsmeta.breastfed = breastfeeding.(eachrow(kidsmeta))
+# p = permanova(kids_dm, kidsmeta.breastfed)
+# p[!, :feature] .= "species"
+# p[!, :variable] .= "breastfed"
+# perm = vcat(perm, p)
+#
+# kidsmeta.formulafed = formulafeeding.(eachrow(kidsmeta))
+# p = permanova(kids_dm, kidsmeta.formulafed)
+# p[!, :feature] .= "species"
+# p[!, :variable] .= "formulafed"
+# perm = vcat(perm, p)
 
 kidsmeta.childGender = Vector{Union{Missing,String}}(kidsmeta.childGender)
 p = permanova(kids_dm, kidsmeta.childGender, filter=.!ismissing.(kidsmeta.childGender))
@@ -174,30 +220,35 @@ What happens if we only look at the kids under 2 years old?
 
 ```julia; results="hidden"
 # get kids that are less than 1.5 years old
-young = map(a-> !ismissing(a) && a <= 365*1.5, kidsmeta.correctedAgeDays)
+young = map(a-> !ismissing(a) && a <= 365*1, kidsmeta.correctedAgeDays)
 youngkids = view(kids, sites=young)
 
 # make new distance matrix
 youngkids_dm = pairwise(BrayCurtis(), youngkids, dims=2,)
 youngkidsmeta = kidsmeta[young, :]
 
-# Test breasfeeding and formula feeding
-p = permanova(youngkids_dm, youngkidsmeta.breastfed, 10000)
+# # Test breasfeeding and formula feeding
+# p = permanova(youngkids_dm, youngkidsmeta.breastfed, 10000)
+# p[!, :feature] .= "species"
+# p[!, :variable] .= "young kids breastfed"
+# perm = vcat(perm, p)
+#
+# p = permanova(youngkids_dm, youngkidsmeta.formulafed, 10000)
+# p[!, :feature] .= "species"
+# p[!, :variable] .= "young kids formulafed"
+# perm = vcat(perm, p)
+#
+p = permanova(youngkids_dm, youngkidsmeta.birthType, filter=.!ismissing.(youngkidsmeta.birthType))
 p[!, :feature] .= "species"
-p[!, :variable] .= "young kids breastfed"
-perm = vcat(perm, p)
-
-p = permanova(youngkids_dm, youngkidsmeta.formulafed, 10000)
-p[!, :feature] .= "species"
-p[!, :variable] .= "young kids formulafed"
+p[!, :variable] .= "young kids birthType"
 perm = vcat(perm, p)
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perm)
 ```
 
 ```julia; echo=false
-# just look at last 2 rows
-@pt perm[end-1:end, :]
+# just look at last 3 rows
+@pt perm[end-2:end, :]
 ```
 
 Breast feeding is now significant (it wasn't before we included `batch010`).
@@ -408,7 +459,6 @@ r_dm = kids_dm[filt,filt]
 @rput r_meta
 @rput r_dm
 
-# I don't know why, but the order is reversed here.
 R"""
 p <- adonis(r_dm ~ correctedAgeDays + limbic,
             data=r_meta, permutations = 10000)
@@ -438,7 +488,7 @@ p[!, :variable] .= "cogScore"
 perm = vcat(perm, p[[1],:])
 ```
 ```julia; echo=false
-@pt perm
+@pt perm[end:end, :]
 ```
 
 Let's save the output after correcting for multiple testing.
@@ -461,7 +511,7 @@ perm = perm[!,[:feature, :variable, :R2, :p_value, :q_value]]
 
 
 ```julia; echo=false; results="hidden"
-CSV.write(joinpath(outpath, "tax_permanovas.csv"), perm)
+CSV.write(joinpath(tables, "tax_permanovas.csv"), perm)
 ```
 
 Let's see what that looks like in graphical form using `StatsPlots`.

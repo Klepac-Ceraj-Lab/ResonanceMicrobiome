@@ -9,21 +9,34 @@ options:
 All of the metagenomes were processed
 using tools from the [bioBakery](https://bitbucket.org/biobakery/biobakery/wiki/Home).
 
-```julia; echo=false; results="hidden"
-ENV["GKSwstype"] = "100" # hide
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
 ```
-
-```julia; echo=false; results="hidden"
+```julia
+ENV["GKSwstype"] = "100"
 using ECHOAnalysis
-using CSV, DataFrames
+using DataFrames
+using SQLite
+using StatsPlots
 using PrettyTables
-
+using CSV
+using Pkg.TOML: parsefile
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+# print ~15 random rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120)
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-outpath, figures = notebookpaths!(4)
+config = parsefile("data/data.toml")
+widemeta = ECHOAnalysis.getmgxmetadata()
+figures = config["output"]["figures"]
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
 ```
+
 
 ## Quality control
 
@@ -31,7 +44,7 @@ First, I'll look at the QC results from `kneaddata`.
 
 ```julia
 qc_files = let qcfiles=[]
-    for (root, dirs, files) in walkdir(datatoml["tables"]["biobakery"]["path"])
+    for (root, dirs, files) in walkdir(config["files"]["biobakery"]["path"])
         occursin("kneaddata", root) || continue
         filter!(files) do f
             occursin("read_counts", f)
@@ -70,22 +83,22 @@ for f in qc_files[2:end]
     global qc = vcat(qc, df)
 end
 
-@pt randrows(qc, 15)
+@pt qc
 ```
 
 To keep the formatting of sample IDs consistant across data types,
-I'll use the `resolve_sampleID` function.
+I'll use the `stoolsample` function.
 
 
 ```julia
 let samples = qc[!, :Sample]
     for i in eachindex(samples)
         s = replace(samples[i], "_kneaddata"=> "")
-        samples[i] = resolve_sampleID(s)[:sample]
+        samples[i] = sampleid(stoolsample(s))
     end
 end
 
-@pt randrows(qc)
+@pt qc
 ```
 
 Now let's take a look at them with some plots.
@@ -104,7 +117,7 @@ bar(x=qc.Sample, hcat(qc.raw, qc.final),
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "knead-qc.svg"))
+savefig(joinpath(figures, "04-knead-qc.png"))
 ```
 
 These are a little more variable than I'd like.
@@ -121,7 +134,7 @@ qc_stats = by(qc, :batch) do df
                   min  = round(minimum(df.final) / 1e6, digits=2),
                   )
 end
-CSV.write(joinpath(outpath, "qc_stats.csv"), qc_stats)
+CSV.write(joinpath(tables, "qc_stats.csv"), qc_stats)
 @pt qc_stats
 ```
 

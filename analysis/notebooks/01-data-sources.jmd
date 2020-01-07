@@ -57,6 +57,8 @@ to get the metadata associated with timepoints,
 
 ### Metadata Scrub
 
+**TODO: Update section for split repos**
+
 Once you have this file,
 run the `metascrub.jl` script contained in the `bin/` folder.
 This script does a few things.
@@ -131,6 +133,29 @@ $ julia --project=@. bin/metascrub.jl data/metadata/filemakerall.xlsx \
 Additional transformations of the metadata to get it into a usable form
 can be found in the next notebook.
 
+```julia; echo=false; results="hidden"
+using Pkg
+Pkg.activate("analysis")
+using Revise
+```
+
+```julia
+using SQLite
+using CSV
+using Pkg.TOML: parsefile
+
+config = parsefile("data/data.toml")
+
+db = SQLite.DB(config["sqlite"]["metadata"]["path"])
+SQLite.drop!(db, "filemakermetadata", ifexists=true)
+SQLite.dropindex!(db, "filemakermetadata_subject_idx", ifexists=true)
+SQLite.dropindex!(db, "filemakermetadata_metadatum_idx", ifexists=true)
+
+CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(db, "filemakermetadata")
+SQLite.createindex!(db, "filemakermetadata", "filemakermetadata_subject_idx", "subject", unique=false)
+SQLite.createindex!(db, "filemakermetadata", "filemakermetadata_metadatum_idx", "metadatum", unique=false)
+```
+
 ## Metagenome data
 
 Compressed quality-scored sequencing files (`.fastq.gz`)
@@ -139,7 +164,7 @@ and run through the bioBakery metagenome workflow.
 
 See **Methods** section of manuscript. <!-- TODO: Add link to manuscript -->
 
-This repository contains samples from sequencing batches 001-009.
+This repository contains samples from sequencing batches 001-012.
 
 ### Running the snakemake workflow
 
@@ -160,6 +185,34 @@ $ snakemake -s /home/vklepacc/software/repos/snakemake_workflows/biobakery_all.s
     --configfile config.yaml --cluster-config cluster.yaml \
     --cluster "sbatch -n {cluster.processors} -N {cluster.nodes} -t {cluster.time} --mem {cluster.memory} -o output/logs/{rule}-%j.out -e output/logs/{rule}-%j.err -p newnodes --exclude=node119" \
     --latency-wait 15
+```
+
+### Adding files to sqlite database
+
+```julia
+using SQLite
+using CSV
+using Pkg.TOML: parsefile
+using ECHOAnalysis
+
+config = parsefile("data/data.toml")
+
+taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
+add_taxonomic_profiles(taxdb, config["files"]["biobakery"]["path"], replace=true)
+
+allsamples = readdir("/lovelace/echo/sequencing/mgx/rawfastq")
+filter!(f-> occursin(r"^[CM]\d+[_\-]\d[EF]", f), allsamples)
+allsamples = unique(stoolsample.(allsamples))
+samples = uniquetimepoints(allsamples, takefirst=false)
+
+funcdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
+add_functional_profiles(funcdb, config["files"]["biobakery"]["path"], kind="genefamilies_relab", replace=true, samples=samples)
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+add_functional_profiles(kodb, config["files"]["biobakery"]["path"], kind="ko_names_relab", replace=true, samples=samples)
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+add_functional_profiles(pfamdb, config["files"]["biobakery"]["path"], kind="pfam_names_relab", replace=true, samples=samples)
+ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
+add_functional_profiles(ecdb, config["files"]["biobakery"]["path"], kind="ec_names_relab", replace=true, samples=samples)
 ```
 
 ### Concatenating raw sequencing files

@@ -7,8 +7,5 @@ Rplots.pdf
 scratch*
 build/
 analysis/html
-data/figures
-data/notebooks
+data/analysis
 data/engaging
-data/aws
-data/humann2_analysis

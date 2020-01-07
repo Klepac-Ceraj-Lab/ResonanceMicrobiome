@@ -7,7 +7,8 @@ options:
 ---
 
 In the previous notebook,
-we extracted metadata tables from FilemakerPro.
+we extracted metadata tables from FilemakerPro
+and added them to a `sqlite` database.
 Now, we'll get these into a more usable format for analysis.
 
 ## Accessing TOML data in julia
@@ -15,8 +16,7 @@ Now, we'll get these into a more usable format for analysis.
 Information about the locations of data are found in `data/data.toml`.
 Parsing this file gives a set of nested key:value pairs.
 
-Extra code for much of this analysis is found in the ECHOAnalysis
-module in the `src/` directory of this repo.
+Extra code for much of this analysis is found in the `ECHOAnalysis` julia package.
 The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
 ```julia; results="hidden"
@@ -25,56 +25,46 @@ using ECHOAnalysis
 
 ```julia
 using Pkg.TOML: parsefile
-mytoml = parsefile("data/data.toml")
-keys(mytoml)
+config = parsefile("data/data.toml")
+for (key, value) in config
+    println(key,":")
+    println("\t",value)
+end
 ```
-
-This is actually already done automatically
-when you load the `ECHOAnalysis` module, saved in a variable called `datatoml`.
-
-```julia
-# this would throw an error if false
-@assert datatoml == mytoml
-```
-
-```julia
-print(datatoml["description"])
-```
-
-The metadata tables are found under `["tables"]["metadata"]`
 
 ## Long form data
 
 The `metascrubjl` script generates a table in long-form,
 meaning each metadatum has its own row.
+In the previous notebook,
+we saved it to an SQLite database for easy retrieval
 
 
 ```julia
+using SQLite
 using CSV
 using DataFrames
 using PrettyTables
 
 # make a formatter for PrettyTables to round long numbers
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+# make a row filter that picks ~15 rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
+
+@ptconfclean # clear previous configuration
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
+
 # set configuration for printing tables
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120)
 
-allmeta = CSV.File(datatoml["tables"]["metadata"]["filemakerdb"]["path"]) |> DataFrame
+db = SQLite.DB(config["sqlite"]["metadata"]["path"])
+allmeta = SQLite.Query(db, "SELECT * FROM filemakermetadata") |> DataFrame
 # pretty print table
 @pt allmeta
 ```
 
-Alternatively, we can use the `load_metadata` function.
-
-```julia
-allmeta_startup = load_metadata(datatoml, "filemakerdb")
-
-# these would throw errors if false
-@assert names(allmeta) == names(allmeta_startup)
-@assert size(allmeta) == size(allmeta_startup)
-```
-
-The script tries to find `timepoint` values for everything, and if it can't,
+The `metadatascrub` script tries to find `timepoint` values for everything,
+and if it can't,
 it assumes that the matadatum applies to all timepoints for that subject.
 These are marked with `timepoint = 0`.
 Let's look at which variables that applies to:
@@ -104,12 +94,15 @@ it's useful to group gids by age groups:
 
 ```julia
 using Statistics
+
+# remove once we get table
+filter(row-> row.metadatum == "correctedAgeDays", allmeta)
+
 agelabels = by(allmeta, [:subject, :timepoint]) do sample
     age = filter(row-> row.metadatum == "correctedAgeDays", sample)
     if nrow(age) > 0
-        years = mean(parse.(Int, skipmissing(age.value))) / 365
-
-        if ismissing(years)
+        years = mean(parse.(Float64, skipmissing(age.value))) / 365
+        if ismissing(years) || isnan(years)
             label=missing
         elseif years <= 1
             label="1 and under"
@@ -128,12 +121,13 @@ agelabels = by(allmeta, [:subject, :timepoint]) do sample
             )
 end
 dropmissing!(agelabels)
-@pt randrows(agelabels[.!ismissing.(agelabels.value), :])
+@pt agelabels
 ```
 ```julia; results="hidden"
 # add to main metadata dataframe
 append!(allmeta, agelabels)
 ```
+
 
 For cognitive scores (eg. Mullen),
 we want to use a normalized score that's comparable across tests.
@@ -143,8 +137,8 @@ we want to use a normalized score that's comparable across tests.
 cogcols = [
     "languageComposite", # this is from Bayleys
     "motorComposite", # also Bayleys
-    # "mullen_EarlyLearningComposite",
-    "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
+    "mullen_EarlyLearningComposite",
+    # "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
     "fullScaleComposite", # this is from WSSPI
     "FSIQ_Composite",  # this is from WISC
     ]
@@ -161,7 +155,7 @@ cogscores = by(allmeta, [:subject, :timepoint]) do sample
         else
             nrow(cogs) != 1 && throw(ErrorException("Wrong number of rows for $parent"))
             metadatum = cogs.metadatum[1]
-            if metadatum == "mullen_NonVerbalComposite"
+            if metadatum == "mullen_EarlyLearningComposite"
                 assessment = "Mullen"
             elseif metadatum == "fullScaleComposite"
                 assessment = "WSSPI"
@@ -182,7 +176,7 @@ cogscores = by(allmeta, [:subject, :timepoint]) do sample
 end
 
 dropmissing!(cogscores)
-@pt randrows(cogscores[.!ismissing.(cogscores.value), :])
+@pt cogscores[.!ismissing.(cogscores.value), :]
 ```
 ```julia; results="hidden"
 # add to main metadata dataframe
@@ -199,7 +193,7 @@ since we can have multiple samples per timepoint.
 `sample` IDs should be unique though.
 
 ```julia; results="hidden"
-samples = load_metadata(datatoml, "samples")
+samples = CSV.read(config["tables"]["fecal_samples"]["path"])
 rename!(samples, [:TimePoint=>:timepoint, :DOC=>:date, :SubjectID=>:subject, :SampleID=>:sample])
 
 # convert to longform
@@ -207,6 +201,7 @@ samples = melt(samples, [:subject, :timepoint, :sample], variable_name=:metadatu
 dropmissing!(samples, [:subject, :sample])
 samples[!, :parent_table] .= "FecalProcessing"
 ```
+
 Finally, we want to make sure the maternal samples
 also have a value for `ageLabel`.
 
@@ -224,22 +219,20 @@ momlabels = by(samples, [:subject, :timepoint]) do sample
     return unique(outdf[:, [:metadatum, :value, :parent_table, :sample]])
 end
 filter!(row-> row.value == "mom", momlabels)
-@pt randrows(momlabels[.!ismissing.(momlabels.value), :])
-
+@pt momlabels[.!ismissing.(momlabels.value), :]
 ```
 ```julia; results="hidden"
 # add to main sample dataframe (while reordering columns)
 append!(samples, momlabels[names(samples)])
 ```
 
-
 ## Brain Data
 
 We also have tables of brain volumes for many of our subjects.
 
 ```julia
-brainfiles = datatoml["tables"]["brain"]
-brainvol = CSV.read(brainfiles["gross_volumes"]["path"])
+brainfiles = config["tables"]["brain_structure"]
+brainvol = CSV.read(brainfiles["lowres"])
 
 # remove spaces from columns names
 names!(brainvol, map(names(brainvol)) do n
@@ -262,9 +255,9 @@ brainsid[1:5]
 ```
 
 ```julia
-brainvol.subject = getfield.(brainsid, :subject)
-brainvol.timepoint = getfield.(brainsid, :timepoint)
-brainvol.sample = getfield.(brainsid, :sample)
+brainvol.subject = subject.(brainsid)
+brainvol.timepoint = timepoint.(brainsid)
+brainvol.sample = sampleid.(brainsid)
 # This uses slightly different syntax, because the column doesn't exist.
 # The `.=` broadcast assigment makes every row in the column the same string
 brainvol[!, :parent_table] .= "brainVolume"
@@ -275,7 +268,7 @@ brainvol[!, :parent_table] .= "brainVolume"
 And now the same thing for the high resolution scan table:
 
 ```julia; results="hidden"
-hires = CSV.read(brainfiles["hires"]["path"])
+hires = CSV.read(brainfiles["hires"])
 
 rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 # don't want to replicate :age column
@@ -291,7 +284,7 @@ and combine left / right hemispheres.
 I'll also make a column with the total brain volume for later normalization.
 
 ```julia
-mapping = CSV.read("data/brain/brain_region_key.csv")
+mapping = CSV.read(brainfiles["hires_key"])
 @pt mapping
 ```
 ```julia
@@ -319,7 +312,7 @@ hires[!, :parent_table] .= "hiresVolumes"
 
 We can only concatenate tables if they all have the same columns,
 so I'll add a `sample` ID to all of the other observations
-to match what's in `samples`.
+to match what's in the `samples` DataFrame.
 The fecal sample `sample` IDs are build from the `subject` ID and `timepoint`,
 so I'll do the same for other observations.
 
@@ -359,7 +352,43 @@ allmeta = vcat(allmeta, brainvol, hires, samples)
 permutecols!(allmeta, [:sample, :subject, :timepoint, :metadatum, :value, :parent_table])
 # remove rows with missing values
 dropmissing!(allmeta)
+allmeta.metadatum = string.(allmeta.metadatum)
+allmeta.value = string.(allmeta.value)
+@pt allmeta
+```
 
-# show a random assortment of ~ 10 rows
-@pt randrows(allmeta)
+## Save to SQLite
+
+```julia
+SQLite.drop!(db, "allmetadata", ifexists=true)
+SQLite.dropindex!(db, "allmetadata_subject_idx", ifexists=true)
+SQLite.dropindex!(db, "allmetadata_metadatum_idx", ifexists=true)
+
+allmeta |> SQLite.load!(db, "allmetadata")
+SQLite.createindex!(db, "allmetadata", "allmetadata_subject_idx", "subject", unique=false)
+SQLite.createindex!(db, "allmetadata", "allmetadata_metadatum_idx", "metadatum", unique=false)
+```
+
+## Converting to wide-form
+
+The `ECHOAnalysis` repo has a function
+to convert long-form data to wide-form,
+where each sample is on a singe row.
+For metadata linked to a timpoint,
+values are only applied to the sample linked to that timepoint.
+For metadata not linked to a timepoint,
+the value is applied to every timepoint for that subject.
+
+
+```julia
+widemeta = widemetadata(allmeta, unique(samples.sample))
+@pt widemeta
+```
+
+Unfortunately, `sqlite` doesn't handle the really wide table well.
+But it's not very big,
+So I'll just store it as a regular CSV file.
+
+```julia
+CSV.write(config["tables"]["sample_metadata_wide"]["path"], widemeta)
 ```

@@ -12,19 +12,28 @@ Now that we have the metadata in long form,
 it's a bit easier to query it for the stuff we want.
 
 ```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+
 ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
+using SQLite
 using StatsPlots
 using PrettyTables
-
+using CSV
+using Pkg.TOML: parsefile
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
 
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120)
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-outpath, figures = notebookpaths!(3)
-allmeta = load_metadata(datatoml)
+config = parsefile("data/data.toml")
+widemeta = ECHOAnalysis.getmgxmetadata()
+figures = config["output"]["figures"]
+isdir(figures) || mkpath(figures)
 ```
 
 As an example, how many unique subjects
@@ -32,35 +41,31 @@ do we have any metadata for?
 
 ```julia
 # the |> is pipe syntax, the following is the same as
-# `length(unique(allmeta[:subject]))`
-unique(allmeta.subject) |> length
+# `length(unique(widemeta[:subject]))`
+unique(widemeta.subject) |> length
 ```
 
-(**Note**: most of these subjects have not provided fecal samples)
+(**Note**: We have metadata for more subjects,
+but this table was created
+for only the subjects that have provided fecal samples)
 
-Or, how many subjects have at least one fecal sample?
+How many samples for each subject?
 
 ```julia
-sampleinfo = by(allmeta, :subject) do df
-    df = filter(row-> row.metadatum == "CollectionRep", df)
-    DataFrame(nsamples = size(df,1))
+sampleinfo = by(widemeta, :subject) do df
+    (;nsamples = size(df,1))
 end
-
-# remove subjects with no fecal samples
-filter!(row-> row.nsamples > 0, sampleinfo)
-# sort by the subject identifier
-sort!(sampleinfo, :subject)
-@pt randrows(sampleinfo)
 ```
 
 ```julia
 histogram(sampleinfo.nsamples, legend=false,
     title="Samples per Subject ID",
-    xlabel="# of fecal samples", ylabel="# of subjects")
+    xlabel="# of fecal samples", ylabel="# of subjects",
+    xticks=1:12)
 ```
 
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "03-samples-per-subject.png"))
+savefig(joinpath(figures, "03-samples-per-subject.svg"))
 ```
 
 Wow - there are a couple of subjects that have a lot of samples.
@@ -70,38 +75,22 @@ Wow - there are a couple of subjects that have a lot of samples.
 highsamplers = filter(row-> row.nsamples > 4, sampleinfo).subject
 ```
 
-## Metagenomes
-
-At this stage, what I care about are samples with metagenomes,
-which are inidcated by the `DOM` metadatum.
-
-
-```julia
-mgxsamples = filter(allmeta) do row
-        # filter on metagenomes (DOM = "Date of Metagenome")
-        row.metadatum == "DOM"
-    end
-
-sort!(mgxsamples, [:sample]);
-@pt mgxsamples
-```
-
 To see what samples are from those folks that gave a bunch:
 
 ```julia
-highsamplers_df = filter(mgxsamples) do row
+highsamplersinfo = filter(widemeta) do row
     # find rows from subjects in the highly sampled pool
     in(row.subject, highsamplers)
 end
 
-sort!(highsamplers_df, [:subject, :timepoint])
+sort!(highsamplersinfo, [:subject, :timepoint])
 
-@pt highsamplers_df[!, [:sample, :subject, :timepoint]]
+@pt highsamplersinfo[!, [:sample, :subject, :timepoint]]
 ```
 
 So a bunch of these are where
 multiple samples were given for the same timepoint (eg `C0016_3F_1A` and `_2A`)
-and/or both genotek and enthanol samples.
+and/or both genotek (`F`) and enthanol (`E`) samples.
 
 _Note_: after `batch006`, SOP is to send 1 `ALiquotRep` of 1 `CollectionRep` for
 each `timepoint` (i.e. only send `C0202_4F_1A` for mgx sequencing, not `C0202_4F_2A`
@@ -114,23 +103,23 @@ we don't actually want to analyze replicates.
 And we want to focus on only samples collected in genotek tubes,
 not ethanol (so ones with an F in the second ID slot).
 
-Using the `resolve_sampleID` function,
+Using the `stoolsample` function,
 I can get just the relevant info for filtering on the first sample.
 
 ```julia
-samples = resolve_sampleID(mgxsamples.sample)
+samples = stoolsample.(widemeta.sample)
 samples[1:4]
 ```
-```julia
-seen = NamedTuple[]
-usamples = NamedTuple[]
+```julia; results="hidden"
+seen = Timepoint[]
+usamples = StoolSample[]
 
-sort!(samples, lt=samplelessthan)
+sort!(samples)
 
 map(samples) do s
     # skip ethanol samples
-    occursin(r"_\d+E_", s.sample) && return nothing
-    subtp = (subject=s.subject, timepoint=s.timepoint)
+    sampletype(s) == "ethanol" && return nothing
+    subtp = Timepoint("id", subject(s), timepoint(s))
     if !in(subtp, seen)
         push!(seen, subtp)
         push!(usamples, s)
@@ -142,56 +131,37 @@ The `ECHOAnalysis` module also has [a function](https://klepac-ceraj-lab.github.
 that does this, and has a bunch of other options too.
 
 ```julia
-usamples2 = uniquesamples(samples)
+usamples2 = uniquetimepoints(samples)
+# this would throw an error if false
 @assert usamples2 == usamples
 ```
 
-
-For simplicity later on, so I don't have to redo this,
-I'll write this to a `csv` file.
+To get just the metadata for these uniqe samples:
 
 ```julia
-using CSV
-using Pkg.TOML: parsefile
-
-# convert to dataframe
-usamples = DataFrame([usamples...])
-@pt usamples
-
-
-CSV.write(
-    joinpath(datatoml["tables"]["metadata"]["path"], "uniquesamples.csv"),
-    usamples
-    )
+umeta = let us = Set(sampleid.(usamples))
+    filter(row-> row.sample in us, widemeta)
+end
+sort!(umeta, :sample)
 ```
 
 
-And we can get metadata for these samples using the `getfocusmetadata` function,
-which converts the longform data into a wide table
-with one row per subject/timepoint pair.
-Metadata from "timpoint 0" (that is, non time-dependent data)
-is added to every row for that subject.
-
-```julia
-# we don't actually need to do this here, but for future reference
-usamples = CSV.read(joinpath(datatoml["tables"]["metadata"]["path"], "uniquesamples.csv"))
-
-focus = getfocusmetadata(allmeta, resolve_sampleID.(usamples.sample))
-@pt randrows(focus)
-```
-
-This can help with things like plotting.
+Metadata in this wide form is useful for things like plotting.
 For example, let's look at the age-adjusted cognitive scores.
 First, we'll filter on kids that have cognitive scores and ages:
 
 ```julia
-toplot = filter(row-> !any(ismissing, [row.cogScore, row.correctedAgeDays]), focus)
+using ColorBrewer
+p1 = ColorBrewer.palette("Set1", 8)
+
+toplot = filter(row-> !any(ismissing, [row.cogScore, row.correctedAgeDays]), umeta)
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, group=toplot.cogAssessment,
-    color=color1[2:end]', xlabel="age (years)", ylabel="Composite Score",
-    title="Cognitive Assessments", legend=:bottom)
+    color=p1[2:end]', xlabel="age (years)", ylabel="Composite Score",
+    title="Cognitive Assessments", legend=:topright,
+    )
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "cogscore_age_scatter.svg"))
+savefig(joinpath(figures, "03-cogscore_age_scatter.svg"))
 ```
 
 ```julia
@@ -202,10 +172,23 @@ s = std(toplot.cogScore)
 toplot.zscore = map(x-> (x - m)/s, toplot.cogScore)
 
 scatter(toplot.correctedAgeDays ./ 365, toplot.zscore,
-    group = toplot.cogAssessment, color=color1[2:end]',
-    ylabel = "zscore", xlabel = "age", legend=:bottom,
+    group = toplot.cogAssessment, color=p1[2:end]',
+    ylabel = "zscore", xlabel = "age", legend=:topright,
     title="Cognitive Assessments")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "cogscore_zscore_age_scatter.svg"))
+savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.svg"))
+```
+
+Checking if any of the outliers are correlated with batch number:
+
+```julia
+toplot = filter(row-> !any(ismissing, [row.Mgx_batch, row.correctedAgeDays, row.cogScore]), umeta)
+batchnum = [parse(Int, match(r"[Bb]atch (\d+)", b).captures[1]) for b in toplot.Mgx_batch]
+scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, primary=false,
+    zcolor=batchnum, xlabel="age (years)", ylabel="Composite Score", group=toplot.Mgx_batch,
+    title="Cognitive Assessments", legend=:topright)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "03-cogscore_age_scatter_batchnum.svg"))
 ```
