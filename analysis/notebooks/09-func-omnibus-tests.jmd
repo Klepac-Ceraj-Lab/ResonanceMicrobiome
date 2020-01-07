@@ -513,7 +513,7 @@ for i in eachindex(perm[!,:R2])
     annotate!(i, r2+.2, text(stars, :center))
 end
 
-plot!(legend=false, title="Functional Profiles (KOs) PERMANOVA",
+plot!(legend=false, title="Functional Profiles (PFAMs) PERMANOVA",
     ylabel="% Variance explainable")
 ```
 ```julia; echo=false; results="hidden"
