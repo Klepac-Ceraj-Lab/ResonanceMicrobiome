@@ -170,7 +170,7 @@ perm = vcat(perm, p)
 p = permanova(kids_dm, kidsmeta.correctedAgeDays,
     filter=map(row-> !ismissing(row.ageLabel) && row.ageLabel == "2 and over", eachrow(kidsmeta)))
 p[!, :feature] .= "species"
-p[!, :variable] .= "Age"
+p[!, :variable] .= "2+ Age"
 perm = vcat(perm, p)
 
 

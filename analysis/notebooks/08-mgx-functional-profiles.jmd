@@ -289,7 +289,7 @@ savefig(joinpath(figures, "08_uniref90_age_correlations.svg"))
 ```
 
 Rather than doing a statistical test on each gene function directly,
-we can do a variant of "gene set enrichment analysis" (GSEA).
+we can do a variant of "feature set enrichment analysis" (FSEA).
 Here, we use a statistical test called a Mann-Whitney U test
 to ask if a set of genes as a whole (say, antibiotic resistance genes)
 tend to be positively or negatively correlated with age.

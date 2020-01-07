@@ -20,10 +20,12 @@ Extra code for much of this analysis is found in the `ECHOAnalysis` julia packag
 The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
 ```julia; results="hidden"
-using ECHOAnalysis
+using Pkg
+Pkg.activate("analysis/")
+using Revise
 ```
-
-```julia
+```julia; results="hidden"
+using ECHOAnalysis
 using Pkg.TOML: parsefile
 config = parsefile("data/data.toml")
 for (key, value) in config
@@ -223,7 +225,7 @@ filter!(row-> row.value == "mom", momlabels)
 ```
 ```julia; results="hidden"
 # add to main sample dataframe (while reordering columns)
-append!(samples, momlabels[names(samples)])
+append!(samples, momlabels[!, names(samples)])
 ```
 
 ## Brain Data
@@ -269,10 +271,31 @@ And now the same thing for the high resolution scan table:
 
 ```julia; results="hidden"
 hires = CSV.read(brainfiles["hires"])
+hires2 = CSV.read(brainfiles["hires2"])
+
+
+hr2_samples = resolve_letter_timepoint(String.(hires2.ID))
+hires2.subject = subject.(hr2_samples)
+hires2.timepoint = timepoint.(hr2_samples)
+@assert names(hires) == names(hires2)
 
 rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 # don't want to replicate :age column
 select!(hires, Not(:Age))
+select!(hires2, Not([Symbol("Kevin List"), :ID]))
+println(names(hires))
+println(names(hires2))
+hrs = collect(zip(hires.subject, hires.timepoint))
+hrs2 = collect(zip(hires2.subject, hires2.timepoint))
+ss = filter(row-> sampletype(row.sample) == "omnigene", samples)
+
+s = Set(collect(zip(ss.subject, ss.timepoint)))
+setdiff(hrs, hrs2)
+setdiff(hrs2, hrs)
+
+intersect(s, hrs)
+intersect(s, union(hrs, hrs2))
+
 @pt hires
 ```
 

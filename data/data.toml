@@ -14,6 +14,7 @@ path = "data/metadata/fecal_samples_master.csv"
 [tables.brain_structure]
 lowres = "data/brain/brain_volumes.csv"
 hires = "data/brain/microbiome_corticalVolumes_bambam.csv"
+hires2 = "data/brain/microbiome_corticalVolumes_bambam_sean.csv"
 hires_key = "data/brain/brain_region_key.csv"
 
 [tables.sample_metadata_wide]
@@ -28,22 +29,22 @@ path="data/engaging"
 filter="output/metaphlan2"
 
 [sqlite.metadata]
-path="/lovelace/echo/sqldatabases/metadata.sqlite"
+path="/babbage/echo/sqldatabases/metadata.sqlite"
 
 [sqlite.taxa]
-path="/lovelace/echo/sqldatabases/taxa.sqlite"
+path="/babbage/echo/sqldatabases/taxa.sqlite"
 
 [sqlite.uniref90]
-path="/lovelace/echo/sqldatabases/uniref90_profiles.sqlite"
+path="/babbage/echo/sqldatabases/uniref90_profiles.sqlite"
 
 [sqlite.pfam]
-path="/lovelace/echo/sqldatabases/pfam_profiles.sqlite"
+path="/babbage/echo/sqldatabases/pfam_profiles.sqlite"
 
 [sqlite.ec]
-path="/lovelace/echo/sqldatabases/ec_profiles.sqlite"
+path="/babbage/echo/sqldatabases/ec_profiles.sqlite"
 
 [sqlite.ko]
-path="/lovelace/echo/sqldatabases/ko_profiles.sqlite"
+path="/babbage/echo/sqldatabases/ko_profiles.sqlite"
 
 [output]
 figures="data/analysis/figures"

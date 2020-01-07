@@ -48,6 +48,7 @@ isdir(tables) || mkpath(tables)
 ```julia; results="hidden"
 db = SQLite.DB(config["sqlite"]["taxa"]["path"])
 species = sqlprofile(db, tablename="taxa", kind="species")
+
 phyla = sqlprofile(db, tablename="taxa", kind="phylum")
 ```
 
