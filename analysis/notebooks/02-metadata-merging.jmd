@@ -59,8 +59,8 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 # set configuration for printing tables
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120)
 
-db = SQLite.DB(config["sqlite"]["metadata"]["path"])
-allmeta = SQLite.Query(db, "SELECT * FROM filemakermetadata") |> DataFrame
+metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
+allmeta = SQLite.Query(metadb, "SELECT * FROM filemakermetadata") |> DataFrame
 # pretty print table
 @pt allmeta
 ```
@@ -96,9 +96,6 @@ it's useful to group gids by age groups:
 
 ```julia
 using Statistics
-
-# remove once we get table
-filter(row-> row.metadatum == "correctedAgeDays", allmeta)
 
 agelabels = by(allmeta, [:subject, :timepoint]) do sample
     age = filter(row-> row.metadatum == "correctedAgeDays", sample)
@@ -272,29 +269,19 @@ And now the same thing for the high resolution scan table:
 ```julia; results="hidden"
 hires = CSV.read(brainfiles["hires"])
 hires2 = CSV.read(brainfiles["hires2"])
+rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
+rename!(hires2, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 
 
-hr2_samples = resolve_letter_timepoint(String.(hires2.ID))
+hr2_samples = resolve_letter_timepoint(string.(hires2.subject))
 hires2.subject = subject.(hr2_samples)
 hires2.timepoint = timepoint.(hr2_samples)
-@assert names(hires) == names(hires2)
 
-rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 # don't want to replicate :age column
 select!(hires, Not(:Age))
-select!(hires2, Not([Symbol("Kevin List"), :ID]))
-println(names(hires))
-println(names(hires2))
-hrs = collect(zip(hires.subject, hires.timepoint))
-hrs2 = collect(zip(hires2.subject, hires2.timepoint))
-ss = filter(row-> sampletype(row.sample) == "omnigene", samples)
-
-s = Set(collect(zip(ss.subject, ss.timepoint)))
-setdiff(hrs, hrs2)
-setdiff(hrs2, hrs)
-
-intersect(s, hrs)
-intersect(s, union(hrs, hrs2))
+@assert names(hires) == names(hires2)
+hires = vcat(hires, hires2)
+unique!(hires, [:subject,:timepoint])
 
 @pt hires
 ```
@@ -383,13 +370,13 @@ allmeta.value = string.(allmeta.value)
 ## Save to SQLite
 
 ```julia
-SQLite.drop!(db, "allmetadata", ifexists=true)
-SQLite.dropindex!(db, "allmetadata_subject_idx", ifexists=true)
-SQLite.dropindex!(db, "allmetadata_metadatum_idx", ifexists=true)
+SQLite.drop!(metadb, "allmetadata", ifexists=true)
+SQLite.dropindex!(metadb, "allmetadata_subject_idx", ifexists=true)
+SQLite.dropindex!(metadb, "allmetadata_metadatum_idx", ifexists=true)
 
-allmeta |> SQLite.load!(db, "allmetadata")
-SQLite.createindex!(db, "allmetadata", "allmetadata_subject_idx", "subject", unique=false)
-SQLite.createindex!(db, "allmetadata", "allmetadata_metadatum_idx", "metadatum", unique=false)
+allmeta |> SQLite.load!(metadb, "allmetadata")
+SQLite.createindex!(metadb, "allmetadata", "allmetadata_subject_idx", "subject", unique=false)
+SQLite.createindex!(metadb, "allmetadata", "allmetadata_metadatum_idx", "metadatum", unique=false)
 ```
 
 ## Converting to wide-form

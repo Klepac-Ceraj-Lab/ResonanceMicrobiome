@@ -1,0 +1,100 @@
+# Main Figures
+
+Start after notebook 2.
+
+## Setup
+
+```julia; results="hidden"
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+```
+```julia
+ENV["GKSwstype"] = "100"
+using ECHOAnalysis
+using DataFrames
+using SQLite
+using StatsPlots
+using PrettyTables
+using CSV
+using Microbiome
+using Distances
+using MultivariateStats
+using Pkg.TOML: parsefile
+using Clustering
+using MicrobiomePlots
+
+rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+# print ~15 random rows
+randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
+@ptconfclean # clear previous configuration
+@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
+
+includet("accessories.jl")
+
+config = parsefile("data/data.toml")
+allmeta = getmgxmetadata()
+allmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false))
+figures = config["output"]["figures"]
+figures = joinpath(figures, "figure1")
+tables = config["output"]["tables"]
+isdir(figures) || mkpath(figures)
+isdir(tables) || mkpath(tables)
+```
+### Feature tables
+
+```julia; results="hidden"
+taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
+species = sqlprofile(taxdb, tablename="taxa", kind="species")
+
+species = view(species, sites=allmeta.sample) |> copy
+relativeabundance!(species)
+```
+```julia; results="hidden"
+unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
+unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
+species = view(species, sites=sitenames(unirefs)) |> copy
+```
+```julia; results="hidden"
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+pfams = sqlprofile(pfamdb, tablename="pfam_names_relab", kind="pfam_names_relab")
+ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
+ecs = sqlprofile(ecdb, tablename="ec_names_relab", kind="ec_names_relab")
+```
+```julia
+@assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
+allmeta = getmgxmetadata(samples=sitenames(species))
+```
+
+### Metadata groups
+
+```julia; results="hidden"
+allmomsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=ismom))
+allkidsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=iskid))
+
+umomsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=ismom))
+ukidsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid))
+umeta = getmgxmetadata(samples=[ukidsmeta.sample; umomsmeta.sample])
+```
+
+Accessory gene filters
+
+```julia
+Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, minabundance), (y for y in a))
+```
+```julia
+unirefprevfilt = map(eachrow(occurrences(unirefs))) do row
+    u1_prev = prevalence(row[map(x-> !ismissing(x) && x == "1 and under", allmeta.ageLabel)], 0.)
+    o1_prev = prevalence(row[map(x-> !ismissing(x) && x != "mom" && x != "1 and under", allmeta.ageLabel)], 0.)
+    mom_prev = prevalence(row[map(x-> !ismissing(x) && x == "mom", allmeta.ageLabel)], 0.)
+
+    return (any(>(0.05), [u1_prev, o1_prev, mom_prev]), all(<(0.9), [u1_prev, o1_prev, mom_prev]) )
+end
+
+unirefprevalent = view(unirefs, species=[p[1] for p in unirefprevfilt])
+unirefaccessory = view(unirefs, species=map(all, unirefprevfilt))
+```
+
+## PCoAs
