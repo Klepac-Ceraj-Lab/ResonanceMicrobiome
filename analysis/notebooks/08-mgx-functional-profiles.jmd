@@ -506,24 +506,6 @@ end
 And we can convert those KOs to UniRef90s to get our gene set.
 
 ```julia
-kos2uniref = Dict()
-for line in eachline("data/engaging/ko2uniref90.txt")
-    line = split(line, '\t')
-    kos2uniref[line[1]] = map(x-> String(match(r"UniRef90_(\w+)", x).captures[1]), line[2:end])
-end
-
-
-na_uniref = let urefs = []
-    for (key, value) in neuroactive
-        for k in value.kos
-            if k in keys(kos2uniref)
-                append!(urefs, kos2uniref[k])
-            end
-        end
-    end
-    Set{String}(urefs)
-end
-
 neuroactive_pos = findall(f-> f in na_uniref, features)
 mwu = MannWhitneyUTest(agecors[neuroactive_pos], agecors[Not(neuroactive_pos)])
 ```

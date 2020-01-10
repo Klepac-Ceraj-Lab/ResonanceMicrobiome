@@ -23,6 +23,9 @@ using MultivariateStats
 using Pkg.TOML: parsefile
 using Clustering
 using MicrobiomePlots
+using BiobakeryUtils
+using MultipleTesting
+
 
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
 # print ~15 random rows
@@ -34,6 +37,7 @@ includet("accessories.jl")
 
 config = parsefile("data/data.toml")
 allmeta = getmgxmetadata()
+
 allmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false))
 figures = config["output"]["figures"]
 figures = joinpath(figures, "figure1")
@@ -48,8 +52,10 @@ taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
 species = sqlprofile(taxdb, tablename="taxa", kind="species")
 
 species = view(species, sites=allmeta.sample) |> copy
+
 relativeabundance!(species)
 ```
+
 ```julia; results="hidden"
 unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
 unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
@@ -58,25 +64,57 @@ species = view(species, sites=sitenames(unirefs)) |> copy
 ```julia; results="hidden"
 kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
 kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
+kos = view(kos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(kos)))
 pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
 pfams = sqlprofile(pfamdb, tablename="pfam_names_relab", kind="pfam_names_relab")
+pfams = view(pfams, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(pfams)))
 ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
 ecs = sqlprofile(ecdb, tablename="ec_names_relab", kind="ec_names_relab")
+ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs)))
 ```
 ```julia
 @assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
 allmeta = getmgxmetadata(samples=sitenames(species))
+dropmissing!(allmeta, :ageLabel)
+species = view(species, sites=allmeta.sample) |> copy
+unirefs = view(unirefs, sites=allmeta.sample) |> copy
+kos     = view(kos, sites=allmeta.sample)     |> copy
+pfams   = view(pfams, sites=allmeta.sample)   |> copy
+ecs     = view(ecs, sites=allmeta.sample)     |> copy
 ```
 
-### Metadata groups
+### Subgroup indexes
 
 ```julia; results="hidden"
-allmomsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=ismom))
-allkidsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=iskid))
+allmoms = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=ismom)))
+    map(s-> in(s, samples), allmeta.sample)
+end
 
-umomsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=ismom))
-ukidsmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid))
-umeta = getmgxmetadata(samples=[ukidsmeta.sample; umomsmeta.sample])
+allkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=iskid)))
+    map(s-> in(s, samples), allmeta.sample)
+end
+
+umoms = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=ismom)))
+    map(s-> in(s, samples), allmeta.sample)
+end
+
+ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid)))
+    (map(s-> in(s, samples), allmeta.sample),
+    map(row-> in(row.sample, samples) && row.ageLabel == "2 and over", eachrow(allmeta)))
+end
+
+uboth = map(any, zip(umoms, ukids))
+```
+
+### Metadata subgroups
+
+```julia
+allmomsmeta = view(allmeta, allmoms, :)
+umomsmeta = view(allmeta, umoms, :)
+allkidsmeta = view(allmeta, allkids, :)
+ukidsmeta = view(allmeta, ukids, :)
+oldkidsmeta = view(allmeta, oldkids, :)
+ubothmeta = view(allmeta, uboth, :)
 ```
 
 Accessory gene filters
@@ -86,9 +124,9 @@ Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, min
 ```
 ```julia
 unirefprevfilt = map(eachrow(occurrences(unirefs))) do row
-    u1_prev = prevalence(row[map(x-> !ismissing(x) && x == "1 and under", allmeta.ageLabel)], 0.)
-    o1_prev = prevalence(row[map(x-> !ismissing(x) && x != "mom" && x != "1 and under", allmeta.ageLabel)], 0.)
-    mom_prev = prevalence(row[map(x-> !ismissing(x) && x == "mom", allmeta.ageLabel)], 0.)
+    u1_prev = prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.)
+    o1_prev = prevalence(row[map(x->  x != "mom" && x != "1 and under", allmeta.ageLabel)], 0.)
+    mom_prev = prevalence(row[map(x-> x == "mom", allmeta.ageLabel)], 0.)
 
     return (any(>(0.05), [u1_prev, o1_prev, mom_prev]), all(<(0.9), [u1_prev, o1_prev, mom_prev]) )
 end
@@ -97,4 +135,336 @@ unirefprevalent = view(unirefs, species=[p[1] for p in unirefprevfilt])
 unirefaccessory = view(unirefs, species=map(all, unirefprevfilt))
 ```
 
-## PCoAs
+### Additional info
+
+```julia
+allmeta.shannon = shannon(species)
+allmeta.identifiable_unirefs = 1 .- Vector(occurrences(unirefs)[1,:])
+allmeta.n_unirefs = vec(sum(!=(0.), occurrences(unirefs)[1:end,:], dims=1))
+allmeta.subject_type = [ismom(s) ? "Mother" :
+                        iskid(s) ? "Child"  :
+                        error("Not mom or kid: $s") for s in allmeta.sample]
+
+allmeta.lowres_total = map(row-> sum(row[[:white_matter_volume, :grey_matter_volume, :csf_volume]]), eachrow(allmeta))
+allmeta.white_matter_normed = allmeta.white_matter_volume ./ allmeta.lowres_total
+allmeta.grey_matter_normed = allmeta.grey_matter_volume ./ allmeta.lowres_total
+allmeta.csf_normed = allmeta.csf_volume ./ allmeta.lowres_total
+
+allmeta.cerebellar_normed = allmeta.cerebellar ./ allmeta.hires_total
+allmeta.neocortical_normed = allmeta.neocortical ./ allmeta.hires_total
+allmeta.subcortical_normed = allmeta.subcortical ./ allmeta.hires_total
+allmeta.limbic_normed = allmeta.limbic ./ allmeta.hires_total
+```
+
+
+## Figure 1A
+
+```julia; results="hidden"
+speciesdm = pairwise(BrayCurtis(), species)
+speciesmds = fit(MDS, speciesdm, distances=true)
+speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
+```
+
+```julia
+p1a1 = plot(speciesmds, group=allmeta.ageLabel, color=color3',
+    title="All samples, taxonomic profiles")
+xlabel!(p1a1, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
+ylabel!(p1a1, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+p1a2 = plot(speciesmds, zcolor=allmeta.shannon, color=:viridis, primary=false,
+    title="All samples, taxonomic profiles",
+    colorbar_title="Shannon diversity")
+xlabel!(p1a2, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
+ylabel!(p1a2, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
+```
+```julia; results="hidden"
+kidsspeciesmds = fit(MDS, speciesdm[allkids,allkids], distances=true)
+kidsspeciesmdsaxes = [v / sum(eigvals(kidsspeciesmds)) for v in eigvals(kidsspeciesmds)]
+```
+```julia
+p1a3 = scatter(projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+    zcolor=allkidsmeta.shannon, color=:viridis, primary=false,
+    yaxis="Age (years)",
+    title="All kids, taxonomic profiles",
+    colorbar_title="Shannon diversity")
+xlabel!("MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)")
+```
+
+## Figure 1B
+
+```julia; results="hidden"
+unirefaccessorydm = pairwise(BrayCurtis(), unirefaccessory)
+unirefaccessorymds = fit(MDS, unirefaccessorydm[uboth, uboth], distances=true)
+unirefaccessorymdsaxes = [v / sum(eigvals(unirefaccessorymds)) for v in eigvals(unirefaccessorymds)]
+```
+
+```julia
+p1b1 = plot(unirefaccessorymds, group=ubothmeta.ageLabel, color=color3',
+    title="All samples, functional (UniRef90) profiles")
+xlabel!(p1b1, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
+ylabel!(p1b1, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+p1b2 = plot(unirefaccessorymds, zcolor=allmeta.identifiable_unirefs, color=:solar, primary=false,
+    title="All samples, functional (UniRef90) profiles",
+    colorbar_title="Abundance of identifiable genes")
+xlabel!(p1b2, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
+ylabel!(p1b2, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
+```
+```julia; results="hidden"
+kidsunirefaccessorymds = fit(MDS, unirefaccessorydm[allkids,allkids], distances=true)
+kidsunirefaccessorymdsaxes = [v / sum(eigvals(kidsunirefaccessorymds)) for v in eigvals(kidsunirefaccessorymds)]
+```
+```julia
+p1b3 = scatter(projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+    zcolor=allkidsmeta.n_unirefs, color=:BrBG, primary=false,
+    yaxis="Age (years)",
+    title="All kids, functional (UniRef90) profiles",
+    colorbar_title="Number of genes")
+xlabel!(p1b3, "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)")
+```
+
+# Figure 1C
+
+```julia
+using RCall
+
+function BiobakeryUtils.permanova(dm::Array{<:Real,2}, metadata::AbstractVector, nperm::Int=999;
+                    label=nothing, datafilter=x->true)
+    size(dm,1) != size(dm,2) && throw(ArgumentError("dm must be symetrical distance matrix"))
+    size(dm,2) != length(metadata) && throw(ArgumentError("Metadata does not match the size of distance matrix"))
+    let notmissing = map(!ismissing, metadata)
+        metadata = metadata[notmissing]
+        dm = dm[notmissing, notmissing]
+    end
+
+    filt = map(datafilter, metadata)
+    r_dm = dm[filt, filt]
+    metadata = metadata[filt]
+    @rput r_dm
+    @rput metadata
+    reval("library(vegan)")
+
+    reval("p <- adonis(r_dm ~ metadata, permutations = $nperm)")
+
+    @rget p
+
+    p = p[:aov_tab]
+    if !isnothing(label)
+        p[!,:label] = fill(label, size(p, 1))
+    end
+
+    return p
+end
+
+
+function BiobakeryUtils.permanova(dm, metadata::AbstractDataFrame, nperm=10000;
+            datafilter=x->true,
+            label=nothing,
+            fields=names(metadata))
+    let notmissing = map(row->all(!ismissing, row[fields]), eachrow(metadata))
+        metadata = metadata[notmissing, :]
+        dm = dm[notmissing, notmissing]
+    end
+
+    fields = join(String.(fields), " + ")
+
+    filt = map(datafilter, eachrow(metadata))
+    r_meta = metadata[filt, :]
+    r_dm = dm[filt,filt]
+    @rput r_meta
+    @rput r_dm
+    reval("library(vegan)")
+    reval("p <- adonis(r_dm ~ $fields, data=r_meta, permutations = $nperm)")
+
+    @rget p
+    p = p[:aov_tab]
+    if !isnothing(label)
+        p[!,:label] = fill(label, size(p, 1))
+    end
+
+    return p
+end
+```
+```julia
+species_permanovas = vcat(
+    permanova(speciesdm, string.(allmeta.subject), label="subject"),
+    permanova(speciesdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
+    permanova(speciesdm[uboth,uboth], ubothmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:subject_type], label="2+ subject type"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:correctedAgeDays], label="2+ age"),
+    permanova(speciesdm[ukids,ukids], string.(ukidsmeta.birthType), label="birth type"),
+    permanova(speciesdm[ukids,ukids], string.(ukidsmeta.childGender), datafilter=x-> x != "Don't know", label="child gender"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
+    )
+```
+```julia
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), species_permanovas)
+species_permanovas[!, :feature] .= "species"
+rename!(species_permanovas, Symbol("Pr(>F)")=>:p_value)
+disallowmissing!(species_permanovas)
+species_permanovas.q_value = adjust(species_permanovas.p_value, BenjaminiHochberg())
+sort!(species_permanovas, :q_value)
+```
+
+```julia
+unirefaccessory_permanovas = vcat(
+    permanova(unirefaccessorydm, string.(allmeta.subject), label="subject"),
+    permanova(unirefaccessorydm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
+    permanova(unirefaccessorydm[uboth,uboth], ubothmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:subject_type], label="2+ subject type"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:correctedAgeDays], label="2+ age"),
+    permanova(unirefaccessorydm[ukids,ukids], string.(ukidsmeta.birthType), label="birth type"),
+    permanova(unirefaccessorydm[ukids,ukids], string.(ukidsmeta.childGender), datafilter=x-> x != "Don't know", label="child gender"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
+    )
+```
+```julia
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), unirefaccessory_permanovas)
+unirefaccessory_permanovas[!, :feature] .= "unirefaccessory"
+rename!(unirefaccessory_permanovas, Symbol("Pr(>F)")=>:p_value)
+disallowmissing!(unirefaccessory_permanovas)
+unirefaccessory_permanovas.q_value = adjust(unirefaccessory_permanovas.p_value, BenjaminiHochberg())
+sort!(unirefaccessory_permanovas, :q_value)
+```
+
+```julia
+pfamsdm = pairwise(BrayCurtis(), pfams)
+kosdm = pairwise(BrayCurtis(), kos)
+ecsdm = pairwise(BrayCurtis(), ecs)
+```
+```julia
+pfams_permanovas = vcat(
+    permanova(pfamsdm, string.(allmeta.subject), label="subject"),
+    permanova(pfamsdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
+    permanova(pfamsdm[uboth,uboth], ubothmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:subject_type], label="2+ subject type"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:correctedAgeDays], label="2+ age"),
+    permanova(pfamsdm[ukids,ukids], string.(ukidsmeta.birthType), label="birth type"),
+    permanova(pfamsdm[ukids,ukids], string.(ukidsmeta.childGender), datafilter=x-> x != "Don't know", label="child gender"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
+    )
+```
+```julia
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), pfams_permanovas)
+pfams_permanovas[!, :feature] .= "pfams"
+rename!(pfams_permanovas, Symbol("Pr(>F)")=>:p_value)
+disallowmissing!(pfams_permanovas)
+pfams_permanovas.q_value = adjust(pfams_permanovas.p_value, BenjaminiHochberg())
+sort!(pfams_permanovas, :q_value)
+```
+
+```julia
+kos_permanovas = vcat(
+    permanova(kosdm, string.(allmeta.subject), label="subject"),
+    permanova(kosdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
+    permanova(kosdm[uboth,uboth], ubothmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:subject_type], label="2+ subject type"),
+    permanova(kosdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
+    permanova(kosdm[ukids,ukids], ukidsmeta,
+        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
+        fields=[:correctedAgeDays], label="2+ age"),
+    permanova(kosdm[ukids,ukids], string.(ukidsmeta.birthType), label="birth type"),
+    permanova(kosdm[ukids,ukids], string.(ukidsmeta.childGender), datafilter=x-> x != "Don't know", label="child gender"),
+    permanova(kosdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
+    )
+```
+```julia
+filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), kos_permanovas)
+kos_permanovas[!, :feature] .= "kos"
+rename!(kos_permanovas, Symbol("Pr(>F)")=>:p_value)
+disallowmissing!(kos_permanovas)
+kos_permanovas.q_value = adjust(kos_permanovas.p_value, BenjaminiHochberg())
+sort!(kos_permanovas, :q_value)
+```
+```julia
+allpermanovas = vcat(
+    species_permanovas,
+    unirefaccessory_permanovas,
+    pfams_permanovas,
+    kos_permanovas
+    )
+sort!(allpermanovas, :R2)
+r2 = unstack(allpermanovas, :label, :feature, :R2)
+r2m = Matrix(r2[!,[:species, :unirefaccessory, :pfams, :kos]])
+q = unstack(allpermanovas, :label, :feature, :q_value)
+qm = Matrix(q[!,[:species, :unirefaccessory, :pfams, :kos]])
+
+qa = let M = fill("", size(qm))
+    for i in eachindex(qm)
+        ismissing(qm[i]) && continue
+        if qm[i] < 0.001
+            M[i] = "***"
+        elseif qm[i] < 0.01
+            M[i] = "**"
+        elseif qm[i] < 0.1
+            M[i] = "*"
+        end
+    end
+    M
+end
+
+f1c = heatmap(r2m, color=:PuBu, clims=(0.,0.2),
+    yticks=(1:size(r2m, 1), r2[:label]),
+    xticks=(1:size(r2m, 2), names(r2)[2:end]))
+
+for (i, col) in enumerate(eachcol(qa))
+    annotate!(f1c, [(i, c+.2, text(col[c], 8)) for c in eachindex(col)])
+    annotate!(f1c, [(i, c, text(
+                    ismissing(r2m[c,i]) ?
+                    "missing" :
+                    "$(round(r2m[c,i] *100, digits=2))%",
+                    8)) for c in eachindex(col)])
+end
+display(f1c)
+```
+## Figure 1D-E
+
+```julia
+abxr = CSV.read("data/uniprot/uniprot-abxr.tsv")
+carbs = CSV.read("data/uniprot/uniprot-carbohydrate.tsv")
+fa = CSV.read("data/uniprot/uniprot-fa.tsv")
+allunirefs = map(u-> match.(r"UniRef90_(\w+)",u).captures[1], featurenames(unirefaccessory))
+
+neuroactive = getneuroactive(allunirefs) # function in accessories.jl
+allneuroactive = union([neuroactive[k] for k in keys(neuroactive)]...)
+
+(agecors, pos, mwu) = fsea(occurrences(view(unirefaccessory, sites=ukids)), ukidsmeta.correctedAgeDays,
+                            allneuroactive)
+
+# genesets =
+```
