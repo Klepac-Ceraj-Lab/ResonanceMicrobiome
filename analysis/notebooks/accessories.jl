@@ -29,7 +29,7 @@ function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt")
             desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
             @info "getting unirefs for $desc"
             if !in(desc, keys(neuroactive))
-                neuroactive[desc] = Set(Int[])
+                neuroactive[desc] = Int[]
             end
         else
             filter!(l-> occursin(r"^K\d+$", l), line)
@@ -37,8 +37,11 @@ function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt")
             length(searchfor) == 0 && continue
             searchfor = Set(vcat(searchfor...))
             pos = findall(u-> u in searchfor, features)
-            union!(neuroactive[desc], pos)
+            append!(neuroactive[desc], pos)
         end
+    end
+    for k in keys(neuroactive)
+        unique!(neuroactive[k])
     end
     return neuroactive
 end
@@ -51,7 +54,7 @@ function fsea(cors, allfeatures::AbstractVector, searchset::Set)
     return fsea(cors, pos)
 end
 
-function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos)
+function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVector{<:Int})
     let notmissing = map(!ismissing, metadatum)
         occ = occ[:, notmissing]
         metadatum = metadatum[notmissing]
@@ -59,4 +62,23 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos)
 
     cors = cor(metadatum, occ, dims=2)'
     return fsea(cors, pos)
+end
+
+
+function plotfsea(df::AbstractDataFrame, ymin, ymax)
+    md = first(eachrow(df)).metadatum
+    plt = boxplot(df.cors, color=:lightgrey,
+        legend=false, xticks=(1:nrow(df), df.geneset), xrotation=90,
+        ylabel="Median $md Correlation",
+        yticks= ymin:0.1:ymax)
+    for (i, row) in enumerate(eachrow(df))
+        if row.qvalue < 0.001
+            annotate!(i, ymax -0.1, "***", align=:center)
+        elseif row.qvalue < 0.01
+            annotate!(i, ymax -0.1, "**", align=:center)
+        elseif row.qvalue < 0.1
+            annotate!(i, ymax -0.1, "*", align=:center)
+        end
+    end
+    return(plt)
 end
