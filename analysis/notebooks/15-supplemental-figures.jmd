@@ -1,0 +1,17 @@
+# Supplementary Figures
+
+Start after notebook 2.
+
+## Setup
+
+This step takes about an hour
+
+```julia
+using Pkg
+Pkg.activate("analysis/")
+using Revise
+
+include("startup-loadall.jl")
+```
+```julia
+```
