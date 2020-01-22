@@ -64,7 +64,7 @@ xlabel!(f1b1, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
 ylabel!(f1b1, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
 ```
 ```julia
-f1b2 = plot(unirefaccessorymds, zcolor=allmeta.identifiable_unirefs, color=:solar, primary=false,
+f1b2 = plot(unirefaccessorymds, zcolor=ubothmeta.identifiable_unirefs, color=:solar, primary=false,
     title="All samples, functional (UniRef90) profiles",
     colorbar_title="Abundance of identifiable genes")
 xlabel!(f1b2, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
@@ -375,12 +375,12 @@ end
 
 allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
 
-bplts = let (ymin, ymax) = (minimum(minimum, allfsea.cors), maximum(maximum, allfsea.cors))
+bplts = let (ymin, ymax) = (minimum(minimum, df.cors), maximum(maximum, df.cors))
     ymin = round(ymin, digits=1) - 0.1
     ymax = round(ymax, digits=1) + 0.1
 
     bplts = []
-    by(allfsea, :metadatum) do df
+    by(df, :metadatum) do df
         push!(bplts, plotfsea(df, ymin, ymax, ))
     end
     bplts
@@ -411,4 +411,15 @@ plot(plot(f1a1, markersize=8),
 ```
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "figure1.svg"))
+```
+
+```julia
+using JLD2
+
+@save "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
+@save "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@save "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@save "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
 ```

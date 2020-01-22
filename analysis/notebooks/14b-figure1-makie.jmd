@@ -1,0 +1,121 @@
+```julia
+using Pkg
+Pkg.activate("analysis/")
+using JLD2
+using DataFrames
+using MultivariateStats
+using MakieLayout
+using AbstractPlotting
+using StatsMakie
+using CairoMakie
+using Makie
+using ColorSchemes
+
+AbstractPlotting.inline!(false)
+
+@load "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
+@load "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@load "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+```
+```julia
+scene, layout = layoutscene()
+upperleft = GridLayout()
+ul_axes = upperleft[1:3, 1:2] = [LAxis(scene) for row in 1:3, col in 1:2]
+upperright = GridLayout()
+ur_axes_top = upperright[1:2, 1] = LAxis(scene)
+ur_axes_bottom = upperright[3, 1] = LAxis(scene)
+layout[1:4, 1:3] = upperleft
+layout[1:4, 4:5] = upperright
+lower_axes = layout[5, 1:5] = [LAxis(scene) for col in 1:5]
+upperleft[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 30, 10, 0))
+upperleft[2, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 30, 10, 0))
+upperleft[3, 1, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 30, 10, 0))
+upperright[1, 1, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 30, 10, 0))
+upperright[3, 1, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 30, 10, 0))
+layout[5, 1, TopLeft()] = LText(scene, "F", textsize = 40, padding = (0, 30, 10, 0))
+scene
+
+
+scatter!(ul_axes[1,1], Group(allmeta.ageLabel), projection(speciesmds)[:,1:2],
+        markersize = 10 * AbstractPlotting.px, color=color3,
+        strokecolor=:black, strokewidth=1)
+scatter!(ul_axes[2,1], projection(speciesmds)[:,1:2], color = allmeta.shannon,
+        markersize = 10 * AbstractPlotting.px,
+        strokecolor=:black, strokewidth=1)
+scatter!(ul_axes[3,1], projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+        markersize = 10 * AbstractPlotting.px,
+        color=allkidsmeta.shannon,
+        strokecolor=:black, strokewidth=1)
+scatter!(ul_axes[1,2], Group(ubothmeta.ageLabel), projection(unirefaccessorymds)[:,1:2],
+            markersize = 10 * AbstractPlotting.px,
+            color=color3, strokecolor=:black, strokewidth=1)
+scatter!(ul_axes[2,2], projection(unirefaccessorymds)[:,1:2],
+            color=ubothmeta.identifiable_unirefs,
+            markersize = 10 * AbstractPlotting.px,
+            colormap=ColorSchemes.solar.colors,
+            strokecolor=:black, strokewidth=1)
+scatter!(ul_axes[3,2], projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+            markersize = 10 * AbstractPlotting.px,
+            color=allkidsmeta.n_unirefs, colormap=ColorSchemes.BrBG_10.colors,
+            strokecolor=:black, strokewidth=1)
+
+describe(allkidsmeta.cogScore)
+
+let filt = map(!ismissing, allkidsmeta.cogScore)
+    scatter!(ur_axes_bottom, Group(allkidsmeta.cogAssessment[filt]),
+                allkidsmeta.correctedAgeDays[filt] ./ 365,
+                allkidsmeta.cogScore[filt],
+                color=ColorSchemes.Set1_5.colors[2:end],
+                markersize = 10 * AbstractPlotting.px,
+                strokecolor=:black, strokewidth=1
+                )
+end
+
+heatmap!(ur_axes_top, r2m', colormap=ColorSchemes.PuBu_9.colors, colorrange=(0,0.2))
+positions = Point2f0.(vec(collect(Tuple.(CartesianIndices(r2m')))))
+annotations!(ur_axes_top, vec(string.(round.(r2m' .* 100, digits=2))), positions .- 0.5,
+                align = (:left, :left),
+                textsize = 0.4,
+                raw = true)
+scene
+```
+```julia
+allfsea = vcat(
+    (DataFrame((geneset=row.geneset, metadatum=row.metadatum, cor=i) for i in row.cors)
+    for row in eachrow(allfsea))...
+    )
+
+let genesets = unique(allfsea.geneset)
+    gmap = Dict(g=>i for (i,g) in enumerate(genesets))
+    allfsea.gsindex = [gmap[g] for g in allfsea.geneset]
+end
+
+groups = groupby(allfsea, :metadatum)
+
+scene, layout = layoutscene()
+ax = layout[1, 1] = LAxis(scene, xticklabelrotation = -pi/2, xticklabelalign = (:left, :center))
+StatsMakie.boxplot!(ax, Data(groups[1]), :gsindex, :cor,
+            markersize = 10 * AbstractPlotting.px,
+
+            )
+ax.xticks = ManualTicks(1:length(unique(allfsea.gsindex)), unique(allfsea.geneset))
+scene
+
+
+boxplot(Data(groups[1]), 1:size(groups[1],1), :cor)
+```
+
+
+
+
+```julia
+f1a1leg = LLegend(ul_axes[1], sort(unique(allmeta.ageLabel)[1]), ["moms"])
+f1a2legend = colorlegend(f1a2[end], raw = true, camera = campixel!)
+f1a3legend = colorlegend(f1a3[end], raw = true, camera = campixel!)
+f1b1legend = legend(f1b1, sort(unique(ubothmeta.ageLabel)))
+f1b2legend = colorlegend(f1b2[end], raw=true, camera=campixel!)
+f1b3legend = colorlegend(f1b3[end], raw=true, camera=campixel!)
+```
