@@ -14,7 +14,7 @@ version = "0.2.0"
 
 [[AbstractPlotting]]
 deps = ["AbstractNumbers", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "FreeType", "FreeTypeAbstraction", "GeometryTypes", "ImageMagick", "IntervalSets", "LinearAlgebra", "Markdown", "Observables", "Packing", "PlotUtils", "Printf", "Random", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "StaticArrays", "Statistics", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "0bdd3aef1b9d7b0130e74ace51a538f60706438a"
+git-tree-sha1 = "46e42451ddab8e546deec7be8fad7f55d7870849"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaPlots/AbstractPlotting.jl.git"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
@@ -647,11 +647,11 @@ version = "0.9.5"
 
 [[MakieLayout]]
 deps = ["AbstractPlotting", "Animations", "Formatting", "Match", "Observables"]
-git-tree-sha1 = "3ee2f5707da62e4089cb2bd7bb142f4bd92ea8b2"
+git-tree-sha1 = "ffed02c4223191c1b4237f67208b8c105fee9409"
 repo-rev = "master"
 repo-url = "https://github.com/jkrumbiegel/MakieLayout.jl.git"
 uuid = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"
-version = "0.2.8"
+version = "0.2.12"
 
 [[MappedArrays]]
 git-tree-sha1 = "e2a02fe7ee86a10c707ff1756ab1650b40b140bb"
@@ -680,9 +680,9 @@ version = "0.3.1"
 
 [[Microbiome]]
 deps = ["DataFrames", "MultivariateStats", "Reexport", "SpatialEcology", "Statistics", "StatsBase"]
-git-tree-sha1 = "debcd4847f6b5b846c6f64b822c7956a123d6976"
+git-tree-sha1 = "1ac49238cdc02baa2967e92c7aa9312a98ca3989"
 uuid = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
-version = "0.5.1"
+version = "0.5.0"
 
 [[MicrobiomePlots]]
 deps = ["Colors", "Microbiome", "RecipesBase", "StatsPlots"]
@@ -755,9 +755,9 @@ uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
 version = "0.2.3"
 
 [[OffsetArrays]]
-git-tree-sha1 = "fcfb0d1acd89dd37bbfce2873c8401713a855f80"
+git-tree-sha1 = "707e34562700b81e8aa13548eb6b23b18112e49b"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.0.1"
+version = "1.0.2"
 
 [[OpenBLAS_jll]]
 deps = ["Libdl", "Pkg"]
@@ -791,9 +791,9 @@ version = "8.42.0+1"
 
 [[PDMats]]
 deps = ["Arpack", "LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
-git-tree-sha1 = "035f8d60ba2a22cb1d2580b1e0e5ce0cb05e4563"
+git-tree-sha1 = "5f303510529486bb02ac4d70da8295da38302194"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.9.10"
+version = "0.9.11"
 
 [[Packing]]
 deps = ["GeometryTypes", "Test"]
@@ -849,7 +849,7 @@ version = "0.6.2"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryTypes", "JSON", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "Reexport", "Requires", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
-git-tree-sha1 = "fe398eb41a039e972b2f75e15f4b6384978a5412"
+git-tree-sha1 = "3433ef487688a3391b6248b6960b90df690d3512"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaPlots/Plots.jl.git"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -1003,10 +1003,10 @@ deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpatialEcology]]
-deps = ["DataFrames", "DataFramesMeta", "EcoBase", "Random", "RandomBooleanMatrices", "RandomNumbers", "RecipesBase", "SparseArrays", "Statistics", "StatsBase", "Test"]
-git-tree-sha1 = "7e4ae3dd9cd98ac6127a28fc5bc46bdf5e28d86b"
+deps = ["DataFrames", "DataFramesMeta", "Distances", "EcoBase", "Random", "RandomBooleanMatrices", "RandomNumbers", "RecipesBase", "SparseArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "511ab3cdda7dbe903581cf7dfdcaaeade7e3d0cd"
 uuid = "348f2d5d-71a3-5ad4-b565-8af070f99681"
-version = "0.7.0"
+version = "0.8.0"
 
 [[SpecialFunctions]]
 deps = ["OpenSpecFun_jll"]
@@ -1044,9 +1044,11 @@ version = "0.9.3"
 
 [[StatsMakie]]
 deps = ["AbstractPlotting", "Distributions", "FileIO", "FreqTables", "IntervalSets", "KernelDensity", "Loess", "NamedArrays", "Observables", "OrderedCollections", "Random", "Statistics", "StatsBase", "StructArrays", "Tables", "Widgets"]
-git-tree-sha1 = "2307293357f872a6dcbe2616d47efdaa0ea2bb9b"
+git-tree-sha1 = "6d11f9816acf0f9d080272ad24516b86e388abd5"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPlots/StatsMakie.jl.git"
 uuid = "65254759-4cff-5aa5-8326-61ce017a8c70"
-version = "0.0.6"
+version = "0.0.7"
 
 [[StatsModels]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "ShiftedArrays", "SparseArrays", "StatsBase", "Tables"]
