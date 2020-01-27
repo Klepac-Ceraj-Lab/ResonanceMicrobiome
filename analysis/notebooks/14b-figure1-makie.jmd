@@ -39,34 +39,42 @@ scene, layout = layoutscene()
 layout_1A = GridLayout()
 layout_1B = GridLayout()
 layout_1CD = GridLayout()
-layout_1E = GridLayout()
+layout_1E = GridLayout(alignmode=Outside())
+layout_1E_leg = GridLayout()
 
-axes_1A = layout_1A[1:3, 1]  = [LAxis(scene) for row in 1:3]
-axes_1B = layout_1B[1:3, 1]  = [LAxis(scene) for row in 1:3]
+
+axes_1A_top    = layout_1A[1:2, 1]  = LAxis(scene)
+legend_1A = layout_1A
+
+axes_1A_bottom = layout_1A[3, 1]    = LAxis(scene)
+axes_1B_top    = layout_1B[1:2, 2]  = LAxis(scene)
+axes_1B_bottom = layout_1A[3, 2]    = LAxis(scene)
+
 axes_1C = layout_1CD[1:2, 1] =  LAxis(scene,
                                     xticklabelrotation = pi/4,
                                     xticklabelalign = (:right, :center))
 axes_1D = layout_1CD[3, 1]   =  LAxis(scene)
-axes_1E = layout_1E[1, 1:5]  = [LAxis(scene,
-                                xticklabelrotation = pi/2,
-                                xticklabelalign = (:right, :center))
-                               for col in 1:5]
+axes_1E = layout_1E[1, 1:5]  = [LAxis(scene) for col in 1:5]
+legend_1E = layout_1E_leg[1, 1:5]  = LLegend(scene, height=100,
+                                            ncols=7, nrows=2, titlevisible=false)
 
 layout[1:3, 1] = layout_1A
 layout[1:3, 2] = layout_1B
 layout[1:3, 3] = layout_1CD
 layout[4, 1:3] = layout_1E
+layout[5, 1:3] = layout_1E_leg
 
-layout_1A[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 30, 10, 0))
-layout_1B[1, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 30, 10, 0))
-layout_1CD[1, 1, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 30, 10, 0))
-layout_1CD[3, 1, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 30, 10, 0))
-layout_1E[1, 1, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 30, 10, 0))
+layout[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 30, 10, 0))
+layout[1, 2, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 30, 10, 0))
+layout[1, 3, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 30, 10, 0))
+layout[3, 3, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 30, 10, 0))
+layout[4, 1, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 30, 10, 0))
+scene
 ```
 
 ```julia
-scatter!(axes_1A[1], Group(allmeta.ageLabel), projection(speciesmds)[:,1:2],
-        markersize = 10 * AbstractPlotting.px, color=color3,
+scatter!(axes_1A[1], Group(marker=allmeta.ageLabel), Style(color=allmeta.shannon), projection(speciesmds)[:,1:2],
+        markersize = 10 * AbstractPlotting.px, marker=[:circle, :hexagon, :rect, :cross],
         strokecolor=:black, strokewidth=1)
 axes_1A[1].xlabel = "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)"
 axes_1A[1].ylabel = "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)"
@@ -214,7 +222,13 @@ annotations!(scene, labels, pixelvals,
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 16)
-# sig = permutedims(replace(qa, "" => " "))
+
+sig = vec(permutedims(replace(qa, "" => " ")))
+annotations!(scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 14))),
+    align = (:center, :center),
+    color = ifelse.(values .< 0.14, :black, :white),
+    textsize = 16)
+
 # sigpixelvals = lift(axes_1C.limits, axes_1C.scene.px_area) do lims, pxa
 #     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues .+ Ref(Point2f0(0.2, 0))))
 # end
@@ -243,12 +257,35 @@ hm_layout[1:2, 2, Left()] = LText(scene, "% Variance", rotation = pi/2, padding 
 foreach(Union{LColorbar, LAxis}, layout) do obj
     tight_ticklabel_spacing!(obj)
 end
+# scene
 ```
 
 ```julia
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
 cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
+scene
+legend_1E.entries[] = LegendEntry.(
+    ["        ", "median < 0", "      ", "  ", "      ", "median > 0", "        ",
+     "q < 0.001", "q < 0.01", "q < 0.1", "NS", "q < 0.001", "q < 0.01", "q < 0.1"],
+    [
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color=:white, strokecolor=:white),
+        MarkerElement(marker = :rect, color = cs[1], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[2], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[3], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[4], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[5], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[6], strokecolor = :black),
+        MarkerElement(marker = :rect, color = cs[7], strokecolor = :black)
+    ]
+)
+
 allfsea.color = map(eachrow(allfsea)) do row
     m = row.median
     q = row.qvalue
@@ -278,7 +315,8 @@ allfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,
                 cor=i,
-                color=row.color
+                color=row.color,
+                qvalue=row.qvalue
                 ) for i in row.cors)
     for row in eachrow(allfsea))...
     )
@@ -290,64 +328,45 @@ allfsea2.geneset = map(allfsea2.geneset) do gs
     gs
 end
 
+siggs = filter(row-> row.anysig, by(allfsea2, :geneset) do gs
+                (anysig = any(<(0.1), gs.qvalue),)
+            end).geneset |> Set
 
-
-any(gs-> occursin("degradation", gs), allfsea2.geneset)
-
+filter!(row-> row.geneset in siggs, allfsea2)
+sort!(allfsea2, :geneset)
 let genesets = unique(allfsea2.geneset)
     gmap = Dict(g=>i for (i,g) in enumerate(genesets))
     allfsea2.gsindex = [gmap[g] for g in allfsea2.geneset]
 end
 
-sort!(allfsea2, :geneset)
-
 groups = groupby(allfsea2, :metadatum)
-
 ```
 
 ```julia
-(ymin, ymax) = extrema(allfsea2.cor)
-
 for (i, gr) in enumerate(groups[2:end])
     by(gr, :gsindex) do gs
         g = first(gs.geneset)
         x = gs.gsindex
         y = gs.cor
         c = first(gs.color)
-        boxplot!(axes_1E[i], x, y, color=c,
-            markersize = 10 * AbstractPlotting.px,
-            yticks=range(ymin, stop=ymax, length=6),
-            ylims=(ymin, ymax))
+        boxplot!(axes_1E[i], x, y, color=c, orientation=:horizontal,
+            markersize = 10 * AbstractPlotting.px)
     end
-    axes_1E[i].ylabel = first(gr.metadatum)
-    axes_1E[i].ylabelpadding = 20
-    ugs = unique(gr.geneset)
-        axes_1E[i].xticks = ManualTicks(1:length(ugs), ugs)
+    axes_1E[i].xlabel = first(gr.metadatum)
+    axes_1E[i].xlabelpadding = 20
+    if i == 1
+        ugs = unique(gr.geneset)
+        axes_1E[i].yticks = ManualTicks(1:length(ugs), ugs)
+    else
+        # axes_1E[i].yticksvisible = false
+        axes_1E[i].yticklabelsvisible = false
+    end
 end
-
-# boxplot!(axes_1E[1], Data(groups[1]), :gsindex, :cor,
-#             markersize = 10 * AbstractPlotting.px, ylims=cor_ext)
-# axes_1E[1].xticks = ManualTicks(1:length(unique(allfsea2.gsindex)), unique(allfsea2.geneset))
-#
-# boxplot!(axes_1E[2], Data(groups[2]), :gsindex, :cor,
-#             markersize = 10 * AbstractPlotting.px, ylims=cor_ext)
-# axes_1E[2].xticks = ManualTicks(1:length(unique(allfsea2.gsindex)), unique(allfsea2.geneset))
-#
-# boxplot!(axes_1E[3], Data(groups[3]), :gsindex, :cor,
-#             markersize = 10 * AbstractPlotting.px, ylims=cor_ext)
-# axes_1E[3].xticks = ManualTicks(1:length(unique(allfsea2.gsindex)), unique(allfsea2.geneset))
-#
-# boxplot!(axes_1E[4], Data(groups[4]), :gsindex, :cor,
-#             markersize = 10 * AbstractPlotting.px, ylims=cor_ext)
-# axes_1E[4].xticks = ManualTicks(1:length(unique(allfsea2.gsindex)), unique(allfsea2.geneset))
-#
-# boxplot!(axes_1E[5], Data(groups[5]), :gsindex, :cor,
-#             markersize = 10 * AbstractPlotting.px, ylims=cor_ext)
-# axes_1E[5].xticks = ManualTicks(1:length(unique(allfsea2.gsindex)), unique(allfsea2.geneset))
 
 foreach(Union{LColorbar, LAxis}, layout) do obj
     tight_ticklabel_spacing!(obj)
 end
+
 scene
 ```
 
