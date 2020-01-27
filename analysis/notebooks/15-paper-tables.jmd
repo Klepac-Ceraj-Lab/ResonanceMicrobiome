@@ -45,3 +45,10 @@ open("data/analysis/tables/table1.tsv", "w") do io
 end
 
 ```
+
+## Supplementary Tables
+
+```julia
+CSV.write("data/analysis/tables/supptable1_allpermanovas.csv", allpermanovas)
+CSV.write("data/analysis/tables/supptable2_allfsea.csv", allfsea[!, Not(:cors)])
+```

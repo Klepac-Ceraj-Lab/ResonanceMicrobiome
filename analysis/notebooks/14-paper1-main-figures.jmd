@@ -23,30 +23,9 @@ speciesmds = fit(MDS, speciesdm, distances=true)
 speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
 ```
 
-```julia
-f1a1 = plot(speciesmds, group=allmeta.ageLabel, color=color3',
-    title="All samples, taxonomic profiles")
-xlabel!(f1a1, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
-ylabel!(f1a1, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
-```
-```julia
-f1a2 = plot(speciesmds, zcolor=allmeta.shannon, color=:viridis, primary=false,
-    title="All samples, taxonomic profiles",
-    colorbar_title="Shannon diversity")
-xlabel!(f1a2, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
-ylabel!(f1a2, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
-```
 ```julia; results="hidden"
 kidsspeciesmds = fit(MDS, speciesdm[allkids,allkids], distances=true)
 kidsspeciesmdsaxes = [v / sum(eigvals(kidsspeciesmds)) for v in eigvals(kidsspeciesmds)]
-```
-```julia
-f1a3 = scatter(projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
-    zcolor=allkidsmeta.shannon, color=:viridis, primary=false,
-    yaxis="Age (years)",
-    title="All kids, taxonomic profiles",
-    colorbar_title="Shannon diversity")
-xlabel!("MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)")
 ```
 
 ## Figure 1B
@@ -57,42 +36,13 @@ unirefaccessorymds = fit(MDS, unirefaccessorydm[uboth, uboth], distances=true)
 unirefaccessorymdsaxes = [v / sum(eigvals(unirefaccessorymds)) for v in eigvals(unirefaccessorymds)]
 ```
 
-```julia
-f1b1 = plot(unirefaccessorymds, group=ubothmeta.ageLabel, color=color3',
-    title="All samples, functional (UniRef90) profiles")
-xlabel!(f1b1, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
-ylabel!(f1b1, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
-```
-```julia
-f1b2 = plot(unirefaccessorymds, zcolor=ubothmeta.identifiable_unirefs, color=:solar, primary=false,
-    title="All samples, functional (UniRef90) profiles",
-    colorbar_title="Abundance of identifiable genes")
-xlabel!(f1b2, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
-ylabel!(f1b2, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
-```
 ```julia; results="hidden"
 kidsunirefaccessorymds = fit(MDS, unirefaccessorydm[allkids,allkids], distances=true)
 kidsunirefaccessorymdsaxes = [v / sum(eigvals(kidsunirefaccessorymds)) for v in eigvals(kidsunirefaccessorymds)]
 ```
-```julia
-f1b3 = scatter(projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
-    zcolor=allkidsmeta.n_unirefs, color=:BrBG, primary=false,
-    yaxis="Age (years)",
-    title="All kids, functional (UniRef90) profiles",
-    colorbar_title="Number of genes")
-xlabel!(f1b3, "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)")
-```
 
 ## Figure 1C
 
-```julia
-let filt = map(!ismissing, allkidsmeta.cogScore)
-    global f1c = scatter(allkidsmeta.correctedAgeDays[filt] ./ 365 , allkidsmeta.cogScore[filt],
-                    group=allkidsmeta.cogAssessment[filt], color=color1[2:end]',
-                    ylabel="Overall cognitive ability (score)",
-                    xlabel="Age (years)")
-end
-```
 
 
 ## Figure 1D
@@ -307,20 +257,6 @@ qa = let M = fill("", size(qm))
     end
     M
 end
-
-f1d = heatmap(r2m, color=:PuBu, clims=(0.,0.2),
-    yticks=(1:size(r2m, 1), r2[:label]),
-    xticks=(1:size(r2m, 2), names(r2)[2:end]))
-
-for (i, col) in enumerate(eachcol(qa))
-    annotate!(f1d, [(i, c+.2, text(col[c], 8)) for c in eachindex(col)])
-    annotate!(f1d, [(i, c, text(
-                    ismissing(r2m[c,i]) ?
-                    "missing" :
-                    "$(round(r2m[c,i] *100, digits=2))%",
-                    8)) for c in eachindex(col)])
-end
-display(f1d)
 ```
 
 
@@ -366,21 +302,125 @@ for md in metadatums
     end
 end
 
-
-
-
 for c in allfsea.cors
     filter!(!isnan, c)
 end
 
 allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
+```
 
-bplts = let (ymin, ymax) = (minimum(minimum, df.cors), maximum(maximum, df.cors))
+# Supplementary Figure 1
+
+```julia
+function labeldiff(dm, labels)
+    u = sort(unique(labels))
+    d = Dict(u1 => Dict() for u1 in u)
+    for (l1 , l2) in multiset_permutations(repeat(u,2), 2)
+
+        l1pos = findall(isequal(l1), labels)
+        l2pos = findall(isequal(l2), labels)
+        ds = vec(dm[l1pos, l2pos])
+        d[l1][l2] = ds
+    end
+    d
+end
+
+
+speciesdiffs = labeldiff(speciesdm[uboth, uboth], allmeta.ageLabel[uboth])
+unirefaccessorydiffs = labeldiff(unirefaccessorydm[uboth,uboth], allmeta.ageLabel[uboth])
+pfamsdiffs = labeldiff(pfamsdm[uboth,uboth], allmeta.ageLabel[uboth])
+kosdiffs = labeldiff(kosdm[uboth,uboth], allmeta.ageLabel[uboth])
+keypairs = multiset_permutations(repeat(sort(collect(keys(speciesdiffs))),2), 2)
+```
+
+
+
+
+```julia
+using JLD2
+
+@save "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
+@save "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@save "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@save "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@save "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
+```
+
+
+```julia
+f1a1 = plot(speciesmds, group=allmeta.ageLabel, color=color3',
+    title="All samples, taxonomic profiles")
+xlabel!(f1a1, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
+ylabel!(f1a1, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+f1a2 = plot(speciesmds, zcolor=allmeta.shannon, color=:viridis, primary=false,
+    title="All samples, taxonomic profiles",
+    colorbar_title="Shannon diversity")
+xlabel!(f1a2, "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)")
+ylabel!(f1a2, "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+f1a3 = scatter(projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+    zcolor=allkidsmeta.shannon, color=:viridis, primary=false,
+    yaxis="Age (years)",
+    title="All kids, taxonomic profiles",
+    colorbar_title="Shannon diversity")
+xlabel!("MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)")
+```
+```julia
+f1b1 = plot(unirefaccessorymds, group=ubothmeta.ageLabel, color=color3',
+    title="All samples, functional (UniRef90) profiles")
+xlabel!(f1b1, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
+ylabel!(f1b1, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+f1b2 = plot(unirefaccessorymds, zcolor=ubothmeta.identifiable_unirefs, color=:solar, primary=false,
+    title="All samples, functional (UniRef90) profiles",
+    colorbar_title="Abundance of identifiable genes")
+xlabel!(f1b2, "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)")
+ylabel!(f1b2, "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)")
+```
+```julia
+f1b3 = scatter(projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+    zcolor=allkidsmeta.n_unirefs, color=:BrBG, primary=false,
+    yaxis="Age (years)",
+    title="All kids, functional (UniRef90) profiles",
+    colorbar_title="Number of genes")
+xlabel!(f1b3, "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)")
+```
+```julia
+let filt = map(!ismissing, allkidsmeta.cogScore)
+    global f1c = scatter(allkidsmeta.correctedAgeDays[filt] ./ 365 , allkidsmeta.cogScore[filt],
+                    group=allkidsmeta.cogAssessment[filt], color=color1[2:end]',
+                    ylabel="Overall cognitive ability (score)",
+                    xlabel="Age (years)")
+end
+```
+```julia
+f1d = heatmap(r2m, color=:PuBu, clims=(0.,0.2),
+    yticks=(1:size(r2m, 1), r2[:label]),
+    xticks=(1:size(r2m, 2), names(r2)[2:end]))
+
+for (i, col) in enumerate(eachcol(qa))
+    annotate!(f1d, [(i, c+.2, text(col[c], 8)) for c in eachindex(col)])
+    annotate!(f1d, [(i, c, text(
+                    ismissing(r2m[c,i]) ?
+                    "missing" :
+                    "$(round(r2m[c,i] *100, digits=2))%",
+                    8)) for c in eachindex(col)])
+end
+display(f1d)
+```
+```julia
+bplts = let (ymin, ymax) = (minimum(minimum, allfsea.cors), maximum(maximum, allfsea.cors))
     ymin = round(ymin, digits=1) - 0.1
     ymax = round(ymax, digits=1) + 0.1
 
     bplts = []
-    by(df, :metadatum) do df
+    by(allfsea, :metadatum) do df
         push!(bplts, plotfsea(df, ymin, ymax, ))
     end
     bplts
@@ -389,7 +429,6 @@ end
 ```julia
 f1f = plot(bplts[2:end]..., layout=(5,1), size=(500, 1600))
 ```
-
 ```julia
 l2 =@layout [[grid(3,1) grid(3,1)
                grid(1,2){0.25h}] grid(5,1){0.2w}]
@@ -413,13 +452,34 @@ plot(plot(f1a1, markersize=8),
 savefig(joinpath(figures, "figure1.svg"))
 ```
 
-```julia
-using JLD2
+# Supplementary
 
-@save "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
-@save "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
-@save "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
-@save "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
-@save "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
-@save "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+
+```julia
+s1a = boxplot([filter(>(0.), speciesdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="Species Diffs")
+```
+
+```julia
+s1b = boxplot([filter(>(0.), pfamsdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="Pfam Diffs")
+```
+
+```julia
+s1c = boxplot([filter(>(0.), kosdiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="KO Diffs")
+```
+```julia
+s1d = boxplot([filter(>(0.), unirefaccessorydiffs[k][l]) for (k, l) in keypairs], xticks = (1:length(keypairs), ["$k-$l" for (k,l) in keypairs]),
+    xrotation=45, color=color2[1:4]', legend=false, ylabel="Bray Curtis dissimilarity",
+    ylims=(0., 1.), title="Unirefaccessory Diffs")
+```
+```julia
+plot(s1a,s1b,s1c,s1d, size = (600, 800))
+```
+```julia
+savefig(joinpath(figures, "suppfigure1.svg"))
 ```

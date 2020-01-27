@@ -14,10 +14,12 @@ using Distances
 using MultivariateStats
 using Pkg.TOML: parsefile
 using Clustering
+using Combinatorics
 using MicrobiomePlots
 using BiobakeryUtils
 using MultipleTesting
 using ProgressMeter
+using JLD2
 
 
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
@@ -26,7 +28,7 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-includet("accessories.jl")
+include("accessories.jl")
 
 config = parsefile("data/data.toml")
 allmeta = getmgxmetadata()
@@ -120,7 +122,7 @@ unirefprevfilt = let c = 0
     end
 end
 unirefprevalent = view(unirefs, species=[p[1] for p in unirefprevfilt])
-unirefaccessory = view(unirefs, species=map(all, unirefprevfilt))
+unirefaccessory = view(unirefs, species=[p[2] for p in unirefprevfilt])
 
 ### Additional info
 @warn "Adding additional info to metadata tables"
