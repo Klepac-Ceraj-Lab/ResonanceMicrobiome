@@ -1,17 +1,129 @@
 # Supplementary Figures
 
-Start after notebook 2.
-
-## Setup
-
-This step takes about an hour
-
 ```julia
 using Pkg
 Pkg.activate("analysis/")
-using Revise
+using JLD2
+using DataFrames
+using MultivariateStats
+using MakieLayout
+using AbstractPlotting
+using StatsMakie
+using CairoMakie
+using Makie
+using ColorSchemes
+using Statistics
+using StatsBase: midpoints
 
-include("startup-loadall.jl")
+AbstractPlotting.inline!(false)
+
+@load "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
+@load "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@load "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@load "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
+
+allfsea.median = map(median, allfsea.cors)
+rename!(r2, :unirefaccessory=>:accessory)
 ```
 ```julia
+function makelong(diffdict, colors = ColorSchemes.Set3_5.colors)
+    df = DataFrame(xi = Int[], xlabel=String[], y = Float64[], color=[])
+    i = 0
+    for k1 in sort(keys(diffdict)|> collect)
+        subdict = diffdict[k1]
+        c = 0
+        for k2 in sort(keys(subdict)|> collect)
+            i+=1
+            c+=1
+            dists = subdict[k2]
+            append!(df, ((xi = i, xlabel="$k1 - $k2", y = d, color=colors[c]) for d in dists))
+        end
+    end
+    filter!(row-> row.y != 0, df)
+    return df
+end
+```
+```julia
+speciesdiffs2 = makelong(speciesdiffs)
+unirefaccessorydiffs2 = makelong(unirefaccessorydiffs)
+kosdiffs2 = makelong(kosdiffs)
+pfamsdiffs2 = makelong(pfamsdiffs)
+```
+
+```julia
+res = (3*300, 3*300)
+scene, layout = layoutscene(resolution = res)
+
+layout_S1 = GridLayout()
+axes_S1 = layout_S1[1:2:4,1:2:4] = [LAxis(scene, titlevisible=true) for row in 1:2, col in 1:2]
+legends_S1 = layout_S1[2:2:4,2:2:4] = [LLegend(scene, height=Auto(true), width=Auto(false, ncols=4)) for row in 1:2, col in 1:2]
+
+
+layout[1,1] = layout_S1
+
+s1a = let
+    plt = nothing
+    by(speciesdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[1], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 10 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1b = let
+    plt = nothing
+    by(unirefaccessorydiffs2, :xi) do df
+        plt = boxplot!(axes_S1[2], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 10 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1c = let
+    plt = nothing
+    by(pfamsdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[3], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 10 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1d = let
+    plt = nothing
+    by(kosdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[4], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 10 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+axes_S1[1].title = "Species Diffs"
+axes_S1[2].title = "Accessory Diffs"
+axes_S1[3].title = "Pfams Diffs"
+axes_S1[4].title = "KOs Diffs"
+
+
+ylims!(axes_S1[1], (0.,1))
+ylims!(axes_S1[2], (0.,1))
+ylims!(axes_S1[3], (0.,1))
+ylims!(axes_S1[4], (0.,1))
+
+
+
+scene
 ```
