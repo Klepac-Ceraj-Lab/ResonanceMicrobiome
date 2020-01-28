@@ -20,6 +20,8 @@ AbstractPlotting.inline!(false)
 @load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
 @load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
 @load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@load "analysis/notebooks/suppfigureassets/s1.jld2" allfsea
+
 allfsea.median = map(median, allfsea.cors)
 rename!(r2, :unirefaccessory=>:accessory)
 
