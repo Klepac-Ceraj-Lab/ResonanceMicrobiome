@@ -2,6 +2,7 @@
 using Pkg
 Pkg.activate("analysis/")
 using JLD2
+using CSV
 using DataFrames
 using MultivariateStats
 using Statistics
@@ -26,6 +27,7 @@ ukids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=t
 end
 ukidsmeta = view(allmeta, ukids, :)
 
+
 open("data/analysis/tables/table1.tsv", "w") do io
     println(io, "thing\tvalue")
     println(io, "All samples (n)\t$(size(allmeta, 1))")
@@ -39,6 +41,8 @@ open("data/analysis/tables/table1.tsv", "w") do io
     println(io, "Kids with cogscore (n)\t$(sum(!ismissing, ubothmeta.cogScore))")
     println(io, "Kids with both (n)\t$(sum(row-> all(!ismissing, (row.hires_total, row.cogScore)), eachrow(ubothmeta)))")
 
+    println(io, "Non-white kids (%)\t$(round(mean(!=("Caucasian / White"), skipmissing(ubothmeta.childRace)) *100, digits=2))")
+    println(io, "Mixed race kids (%)\t$(round(mean(r-> occursin(r"[Mm]ixed", r), skipmissing(ubothmeta.childRace)) *100, digits=2))")
     println(io, "Age in years (mean, SD)\t$(round(mean(skipmissing(ukidsmeta.correctedAgeDays ./ 365)), digits=2)), $(round(std(skipmissing(ukidsmeta.correctedAgeDays ./ 365)), digits=2))")
     println(io, "BMI (mean, SD)\t$(round(mean(skipmissing(ukidsmeta.BMI_calc)), digits=2)), $(round(std(skipmissing(ukidsmeta.BMI_calc)), digits=2))")
     println(io, "Maternal SES (mean, SD)\t$(round(mean(skipmissing(ukidsmeta.mother_HHS)), digits=2)), $(round(std(skipmissing(ukidsmeta.mother_HHS)), digits=2))")
@@ -50,5 +54,6 @@ end
 
 ```julia
 CSV.write("data/analysis/tables/supptable1_allpermanovas.csv", allpermanovas)
+allfsea.median = map(row->median(row.cors), eachrow(allfsea))
 CSV.write("data/analysis/tables/supptable2_allfsea.csv", allfsea[!, Not(:cors)])
 ```

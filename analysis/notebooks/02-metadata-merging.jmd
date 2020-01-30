@@ -138,7 +138,7 @@ cogcols = [
     "motorComposite", # also Bayleys
     "mullen_EarlyLearningComposite",
     # "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
-    "fullScaleComposite", # this is from WSSPI
+    "fullScaleComposite", # this is from WPPSI
     "FSIQ_Composite",  # this is from WISC
     ]
 cogscores = by(allmeta, [:subject, :timepoint]) do sample
@@ -157,7 +157,7 @@ cogscores = by(allmeta, [:subject, :timepoint]) do sample
             if metadatum == "mullen_EarlyLearningComposite"
                 assessment = "Mullen"
             elseif metadatum == "fullScaleComposite"
-                assessment = "WSSPI"
+                assessment = "WPPSI"
             elseif metadatum == "FSIQ_Composite"
                 assessment = "WISC"
             else
