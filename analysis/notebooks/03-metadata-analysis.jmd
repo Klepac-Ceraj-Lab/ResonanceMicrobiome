@@ -184,9 +184,9 @@ Checking if any of the outliers are correlated with batch number:
 
 ```julia
 toplot = filter(row-> !any(ismissing, [row.Mgx_batch, row.correctedAgeDays, row.cogScore]), umeta)
-batchnum = [parse(Int, match(r"[Bb]atch (\d+)", b).captures[1]) for b in toplot.Mgx_batch]
+toplot.Mgx_batch
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, primary=false,
-    zcolor=batchnum, xlabel="age (years)", ylabel="Composite Score", group=toplot.Mgx_batch,
+    zcolor=toplot.Mgx_batch, xlabel="age (years)", ylabel="Composite Score", group=toplot.Mgx_batch,
     title="Cognitive Assessments", legend=:topright)
 ```
 ```julia; echo=false; results="hidden"

@@ -170,7 +170,7 @@ perm = vcat(perm, p)
 p = permanova(kids_dm, kidsmeta.correctedAgeDays,
     filter=map(row-> !ismissing(row.ageLabel) && row.ageLabel == "2 and over", eachrow(kidsmeta)))
 p[!, :feature] .= "species"
-p[!, :variable] .= "Age"
+p[!, :variable] .= "2+ Age"
 perm = vcat(perm, p)
 
 
@@ -511,7 +511,7 @@ perm = perm[!,[:feature, :variable, :R2, :p_value, :q_value]]
 
 
 ```julia; echo=false; results="hidden"
-CSV.write(joinpath(tables, "tax_permanovas.csv"), perm)
+CSV.write(joinpath(tables, "06-tax-permanovas.csv"), perm)
 ```
 
 Let's see what that looks like in graphical form using `StatsPlots`.
@@ -544,5 +544,5 @@ plot!(legend=false, title="Taxonomic Profiles PERMANOVA",
     ylabel="% Variance explainable")
 ```
 ```julia; echo=false; results="hidden"
-savefig(joinpath(figures, "tax_permanovas.svg"))
+savefig(joinpath(figures, "06-tax-permanovas.svg"))
 ```

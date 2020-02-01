@@ -289,7 +289,7 @@ savefig(joinpath(figures, "08_uniref90_age_correlations.svg"))
 ```
 
 Rather than doing a statistical test on each gene function directly,
-we can do a variant of "gene set enrichment analysis" (GSEA).
+we can do a variant of "feature set enrichment analysis" (FSEA).
 Here, we use a statistical test called a Mann-Whitney U test
 to ask if a set of genes as a whole (say, antibiotic resistance genes)
 tend to be positively or negatively correlated with age.
@@ -506,24 +506,6 @@ end
 And we can convert those KOs to UniRef90s to get our gene set.
 
 ```julia
-kos2uniref = Dict()
-for line in eachline("data/engaging/ko2uniref90.txt")
-    line = split(line, '\t')
-    kos2uniref[line[1]] = map(x-> String(match(r"UniRef90_(\w+)", x).captures[1]), line[2:end])
-end
-
-
-na_uniref = let urefs = []
-    for (key, value) in neuroactive
-        for k in value.kos
-            if k in keys(kos2uniref)
-                append!(urefs, kos2uniref[k])
-            end
-        end
-    end
-    Set{String}(urefs)
-end
-
 neuroactive_pos = findall(f-> f in na_uniref, features)
 mwu = MannWhitneyUTest(agecors[neuroactive_pos], agecors[Not(neuroactive_pos)])
 ```
@@ -1122,6 +1104,95 @@ display(plt)
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "08_uniref90_limbic_correlations_neuroactive_boxplot.svg"))
 ```
+# Cerebellar size
+
+```julia
+cerebellar_filter = map(row-> !ismissing(row.cerebellar), eachrow(ukidsmeta))
+cerebellarmeta = ukidsmeta[cerebellar_filter, :]
+cerebellarmeta.cerebellar_normed = cerebellarmeta.cerebellar ./ cerebellarmeta.hires_total
+
+cerebellar = view(ukids, sites=cerebellar_filter)
+cerebellar = copy(view(cerebellar, species=map(row->any(>(0.), row), eachrow(occurrences(cerebellar)))))
+
+occ = occurrences(cerebellar)
+
+cerebellarcors = cor(cerebellarmeta.cerebellar_normed, occ, dims=2)'
+@assert !any(isnan, cerebellarcors)
+cerebellarrank = sortperm(cerebellarcors)
+describe(cerebellarcors)
+```
+
+
+```julia
+itp = LinearInterpolation(eachindex(cerebellarcors), cerebellarcors[cerebellarrank])
+
+plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+    markersize=1, xlabel="rank", ylabel="Pearson correlation with Cognitive Score",
+    label="all genes", color=color1[2], title="UniRef90 cerebellar_normed correlations", legend=:bottomright)
+```
+
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_cerebellar_correlations.svg"))
+```
+
+```julia; results="hidden"
+features = match.(r"UniRef90_(\w+)", featurenames(cerebellar))
+@assert !any(isnothing, features)
+features = [f.captures[1] for f in features]
+
+cerebellarnadf = DataFrame(description=String[], n_unirefs = Int[], median=Float64[], pvalue=Float64[], idx=[])
+
+@showprogress for (desc, (mgbs, kos)) in neuroactive
+    urs = []
+    for ko in kos
+        ko in keys(kos2uniref) && append!(urs, kos2uniref[ko])
+    end
+    urs = Set(urs)
+    pos = findall(f-> f in urs, features)
+
+    n = length(pos)
+    n > 2 || continue
+
+    mwu = MannWhitneyUTest(cerebellarcors[pos], cerebellarcors[Not(pos)])
+    m = round(median(cerebellarcors[pos]), sigdigits=4)
+    p = round(pvalue(mwu), sigdigits=4)
+
+    push!(cerebellarnadf, (desc, n, m, p, pos))
+    plt = plot(range(1, stop=length(itp), length=100), itp(range(1, stop=length(itp), length=100)),
+        xlabel="rank", ylabel="Pearson correlation with cerebellar_normed", legend=:bottomright,
+        label="all genes", color=color1[2], title = "UniRef90 cerebellar_normed correlations")
+    scatter!(invperm(cerebellarrank)[pos], cerebellarcors[pos],
+        markersize=4, color=color1[1],
+        label="$desc")
+    annotate!(1000, 0.2, "n = $n\nmedian = $m\npvalue=$p", :left)
+    display(plt)
+    savefig(joinpath(figures, "08_uniref90_cerebellar_correlations_neuroactive_$(replace(desc, r"[^\w]+"=>'-')).svg"))
+end
+cerebellarnadf.qvalue = adjust(cerebellarnadf.pvalue, BenjaminiHochberg())
+@pt cerebellarnadf
+```
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "08-cerebellar_normed_neuroactive_correlations.csv"), cerebellarnadf)
+```
+```julia
+sort!(cerebellarnadf, :median)
+plt = boxplot([cerebellarcors[pos] for pos in cerebellarnadf.idx], color=:lightgrey,
+    legend=false, xticks=(1:nrow(agenadf), cerebellarnadf.description), xrotation=45,
+    ylabel="Median cerebellar_normed Correlation", size=(800,600))
+for (i, row) in enumerate(eachrow(cerebellarnadf))
+    if row.qvalue < 0.005
+        annotate!(i, 0.3, "**", align=:center)
+    # elseif row.qvalue < 0.01
+    #     annotate!(i, 0.3, "**", align=:center)
+elseif row.qvalue < 0.05
+        annotate!(i, 0.3, "*", align=:center)
+    end
+end
+display(plt)
+```
+```julia; echo=false; results="hidden"
+savefig(joinpath(figures, "08_uniref90_cerebellar_correlations_neuroactive_boxplot.svg"))
+```
 
 ```julia
 agenadf[!,:cors] = [agecors[pos] for pos in agenadf.idx]
@@ -1134,10 +1205,17 @@ subcorticalnadf[!,:cors] = [subcorticalcors[pos] for pos in subcorticalnadf.idx]
 subcorticalnadf[!,:kind] .= "subcortical"
 limbicnadf[!,:cors] = [limbiccors[pos] for pos in limbicnadf.idx]
 limbicnadf[!,:kind] .= "limbic"
+cerebellarnadf[!,:cors] = [cerebellarcors[pos] for pos in cerebellarnadf.idx]
+cerebellarnadf[!,:kind] .= "cerebellar"
 
-allnadf = vcat(agenadf, cognadf, neocorticalnadf, subcorticalnadf, limbicnadf)
+allnadf = vcat(agenadf, cognadf, neocorticalnadf, subcorticalnadf, limbicnadf, cerebellarnadf)
 sort!(allnadf, :description)
-
+@pt allnadf
+```
+```julia; echo=false; results="hidden"
+CSV.write(joinpath(tables, "all-fsea.csv"), allnadf[!, Not([:idx, :cors])])
+```
+```julia
 mincor = minimum(vcat(allnadf.cors...))
 maxcor = maximum(vcat(allnadf.cors...))
 
@@ -1167,7 +1245,7 @@ median(neocorticalcors)
 median(subcorticalcors)
 median(limbiccors)
 
-plot(gseas[2:end]..., size=(800,800))
+plot(gseas..., size=(800,2400), layout=(6,1))
 ```
 ```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "08-all-gsea-boxplot.svg"))
@@ -1368,7 +1446,7 @@ savefig(joinpath(figures, "08_tax_v_func_mds1_alphadiv.svg"))
 ```
 ```julia
 scatter(projection(taxmds)[:,2], projection(funcmds)[:,2],
-    zcolor=αdiv, color=:viridis, primary=false,s
+    zcolor=αdiv, color=:viridis, primary=false,
     xlabel="Taxonomic MDS2", ylabel="Accessory genes MDS2")
 ```
 ```julia; echo=false; results="hidden"

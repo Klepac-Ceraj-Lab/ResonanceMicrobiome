@@ -1,0 +1,221 @@
+# Supplementary Figures
+
+```julia
+using Pkg
+Pkg.activate("analysis/")
+using JLD2
+using DataFrames
+using MultivariateStats
+using MakieLayout
+using AbstractPlotting
+using StatsMakie
+using CairoMakie
+using Makie
+using ColorSchemes
+using Statistics
+using StatsBase: midpoints
+
+AbstractPlotting.inline!(false)
+
+@load "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
+@load "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@load "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@load "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
+
+allfsea.median = map(median, allfsea.cors)
+rename!(r2, :unirefaccessory=>:accessory)
+
+```
+```julia
+function makelong(diffdict, colors = ColorSchemes.Set3_5.colors, groupsize=4)
+    df = DataFrame(xi = Int[], xlabel=String[], y = Float64[], color=[])
+    i = 0
+    for k1 in sort(keys(diffdict)|> collect)
+        subdict = diffdict[k1]
+        c = 0
+        for k2 in sort(keys(subdict)|> collect)
+            i+=1
+            c+=1
+            dists = subdict[k2]
+            append!(df, ((xi = i + floor(Int, (i-0.1)/groupsize), xlabel="$k1 - $k2", y = d, color=colors[c]) for d in dists))
+        end
+    end
+    filter!(row-> row.y != 0, df)
+    return df
+end
+```
+```julia
+speciesdiffs2 = makelong(speciesdiffs)
+unirefaccessorydiffs2 = makelong(unirefaccessorydiffs)
+kosdiffs2 = makelong(kosdiffs)
+pfamsdiffs2 = makelong(pfamsdiffs)
+```
+
+```julia
+res = (4*300, 4*300)
+scene, layout = layoutscene(resolution = res)
+
+layout_S1 = GridLayout()
+
+axes_S1 = layout_S1[1:2,1:2] = [LAxis(scene, titlevisible=true) for row in 1:2, col in 1:2]
+legend_S1 = layout_S1[3,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+
+layout[1, :] = LText(scene, text="Supplementary Figure 1", textsize=50, width=Auto(false))
+layout[2,1] = layout_S1
+layout_S1[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 0, 10, 0))
+layout_S1[2, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 10, 0))
+layout_S1[1, 2, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 10, 0))
+layout_S1[2, 2, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 0, 10, 0))
+
+
+s1a = let
+    plt = nothing
+    by(speciesdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[1], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 7 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1b = let
+    plt = nothing
+    by(unirefaccessorydiffs2, :xi) do df
+        plt = boxplot!(axes_S1[2], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 7 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1c = let
+    plt = nothing
+    by(pfamsdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[3], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 7 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+s1d = let
+    plt = nothing
+    by(kosdiffs2, :xi) do df
+        plt = boxplot!(axes_S1[4], Data(df),
+            :xi, :y,
+            color=first(df.color), outliercolor=first(df.color),
+            markersize = 7 * AbstractPlotting.px
+            )
+        end
+    plt
+end
+
+axes_S1[1].title = "Species Diffs"
+axes_S1[2].title = "Accessory Diffs"
+axes_S1[3].title = "Pfams Diffs"
+axes_S1[4].title = "KOs Diffs"
+legend_S1.title = "Compared to"
+legend_S1.entries[] = LegendEntry.(
+    [
+    "1 and under",
+    "1 to 2",
+    "2 and over",
+    "mom"
+    ],
+    [
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[1], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[2], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[3], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[4], strokecolor=:black)
+    ]
+)
+
+
+for i in 1:4
+    axes_S1[i].xticks = ManualTicks(2.5:5:20, ["1 and under","1 to 2","2 and over","mom"])
+    axes_S1[i].xticksvisible = false
+    axes_S1[i].xgridvisible = false
+
+    ylims!(axes_S1[i], (0.,1))
+end
+
+save("data/analysis/figures/figure1/suppfigure1.jpeg", scene, resolution=res)
+```
+
+```julia
+res=(1200, 700)
+scene, layout = layoutscene(resolution = res)
+
+layout_S2 = GridLayout()
+
+axes_S2 = layout_S2[1,1:2] = [LAxis(scene, titlevisible=true) for col in 1:2]
+legend_S2 = layout_S2[2,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+layout[1, :] = LText(scene, text="Supplementary Figure 2", textsize=50, width=Auto(false))
+layout[2,1] = layout_S2
+layout_S2[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 0, 10, 0))
+layout_S2[1, 2, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 10, 0))
+
+scatter!(axes_S2[1], Group(allmeta.ageLabel),
+        projection(speciesmds)[:,1:2],
+        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        markersize = 15 * AbstractPlotting.px,
+        strokecolor=:black, strokewidth=1)
+axes_S2[1].xlabel = "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)"
+axes_S2[1].ylabel = "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)"
+axes_S2[1].title = "Taxonomic Profiles MDS"
+
+scatter!(axes_S2[2], Group(ubothmeta.ageLabel),
+        projection(unirefaccessorymds)[:,1:2],
+        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        markersize = 15 * AbstractPlotting.px,
+        strokecolor=:black, strokewidth=1)
+axes_S2[2].xlabel = "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)"
+axes_S2[2].ylabel = "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)"
+axes_S2[2].title = "Uniref90 Accessory MDS"
+
+
+for i in 1:2
+    axes_S2[i].ygridvisible = false
+    axes_S2[i].ygridvisible = false
+    axes_S2[i].xgridvisible = false
+    axes_S2[i].xgridvisible = false
+    axes_S2[i].xticksvisible=false
+    axes_S2[i].xticklabelsvisible=false
+    axes_S2[i].yticksvisible=false
+    axes_S2[i].yticklabelsvisible=false
+    axes_S2[i].ylabelpadding=20
+    axes_S2[i].xlabelpadding=20
+end
+legend_S2.title = "Subject Age"
+legend_S2.entries[] = LegendEntry.(
+    [
+    "1 and under",
+    "1 to 2",
+    "2 and over",
+    "mom"
+    ],
+    [
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[1], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[2], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[3], strokecolor=:black),
+    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[4], strokecolor=:black)
+    ]
+)
+
+save("data/analysis/figures/figure1/suppfigure2.jpeg", scene, resolution=res)
+
+```
+
+
+```julia
+species
+```

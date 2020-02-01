@@ -185,7 +185,6 @@ savefig(joinpath(figures, "12-kos-accessory-diffs-boxplot.svg"))
 ```julia
 permanovas = filter(t-> occursin("permanova", t), readdir(tables))
 permanovas =vcat(CSV.read.(joinpath.(tables, permanovas))...)
-perm2 = filter(row-> row.variable != "Subject ID", permanovas)
 
 r2 = unstack(permanovas, :variable, :feature, :R2)
 r2m = Matrix(r2[!,[:species,:pfams, :kos]])
