@@ -8,17 +8,15 @@ options:
 
 ## Description
 
-Raw data for this paper can be found here **link to OSF repo**
+Raw data for this paper can be [found here](#). **TODO** Add zenodo link
 
-In order to perform the analyses outlined in the notebooks in this project,
-**description of DataDeps**
 
-https://github.com/Klepac-Ceraj-Lab/echo_analysis/issues/6
 
 ## Metadata
 
 Patient metadata is kept in a FileMaker Pro database,
 and exported into a file that requires some effort to parse effectively.
+
 
 ### Export from FilemakerPro
 
