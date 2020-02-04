@@ -12,7 +12,7 @@ using ECHOAnalysis
 @load "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
 @load "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
 @load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
-@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
+@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa allpermanovas
 @load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
 allfsea.median = map(median, allfsea.cors)
 rename!(r2, :unirefaccessory=>:accessory)
@@ -54,6 +54,5 @@ end
 
 ```julia
 CSV.write("data/analysis/tables/supptable1_allpermanovas.csv", allpermanovas)
-allfsea.median = map(row->median(row.cors), eachrow(allfsea))
 CSV.write("data/analysis/tables/supptable2_allfsea.csv", allfsea[!, Not(:cors)])
 ```

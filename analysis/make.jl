@@ -2,8 +2,6 @@ using Weave
 using Pkg
 
 Pkg.activate(@__DIR__)
-Pkg.instantiate()
-
 inpath = joinpath(@__DIR__, "notebooks")
 outpath = joinpath(@__DIR__, "html")
 
