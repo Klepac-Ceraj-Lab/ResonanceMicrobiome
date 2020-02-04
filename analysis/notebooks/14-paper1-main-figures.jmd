@@ -293,12 +293,14 @@ for md in metadatums
     filt = map(!ismissing, ukidsmeta[!,md])
     cors = cor(ukidsmeta[filt, md], occurrences(view(unirefaccessory, sites=ukids))[:,filt], dims=2)'
     for (key, pos) in neuroactive
-        length(pos) < 4 && continue
+        allcors = filter(!isnan, cors[pos])
+        notcors = filter(!isnan, cors[Not(pos)])
+        length(allcors) < 4 && continue
         @info "    $key"
-        mwu = MannWhitneyUTest(cors[pos], cors[Not(pos)])
-        m = median(cors[pos])
+        mwu = MannWhitneyUTest(allcors, notcors)
+        m = median(allcors)
         p = pvalue(mwu)
-        push!(allfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=cors[pos]))
+        push!(allfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=allcors))
     end
 end
 
