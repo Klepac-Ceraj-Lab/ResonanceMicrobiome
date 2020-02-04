@@ -341,6 +341,9 @@ keypairs = multiset_permutations(repeat(sort(collect(keys(speciesdiffs))),2), 2)
 ```julia
 using JLD2
 
+@assert sitenames(species) == allmeta.sample
+allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
+
 @save "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
 @save "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
 @save "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
