@@ -27,6 +27,10 @@ allfsea.median = map(median, allfsea.cors)
 rename!(r2, :unirefaccessory=>:accessory)
 ```
 ```julia
+# TODO:
+# Re-order PERMANVAs
+# 
+
 res = (8*300, 6*300)
 scene, layout = layoutscene(resolution = res)
 layout_1ABCD = GridLayout()
@@ -37,9 +41,9 @@ layout_1G_leg = GridLayout()
 
 
 axes_1A = layout_1ABCD[1:2, 1]   = LAxis(scene)
-axes_1B = layout_1ABCD[3, 1]   = LAxis(scene)
+axes_1C = layout_1ABCD[3, 1]   = LAxis(scene)
 
-axes_1C = layout_1ABCD[1:2, 2]   = LAxis(scene)
+axes_1B = layout_1ABCD[1:2, 2]   = LAxis(scene)
 axes_1D = layout_1ABCD[3, 2]   = LAxis(scene)
 
 legend_1ABCD_markers = layout_1ABCD[4, 1:2]   = LLegend(scene, ncols=4,
@@ -63,8 +67,8 @@ layout[4:5, 1:3] = layout_1G
 layout[6, 1:3] = layout_1G_leg
 
 layout_1ABCD[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 0, 10, 0))
-layout_1ABCD[3, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 30, 0))
-layout_1ABCD[1, 2, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[3, 1, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 30, 0))
+layout_1ABCD[1, 2, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 10, 0))
 layout_1ABCD[3, 2, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 0, 30, 0))
 layout[1, 3, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 0, 10, 0))
 layout[3, 3, TopLeft()] = LText(scene, "F", textsize = 40, padding = (0, 0, 10, 0))
@@ -108,39 +112,39 @@ f1a_colorbar_layout = gridnest!(layout_1ABCD, 1:3, 1)
 f1a_colorbar_layout[1:3, 2] = f1a_colorbar_legend
 f1a_colorbar_layout[1:3, 2, Left()] = LText(scene, "Shannon Index", rotation = pi/2, padding = (0, 5, 0, 0))
 
-f1b = scatter!(axes_1B, Group(marker=allkidsmeta.ageLabel),
+f1c = scatter!(axes_1C, Group(marker=allkidsmeta.ageLabel),
         projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
         markersize = 10 * AbstractPlotting.px, marker=marker=[:utriangle, :hexagon, :rect],
         color=allkidsmeta.shannon,
         strokecolor=:black, strokewidth=1)
-axes_1B.xgridvisible = false
-axes_1B.xlabel = "MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)"
-axes_1B.ylabel = "Age (years)"
-axes_1B.xticksvisible=false
-axes_1B.xticklabelsvisible=false
-axes_1B.ylabelpadding=20
-axes_1B.xlabelpadding=20
-
-
-f1c = scatter!(axes_1C, Group(marker=ubothmeta.ageLabel), Style(color=ubothmeta.identifiable_unirefs),
-        projection(unirefaccessorymds)[:,1] .* -1, projection(unirefaccessorymds)[:,2],  colormap=:solar,
-        markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
-        strokecolor=:black, strokewidth=1)
 axes_1C.xgridvisible = false
-axes_1C.ygridvisible = false
-axes_1C.xlabel = "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)"
-axes_1C.ylabel = "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)"
+axes_1C.xlabel = "MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)"
+axes_1C.ylabel = "Age (years)"
 axes_1C.xticksvisible=false
 axes_1C.xticklabelsvisible=false
-axes_1C.yticksvisible=false
-axes_1C.yticklabelsvisible=false
 axes_1C.ylabelpadding=20
 axes_1C.xlabelpadding=20
 
-f1c_colorbar_legend = LColorbar(scene, f1c, width=30)
-f1c_colorbar_layout = gridnest!(layout_1ABCD, 1:2, 2)
-f1c_colorbar_layout[1:2, 2] = f1c_colorbar_legend
-f1c_colorbar_layout[1:2, 2, Left()] = LText(scene, "Fraction Identified", rotation = pi/2, padding = (0, 5, 0, 0))
+
+f1b = scatter!(axes_1B, Group(marker=ubothmeta.ageLabel), Style(color=ubothmeta.identifiable_unirefs),
+        projection(unirefaccessorymds)[:,1] .* -1, projection(unirefaccessorymds)[:,2],  colormap=:solar,
+        markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
+        strokecolor=:black, strokewidth=1)
+axes_1B.xgridvisible = false
+axes_1B.ygridvisible = false
+axes_1B.xlabel = "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)"
+axes_1B.ylabel = "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)"
+axes_1B.xticksvisible=false
+axes_1B.xticklabelsvisible=false
+axes_1B.yticksvisible=false
+axes_1B.yticklabelsvisible=false
+axes_1B.ylabelpadding=20
+axes_1B.xlabelpadding=20
+
+f1b_colorbar_legend = LColorbar(scene, f1b, width=30)
+f1b_colorbar_layout = gridnest!(layout_1ABCD, 1:2, 2)
+f1b_colorbar_layout[1:2, 2] = f1b_colorbar_legend
+f1b_colorbar_layout[1:2, 2, Left()] = LText(scene, "Fraction Identified", rotation = pi/2, padding = (0, 5, 0, 0))
 
 f1d = scatter!(axes_1D, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.n_unirefs),
             projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
