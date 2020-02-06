@@ -4,6 +4,10 @@
 [![Sophie Rowland](https://img.shields.io/badge/Author-Sophie%20Rowland-blueviolet)](http://sophierowland.com/)
 [![Vanja Klepac-Ceraj](https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet)](https://www.vkclab.com/)
 
+
+[![DOI](https://zenodo.org/badge/222533623.svg)](https://zenodo.org/badge/latestdoi/222533623)
+
+
 ## Installation Instructions
 
 All analysis code for this project is written in [`julia`][1],
@@ -74,7 +78,7 @@ $ curl -o repo.tar.gz
 $ cd resonance_paper1
 ```
 
-### Instantiate the analysis directory
+### Instantiate the `analysis/` directory
 
 The `analysis` directory has two files that enable easy replication
 of the julia project environment and its dependencies,
@@ -104,6 +108,14 @@ Activating environment at `~/repos/lab/testing/resonance_paper1/analysis/Project
 julia> Pkg.instantiate()
 ```
 
+Then, take a look at the files in the `analysis/notebooks/` folder
+to get started.
+The `.jmd` files are julia markdown files,
+and you should view them in order.
+
+Code inside blocks marked with `julia` are julia code
+that should be executed with the analysis environment
+activated and instantiated.
 
   [1]: http://julialang.org
   [2]: https://julialang.org/downloads/
