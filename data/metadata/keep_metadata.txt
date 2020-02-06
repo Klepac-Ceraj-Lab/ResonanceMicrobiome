@@ -11,3 +11,4 @@ childHeight
 childWeight
 mother_HHS
 birthType
+childRace

@@ -270,9 +270,7 @@ version = "0.8.1"
 
 [[ECHOAnalysis]]
 deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays"]
-git-tree-sha1 = "a339a2256b3c443640f373184a221c6f4a80cb44"
-repo-rev = "master"
-repo-url = "https://github.com/Klepac-Ceraj-Lab/echo_analysis.git"
+path = "/home/kevin/.julia/dev/ECHOAnalysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
 version = "0.0.2"
 

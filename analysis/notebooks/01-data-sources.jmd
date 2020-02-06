@@ -206,6 +206,7 @@ SQLite.dropindex!(metadb, "filemakermetadata_subject_idx", ifexists=true)
 SQLite.dropindex!(metadb, "filemakermetadata_metadatum_idx", ifexists=true)
 
 CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(metadb, "filemakermetadata")
+
 SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_subject_idx", "subject", unique=false)
 SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_metadatum_idx", "metadatum", unique=false)
 ```

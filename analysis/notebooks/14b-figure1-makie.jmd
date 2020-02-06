@@ -26,11 +26,8 @@ AbstractPlotting.inline!(false)
 allfsea.median = map(median, allfsea.cors)
 rename!(r2, :unirefaccessory=>:accessory)
 ```
-```julia
-# TODO:
-# Re-order PERMANVAs
-# 
 
+```julia
 res = (8*300, 6*300)
 scene, layout = layoutscene(resolution = res)
 layout_1ABCD = GridLayout()
@@ -67,8 +64,8 @@ layout[4:5, 1:3] = layout_1G
 layout[6, 1:3] = layout_1G_leg
 
 layout_1ABCD[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 0, 10, 0))
-layout_1ABCD[3, 1, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 30, 0))
-layout_1ABCD[1, 2, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[3, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 30, 0))
+layout_1ABCD[1, 2, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 10, 0))
 layout_1ABCD[3, 2, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 0, 30, 0))
 layout[1, 3, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 0, 10, 0))
 layout[3, 3, TopLeft()] = LText(scene, "F", textsize = 40, padding = (0, 0, 10, 0))

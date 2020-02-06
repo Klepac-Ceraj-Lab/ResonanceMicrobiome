@@ -1,12 +1,12 @@
 title = "ECHO RESONANCE Paper 1 - data description"
 authors = ["Kevin S. Bonham", "Sophie Rowland", "Vanja Klepac-Ceraj"]
-description = "This file contains machine-readable information about data files and repositories (eg DataDeps) used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
+description = "This file contains machine-readable information about data files used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
 
 [files.biobakery]
 path="data/engaging"
 
 [tables.metadata]
-path = "data/metadata/filemakerdb.csv"
+path = "data/metadata/filemakerdb-restricted.csv"
 
 [tables.fecal_samples]
 path = "data/metadata/fecal_samples_master.csv"
