@@ -1,4 +1,4 @@
-# NOTE: This takes 30-60 minutes to run
+# NOTE: This can take 30 minutes to a few hours to run
 
 @warn "Loading packages"
 
@@ -25,7 +25,7 @@ using JLD2
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
 # print ~15 random rows
 randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
-@ptconfclean # clear previous configuration
+@ptconfclean # clear any previous configuration
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
 include("accessories.jl")
@@ -43,15 +43,21 @@ isdir(tables) || mkpath(tables)
 ## Feature tables
 @warn "Loading feature tables"
 
+### Load taxonomic profiles from SQLite database
 taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
+### Function in ECHOAnalysis package
 species = sqlprofile(taxdb, tablename="taxa", kind="species")
-
+### Keep only samples in the metadata
 species = view(species, sites=allmeta.sample) |> copy
-
+### Total sum scaling - function in Microbiome
 relativeabundance!(species)
 
+### Same steps for functional profiles
 unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
 unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
+### We have a couple of taxonomic profiles that don't have functional profiles,
+### this gets tax profiles in the same order
+species = view(species, sites=sitenames(unirefs)) |> copy
 
 kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
 kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
@@ -67,7 +73,10 @@ species = view(species, sites=sitenames(ecs)) |> copy
 
 @warn "Getting metadata and subgroups"
 
-@assert samplenames(species) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)# == samplenames(unirefs)
+### double check that everything has samples in the same order for later indexing
+### `@assert` will throw an error if expression is not `true`
+@assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
+### Just get metadata found in tax/func profiles, and in same order
 allmeta = getmgxmetadata(samples=sitenames(species))
 dropmissing!(allmeta, :ageLabel)
 species = view(species, sites=allmeta.sample) |> copy
