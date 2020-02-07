@@ -1,11 +1,24 @@
 # ECHO RESONANCE Microbiome Paper 1
 
-[![Kevin Bonham, PhD](https://img.shields.io/badge/Author-Kevin%20Bonham%2C%20PhD-blueviolet)](http://nequals.me)
-[![Sophie Rowland](https://img.shields.io/badge/Author-Sophie%20Rowland-blueviolet)](http://sophierowland.com/)
-[![Vanja Klepac-Ceraj](https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet)](https://www.vkclab.com/)
+| | |
+|------------:|:----------|
+| **Authors** | [![Kevin Bonham][kevin-badge]][kevin-url] [![Sophie Rowland][sophie-badge]][sophie-url] [![Vanja Klepac-Ceraj][vanja-badge]][vanja-url] |
+| **DOIs**    | Repo: [![repo][repo-badge]][repo-url] Data: [![data][data-badge]][data-url] |
 
 
-[![DOI](https://zenodo.org/badge/222533623.svg)](https://zenodo.org/badge/latestdoi/222533623)
+
+[kevin-badge]: https://img.shields.io/badge/Author-Kevin%20Bonham%2C%20PhD-blueviolet
+[kevin-url]: http://nequals.me
+[sophie-badge]: https://img.shields.io/badge/Author-Sophie%20Rowland-blueviolet
+[sophie-url]: http://sophierowland.com/
+[vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
+[vanja-url]: https://www.vkclab.com/
+[vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
+[vanja-url]: https://www.vkclab.com/
+[repo-badge]: https://zenodo.org/badge/222533623.svg
+[repo-url]: https://zenodo.org/badge/latestdoi/222533623
+[data-badge]: https://zenodo.org/badge/3633793.svg/
+[data-url]: https://zenodo.org/badge/latestdoi/3633793/
 
 
 ## Installation Instructions
