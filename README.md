@@ -17,9 +17,8 @@
 [vanja-url]: https://www.vkclab.com/
 [repo-badge]: https://zenodo.org/badge/222533623.svg
 [repo-url]: https://zenodo.org/badge/latestdoi/222533623
-[data-badge]: https://zenodo.org/badge/3633793.svg/
-[data-url]: https://zenodo.org/badge/latestdoi/3633793/
-
+[data-badge]: https://zenodo.org/badge/DOI/10.5281/zenodo.3633793.svg
+[data-url]: https://doi.org/10.5281/zenodo.3633793
 
 ## Installation Instructions
 
