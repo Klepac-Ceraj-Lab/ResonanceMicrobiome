@@ -43,7 +43,7 @@ axes_1C = layout_1ABCD[3, 1]   = LAxis(scene)
 axes_1B = layout_1ABCD[1:2, 2]   = LAxis(scene)
 axes_1D = layout_1ABCD[3, 2]   = LAxis(scene)
 
-legend_1ABCD_markers = layout_1ABCD[4, 1:2]   = LLegend(scene, ncols=4,
+legend_1ABCD_markers = layout_1ABCD[4, 1:2] = LLegend(scene, ncols=4,
                                                     height=Auto(true), width=Auto(false),
                                                     titlevisible=false, patchcolor=:transparent)
 
@@ -63,13 +63,13 @@ layout[3, 3] = layout_1F
 layout[4:5, 1:3] = layout_1G
 layout[6, 1:3] = layout_1G_leg
 
-layout_1ABCD[1, 1, TopLeft()] = LText(scene, "A", textsize = 40, padding = (0, 0, 10, 0))
-layout_1ABCD[3, 1, TopLeft()] = LText(scene, "B", textsize = 40, padding = (0, 0, 30, 0))
-layout_1ABCD[1, 2, TopLeft()] = LText(scene, "C", textsize = 40, padding = (0, 0, 10, 0))
-layout_1ABCD[3, 2, TopLeft()] = LText(scene, "D", textsize = 40, padding = (0, 0, 30, 0))
-layout[1, 3, TopLeft()] = LText(scene, "E", textsize = 40, padding = (0, 0, 10, 0))
-layout[3, 3, TopLeft()] = LText(scene, "F", textsize = 40, padding = (0, 0, 10, 0))
-layout[4, 1, TopLeft()] = LText(scene, "G", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[3, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0))
+layout_1ABCD[1, 2, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[3, 2, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 30, 0))
+layout[1, 3, TopLeft()] = LText(scene, "e", textsize = 40, padding = (0, 0, 10, 0))
+layout[3, 3, TopLeft()] = LText(scene, "f", textsize = 40, padding = (0, 0, 10, 0))
+layout[4, 1, TopLeft()] = LText(scene, "g", textsize = 40, padding = (0, 0, 10, 0))
 
 # Begin Figures
 
@@ -169,7 +169,32 @@ f1d_layout[1, 2, Left()] = LText(scene, "Number of UniRef90s", rotation = pi/2, 
 
 # Figure 1E
 
-values = disallowmissing(r2m')
+eyorder = [
+    "subject",
+    "subject type",
+    "2+ subject type",
+    "age",
+    "2+ age",
+    "child gender",
+    "birth type",
+    "mother SES",
+    "cognitive function",
+    "neocortical",
+    "subcortical",
+    "limbic",
+    "cerebellar"
+]
+eysrt = reverse(invperm(sortperm(yorder)))
+
+exorder = [
+    "species",
+    "accessory",
+    "kos",
+    "pfams"
+]
+exsrt = reverse(invperm(sortperm(exorder)))
+
+values = disallowmissing(r2m')[eysrt, exsrt]
 xrange = 0:size(values,1)
 yrange = 0:size(values,2)
 hm = heatmap!(axes_1E, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
@@ -190,7 +215,7 @@ annotations!(scene, labels, pixelvals,
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 16)
 
-sig = vec(permutedims(replace(qa, "" => " ")))
+sig = vec(permutedims(replace(qa[eysrt, exsrt], "" => " ")))
 annotations!(scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
@@ -206,10 +231,10 @@ annotations!(scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
 
 tightlimits!(axes_1E)
 
-axes_1E.yticks = ManualTicks(0.5:1:size(r2m,1) - 0.5, r2.label)
+axes_1E.yticks = ManualTicks(0.5:1:size(r2m,1) - 0.5, r2.label[eysrt])
 tight_yticklabel_spacing!(axes_1E)
 
-axes_1E.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end]))
+axes_1E.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][exsrt]))
 
 hm_legend = LColorbar(scene, hm, width=30)
 hm_legend.ticks = let r = range(0, stop=0.20, length=6)

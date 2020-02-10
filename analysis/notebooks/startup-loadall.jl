@@ -50,11 +50,8 @@ species = view(species, sites=allmeta.sample) |> copy
 
 relativeabundance!(species)
 
-
 unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
 unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
-species = view(species, sites=sitenames(unirefs)) |> copy
-
 
 kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
 kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
@@ -66,9 +63,11 @@ ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
 ecs = sqlprofile(ecdb, tablename="ec_names_relab", kind="ec_names_relab")
 ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs)))
 
+species = view(species, sites=sitenames(ecs)) |> copy
+
 @warn "Getting metadata and subgroups"
 
-@assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
+@assert samplenames(species) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)# == samplenames(unirefs)
 allmeta = getmgxmetadata(samples=sitenames(species))
 dropmissing!(allmeta, :ageLabel)
 species = view(species, sites=allmeta.sample) |> copy
