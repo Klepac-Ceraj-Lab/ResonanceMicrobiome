@@ -27,7 +27,6 @@ AbstractPlotting.inline!(false)
 
 allfsea.median = map(median, allfsea.cors)
 rename!(r2, :unirefaccessory=>:accessory)
-
 ```
 ```julia
 function makelong(diffdict, colors = ColorSchemes.Set3_5.colors, groupsize=4)
@@ -220,29 +219,76 @@ save("data/analysis/figures/figure1/suppfigure2.jpeg", scene, resolution=res)
 res=(1200, 700)
 scene, layout = layoutscene(resolution = res)
 
-layout_S3 = GridLayout()
+layout_S4 = GridLayout()
 
-axes_S3 = layout_S3[1,1] = LAxis(scene, titlevisible=true)
-marker_legend_S3 = layout_S3[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+axes_S4 = layout_S4[1,1] = LAxis(scene, titlevisible=true)
+marker_legend_S4 = layout_S3[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
 
 layout[1, 1] = LText(scene, text="Supplementary Figure 3", textsize=50, width=Auto(false))
 
 
 layout[2,1] = layout_S3
 scene
-s3 = scatter!(axes_S3, Group(marker=allmeta.ageLabel),
+s4 = scatter!(axes_S3, Group(marker=allmeta.ageLabel),
         Style(color=log2.(allmeta.pcopri .+ (minimum(allmeta.pcopri) / 4))), grid=false,
         projection(speciesmds)[:,1:2],
         markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
         strokecolor=:black, strokewidth=1, colormap=:plasma)
 
-s3_colorbar_legend = LColorbar(scene, s3, width=30)
-s3_colorbar_layout = gridnest!(layout_S3, 1, 1)
-s3_colorbar_layout[1, 2] = s3_colorbar_legend
-s3_colorbar_layout[1, 2, Left()] = LText(scene, "log2(P. copri abundance)", rotation = pi/2, padding = (0, 5, 0, 0))
+s4_colorbar_legend = LColorbar(scene, s4, width=30)
+s4_colorbar_layout = gridnest!(layout_S3, 1, 1)
+s4_colorbar_layout[1, 2] = s4_colorbar_legend
+s4_colorbar_layout[1, 2, Left()] = LText(scene, "log2(P. copri abundance)", rotation = pi/2, padding = (0, 5, 0, 0))
 
 marker_legend_S3.title = "Subject Age"
 marker_legend_S3.entries[] = LegendEntry.(
+    [
+    "1 and under",
+    "1 to 2",
+    "2 and over",
+    "mom"
+    ],
+    [
+    MarkerElement(marker = :utriangle, color=:white, strokecolor=:black),
+    MarkerElement(marker = :hexagon, color=:white, strokecolor=:black),
+    MarkerElement(marker = :rect, color=:white, strokecolor=:black),
+    MarkerElement(marker = :cross, color=:white, strokecolor=:black)
+    ]
+)
+
+save("data/analysis/figures/figure1/suppfigure3.jpeg", scene, resolution=res)
+```
+
+```julia
+res=(1200, 700)
+scene, layout = layoutscene(resolution = res)
+
+layout_S4 = GridLayout()
+
+axes_S4 = layout_S4[1,1] = LAxis(scene, titlevisible=true)
+
+
+
+marker_legend_S4 = layout_S4[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+
+layout[1, 1] = LText(scene, text="Supplementary Figure 3", textsize=50, width=Auto(false))
+
+
+layout[2,1] = layout_S4
+scene
+s4 = scatter!(axes_S4, Group(marker=allmeta.ageLabel),
+        Style(color=log2.(allmeta.pcopri .+ (minimum(allmeta.pcopri) / 4))), grid=false,
+        projection(speciesmds)[:,1:2],
+        markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
+        strokecolor=:black, strokewidth=1, colormap=:plasma)
+
+s4_colorbar_legend = LColorbar(scene, s4, width=30)
+s4_colorbar_layout = gridnest!(layout_S4, 1, 1)
+s4_colorbar_layout[1, 2] = s4_colorbar_legend
+s4_colorbar_layout[1, 2, Left()] = LText(scene, "log2(P. copri abundance)", rotation = pi/2, padding = (0, 5, 0, 0))
+
+marker_legend_S4.title = "Subject Age"
+marker_legend_S4.entries[] = LegendEntry.(
     [
     "1 and under",
     "1 to 2",

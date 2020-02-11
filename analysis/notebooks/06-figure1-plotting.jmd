@@ -15,12 +15,12 @@ using StatsBase: midpoints
 
 AbstractPlotting.inline!(false)
 
-@load "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
-@load "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
-@load "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
-@load "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
-@load "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa
-@load "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@load "analysis/notebooks/figure1assets/figure1a.jld2" speciesmds allmeta speciesmdsaxes color3
+@load "analysis/notebooks/figure1assets/figure1b.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@load "analysis/notebooks/figure1assets/figure1c.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1d.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@load "analysis/notebooks/figure1assets/figure1e.jld2" r2 r2m qa allpermanovas
+@load "analysis/notebooks/figure1assets/figure1g.jld2" allfsea mdcors
 @load "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
 
 allfsea.median = map(median, allfsea.cors)

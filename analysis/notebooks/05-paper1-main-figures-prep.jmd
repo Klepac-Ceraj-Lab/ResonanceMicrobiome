@@ -15,7 +15,7 @@ include("startup-loadall.jl")
 ```
 
 
-## Figure 1A
+## Figure 1A-B
 
 ```julia; results="hidden"
 speciesdm = pairwise(BrayCurtis(), species)
@@ -28,7 +28,7 @@ kidsspeciesmds = fit(MDS, speciesdm[allkids,allkids], distances=true)
 kidsspeciesmdsaxes = [v / sum(eigvals(kidsspeciesmds)) for v in eigvals(kidsspeciesmds)]
 ```
 
-## Figure 1B
+## Figure 1C-D
 
 ```julia; results="hidden"
 unirefaccessorydm = pairwise(BrayCurtis(), unirefaccessory)
@@ -41,11 +41,8 @@ kidsunirefaccessorymds = fit(MDS, unirefaccessorydm[allkids,allkids], distances=
 kidsunirefaccessorymdsaxes = [v / sum(eigvals(kidsunirefaccessorymds)) for v in eigvals(kidsunirefaccessorymds)]
 ```
 
-## Figure 1C
 
-
-
-## Figure 1D
+## Figure 1E
 
 ```julia
 using RCall
@@ -260,9 +257,7 @@ end
 ```
 
 
-
-
-## Figure 1E-F
+## Figure 1G
 
 ```julia
 abxr = CSV.read("data/uniprot/uniprot-abxr.tsv")
@@ -288,10 +283,13 @@ allfsea = DataFrame(
             pvalue    = Float64[],
             cors      = Vector{Float64}[])
 
+mdcors = Dict(m=>Float64[] for m in metadatums)
+
 for md in metadatums
     @info "Working on $md"
     filt = map(!ismissing, ukidsmeta[!,md])
     cors = cor(ukidsmeta[filt, md], occurrences(view(unirefaccessory, sites=ukids))[:,filt], dims=2)'
+    mdcors[md] = filter(!isnan, cors)
     for (key, pos) in neuroactive
         allcors = filter(!isnan, cors[pos])
         notcors = filter(!isnan, cors[Not(pos)])
@@ -302,10 +300,6 @@ for md in metadatums
         p = pvalue(mwu)
         push!(allfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=allcors))
     end
-end
-
-for c in allfsea.cors
-    filter!(!isnan, c)
 end
 
 allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
@@ -344,11 +338,11 @@ using JLD2
 @assert sitenames(species) == allmeta.sample
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
-@save "analysis/notebooks/figure1assets/figure1a1.jld2" speciesmds allmeta speciesmdsaxes color3
-@save "analysis/notebooks/figure1assets/figure1a3.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
-@save "analysis/notebooks/figure1assets/figure1b1.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
-@save "analysis/notebooks/figure1assets/figure1b3.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
-@save "analysis/notebooks/figure1assets/figure1d.jld2" r2 r2m qa allpermanovas
-@save "analysis/notebooks/figure1assets/figure1ef.jld2" allfsea
+@save "analysis/notebooks/figure1assets/figure1a.jld2" speciesmds allmeta speciesmdsaxes color3
+@save "analysis/notebooks/figure1assets/figure1b.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
+@save "analysis/notebooks/figure1assets/figure1c.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1d.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@save "analysis/notebooks/figure1assets/figure1e.jld2" r2 r2m qa allpermanovas
+@save "analysis/notebooks/figure1assets/figure1g.jld2" allfsea mdcors
 @save "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
 ```
