@@ -166,7 +166,7 @@ f1d_layout = gridnest!(layout_1ABCD, 3, 2)
 f1d_layout[1, 2] = f1d_legend
 f1d_layout[1, 2, Left()] = LText(scene, "Number of UniRef90s", rotation = pi/2, padding = (0, 5, 0, 0))
 
-
+scene
 # Figure 1E
 
 eyorder = [
@@ -184,7 +184,7 @@ eyorder = [
     "limbic",
     "cerebellar"
 ]
-eysrt = reverse(invperm(sortperm(yorder)))
+eysrt = reverse(invperm(sortperm(eyorder)))
 
 exorder = [
     "species",
@@ -194,7 +194,7 @@ exorder = [
 ]
 exsrt = reverse(invperm(sortperm(exorder)))
 
-values = disallowmissing(r2m')[eysrt, exsrt]
+values = disallowmissing(r2m')[exsrt, eysrt]
 xrange = 0:size(values,1)
 yrange = 0:size(values,2)
 hm = heatmap!(axes_1E, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
