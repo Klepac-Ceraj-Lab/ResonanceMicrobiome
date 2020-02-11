@@ -19,8 +19,6 @@ rename!(r2, :unirefaccessory=>:accessory)
 ```
 
 ```julia
-allmeta.childWeight = map(w-> ismissing(w) ? w : parse(Float64, w), allmeta.childWeight)
-allmeta.BMI_calc = map(row-> row.childWeight / (row.childHeight^2) * 703, eachrow(allmeta))
 kids = view(allmeta, allmeta.ageLabel .!= "mom", :)
 ukids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid)))
     map(row-> in(row.sample, samples), eachrow(allmeta))

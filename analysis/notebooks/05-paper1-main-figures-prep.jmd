@@ -122,8 +122,9 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
     permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
     permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
-    permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
-    permanova(speciesdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding")
+    permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
 ```
 ```julia
@@ -153,8 +154,9 @@ unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding")
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
 ```
 ```julia
@@ -189,8 +191,9 @@ pfams_permanovas = vcat(
     permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
     permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
     permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
-    permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
-    permanova(pfamsdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding")
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
 ```
 ```julia
@@ -220,8 +223,9 @@ kos_permanovas = vcat(
     permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
     permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
     permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
-    permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function")
-    permanova(kosdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding")
+    permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
+    permanova(kosdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding"),
+    permanova(kosdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
 ```
 ```julia

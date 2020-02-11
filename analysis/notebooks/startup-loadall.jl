@@ -47,6 +47,9 @@ allmeta.breastfeeding = map(eachrow(allmeta)) do row
     end
 end
 
+allmeta.childWeight = map(w-> ismissing(w) ? w : parse(Float64, w), allmeta.childWeight)
+allmeta.BMI_calc = map(row-> row.childWeight / (row.childHeight^2) * 703, eachrow(allmeta))
+
 figures = config["output"]["figures"]
 figures = joinpath(figures, "figure1")
 tables = config["output"]["tables"]
