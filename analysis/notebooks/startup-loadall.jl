@@ -34,6 +34,19 @@ config = parsefile("data/data.toml")
 allmeta = getmgxmetadata()
 
 allmeta = getmgxmetadata(samples=uniquetimepoints(allmeta.sample, takefirst=false))
+
+allmeta.breastfeeding = map(eachrow(allmeta)) do row
+    ismissing(row.breastFedPercent) && return missing
+    !(row.breastFedPercent isa Number) && error(":breastFedPercent should be a number or missing")
+    if row.breastFedPercent < 5
+        return "exclussive formula"
+    elseif row.breastFedPercent > 80
+        return "exclussive breast"
+    else
+        return "mixed"
+    end
+end
+
 figures = config["output"]["figures"]
 figures = joinpath(figures, "figure1")
 tables = config["output"]["tables"]
