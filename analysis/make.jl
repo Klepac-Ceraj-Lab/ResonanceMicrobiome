@@ -4,7 +4,6 @@ using Pkg
 Pkg.activate(@__DIR__)
 inpath = joinpath(@__DIR__, "notebooks")
 outpath = joinpath(@__DIR__, "html")
-cd(inpath)
 
 files = filter(f-> endswith(f, ".jmd"), readdir(inpath))
 sort!(files)

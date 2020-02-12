@@ -8,10 +8,16 @@ This step takes about an hour
 
 ```julia
 using Pkg
-Pkg.activate(normpath(joinpath(@__DIR__, "..")))
+Pkg.activate("analysis/")
 using Revise
 
-include("startup-loadall.jl")
+if endswith(@__FILE__, "jmd")
+    include("startup-loadall.jl")
+elseif endswith(@__FILE__, "make.jl")
+    include("analysis/startup-loadall.jl")
+else
+    error("not running from an expected file")
+end
 ```
 
 
