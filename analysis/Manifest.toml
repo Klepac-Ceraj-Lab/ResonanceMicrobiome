@@ -14,9 +14,7 @@ version = "0.2.1"
 
 [[AbstractPlotting]]
 deps = ["AbstractNumbers", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "FreeType", "FreeTypeAbstraction", "GeometryTypes", "ImageMagick", "IntervalSets", "LinearAlgebra", "Markdown", "Observables", "Packing", "PlotUtils", "Printf", "Random", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "StaticArrays", "Statistics", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "7976bca195bbe7e491596aecf07bc52acfd38fef"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/AbstractPlotting.jl.git"
+git-tree-sha1 = "0fe853c82e6c08fe9d5452309cf5ace72eae3df3"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
 version = "0.9.17"
 
@@ -61,7 +59,7 @@ version = "0.5.8"
 
 [[BiobakeryUtils]]
 deps = ["CSV", "DataFrames", "Microbiome", "RCall", "Statistics"]
-git-tree-sha1 = "817f9866ed35ddd9309819731665d5c9c9e810ec"
+path = "/home/kevin/.julia/dev/BiobakeryUtils"
 uuid = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
 version = "0.3.0"
 
@@ -86,8 +84,6 @@ version = "1.0.2"
 [[CairoMakie]]
 deps = ["AbstractPlotting", "Cairo", "Colors", "FileIO", "GeometryTypes", "ImageCore", "ImageMagick", "LinearAlgebra", "MeshIO", "StaticArrays"]
 git-tree-sha1 = "d07c5d6ed1a556ae5cfbe29c922b73312804913f"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/CairoMakie.jl.git"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 version = "0.1.2"
 
@@ -171,9 +167,9 @@ version = "2.2.0"
 
 [[Conda]]
 deps = ["JSON", "VersionParsing"]
-git-tree-sha1 = "9a11d428dcdc425072af4aea19ab1e8c3e01c032"
+git-tree-sha1 = "7a58bb32ce5d85f8bf7559aa7c2842f9aecf52fc"
 uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
-version = "1.3.0"
+version = "1.4.1"
 
 [[Contour]]
 deps = ["LinearAlgebra", "StaticArrays", "Test"]
@@ -312,9 +308,9 @@ version = "3.3.9+3"
 
 [[FileIO]]
 deps = ["Pkg"]
-git-tree-sha1 = "74585bf1f7ed7259e166011e89f49363d7fa89a6"
+git-tree-sha1 = "2c84c57aced468fa21763c66d3bef33adcd09ec7"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.2.1"
+version = "1.2.2"
 
 [[FilePathsBase]]
 deps = ["Dates", "LinearAlgebra", "Printf", "Test", "UUIDs"]
@@ -405,9 +401,7 @@ version = "3.3.2+0"
 
 [[GLMakie]]
 deps = ["AbstractPlotting", "ColorTypes", "Colors", "FileIO", "FixedPointNumbers", "GLFW", "GeometryTypes", "LinearAlgebra", "Markdown", "MeshIO", "ModernGL", "Observables", "Printf", "Serialization", "StaticArrays"]
-git-tree-sha1 = "8251bb249b65a2c2ae556191f1ea6880f4d446f9"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/GLMakie.jl.git"
+git-tree-sha1 = "36e3e0bfcab936f1bd21489a4c5b90f25bf8439f"
 uuid = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 version = "0.0.13"
 
@@ -517,12 +511,6 @@ git-tree-sha1 = "15732c475062348b0165684ffe28e85ea8396afc"
 uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
 version = "1.0.0"
 
-[[IterableTables]]
-deps = ["DataValues", "IteratorInterfaceExtensions", "Requires", "TableTraits", "TableTraitsUtils"]
-git-tree-sha1 = "70300b876b2cebde43ebc0df42bc8c94a144e1b4"
-uuid = "1c8ee90f-4401-5389-894e-7a04a3dc0f4d"
-version = "1.0.0"
-
 [[IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
@@ -577,10 +565,10 @@ uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
 version = "1.8.5+0"
 
 [[Libglvnd_jll]]
-deps = ["Libdl", "Pkg", "X11_jll", "Xorg_glproto_jll", "Xorg_libX11_jll", "Xorg_libXext_jll"]
-git-tree-sha1 = "b69bdcad2424615c7b0838f69608b541680a5b7e"
+deps = ["Libdl", "Pkg", "Xorg_libX11_jll", "Xorg_libXext_jll"]
+git-tree-sha1 = "a1dcd03042cbdb7af0935eae4deb2368e653e8db"
 uuid = "7e76a0d4-f3c7-5321-8279-8d96eeed0f29"
-version = "1.2.0+2"
+version = "1.3.0+0"
 
 [[Libgpg_error_jll]]
 deps = ["Libdl", "Pkg"]
@@ -633,19 +621,15 @@ version = "2019.0.117+2"
 
 [[Makie]]
 deps = ["AbstractPlotting", "FileIO", "GLMakie", "ImageMagick", "StatsMakie"]
-git-tree-sha1 = "6b7bfa6fe86effc359cc8ab70a23643b5568a0e9"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/Makie.jl.git"
+git-tree-sha1 = "82c3e000788930bd3e7e957c2149cbaa7b59960d"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 version = "0.9.5"
 
 [[MakieLayout]]
 deps = ["AbstractPlotting", "Animations", "Formatting", "Match", "Observables"]
-git-tree-sha1 = "043ee2d6b117a32b9da0802622447bfce3cc8e0f"
-repo-rev = "master"
-repo-url = "https://github.com/jkrumbiegel/MakieLayout.jl.git"
+git-tree-sha1 = "503dacf9b66e1062a2a24180b62688ae611732a0"
 uuid = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"
-version = "0.2.14"
+version = "0.2.15"
 
 [[MappedArrays]]
 git-tree-sha1 = "e2a02fe7ee86a10c707ff1756ab1650b40b140bb"
@@ -674,13 +658,13 @@ version = "0.3.1"
 
 [[Microbiome]]
 deps = ["DataFrames", "MultivariateStats", "Reexport", "SpatialEcology", "Statistics", "StatsBase"]
-git-tree-sha1 = "debcd4847f6b5b846c6f64b822c7956a123d6976"
+path = "/home/kevin/.julia/dev/Microbiome"
 uuid = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
-version = "0.5.1"
+version = "0.6.2"
 
 [[MicrobiomePlots]]
-deps = ["Colors", "Microbiome", "RecipesBase", "StatsPlots"]
-git-tree-sha1 = "0d36dc4d3b5e7ebc255c60f3ad06ae64968b9510"
+deps = ["Colors", "Microbiome", "Random", "RecipesBase", "Reexport", "StatsPlots"]
+path = "/home/kevin/.julia/dev/MicrobiomePlots"
 uuid = "bed85cf4-5cc8-5ac4-9eb3-09fbf92b2ce2"
 version = "0.2.0"
 
@@ -835,9 +819,9 @@ version = "1.0.1"
 
 [[PlotUtils]]
 deps = ["Colors", "Dates", "Printf", "Random", "Reexport"]
-git-tree-sha1 = "22bd7d0a1f4665d66317d6c89a57f6bba9f2560d"
+git-tree-sha1 = "a146cb72ec962aec81d478de49d1011db06dd754"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "0.6.2"
+version = "0.6.3"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryTypes", "JSON", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "Reexport", "Requires", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
@@ -865,9 +849,9 @@ version = "0.2.3"
 
 [[PrettyTables]]
 deps = ["Crayons", "Formatting", "Parameters", "Reexport", "Tables"]
-git-tree-sha1 = "af4a272b830bb46937a9f2d984b467084d21f7b9"
+git-tree-sha1 = "a857e385fc4be7c6c849ecd452b5859cb158b9e8"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "0.8.1"
+version = "0.8.2"
 
 [[Printf]]
 deps = ["Unicode"]
@@ -993,22 +977,16 @@ deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpatialEcology]]
-deps = ["DataFrames", "DataFramesMeta", "EcoBase", "Random", "RandomBooleanMatrices", "RandomNumbers", "RecipesBase", "SparseArrays", "Statistics", "StatsBase", "Test"]
-git-tree-sha1 = "7e4ae3dd9cd98ac6127a28fc5bc46bdf5e28d86b"
+deps = ["DataFrames", "DataFramesMeta", "Distances", "EcoBase", "Random", "RandomBooleanMatrices", "RandomNumbers", "RecipesBase", "SparseArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "511ab3cdda7dbe903581cf7dfdcaaeade7e3d0cd"
 uuid = "348f2d5d-71a3-5ad4-b565-8af070f99681"
-version = "0.7.0"
+version = "0.8.0"
 
 [[SpecialFunctions]]
 deps = ["OpenSpecFun_jll"]
 git-tree-sha1 = "268052ee908b2c086cc0011f528694f02f3e2408"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "0.9.0"
-
-[[StatPlots]]
-deps = ["Clustering", "DataStructures", "DataValues", "Distributions", "IterableTables", "KernelDensity", "Observables", "Plots", "RecipesBase", "Reexport", "StatsBase", "TableTraits", "TableTraitsUtils", "Test", "Widgets"]
-git-tree-sha1 = "245c50f8a6534bb16ada031e064363f8298b61b9"
-uuid = "60ddc479-9b66-56df-82fc-76a74619b69c"
-version = "0.9.2"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
@@ -1034,9 +1012,7 @@ version = "0.9.3"
 
 [[StatsMakie]]
 deps = ["AbstractPlotting", "Distributions", "FileIO", "FreqTables", "IntervalSets", "KernelDensity", "Loess", "NamedArrays", "Observables", "OrderedCollections", "Random", "Statistics", "StatsBase", "StructArrays", "Tables", "Widgets"]
-git-tree-sha1 = "c526b1049b35abc4cc9f7acbe30180a82639665c"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/StatsMakie.jl.git"
+git-tree-sha1 = "b4dab493b0efac1043d1ede3b54934c711f96134"
 uuid = "65254759-4cff-5aa5-8326-61ce017a8c70"
 version = "0.0.7"
 
@@ -1067,12 +1043,6 @@ deps = ["IteratorInterfaceExtensions"]
 git-tree-sha1 = "b1ad568ba658d8cbb3b892ed5380a6f3e781a81e"
 uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
 version = "1.0.0"
-
-[[TableTraitsUtils]]
-deps = ["DataValues", "IteratorInterfaceExtensions", "Missings", "TableTraits"]
-git-tree-sha1 = "8fc12ae66deac83e44454e61b02c37b326493233"
-uuid = "382cd787-c1b6-5bf2-a167-d5b971a19bda"
-version = "1.0.1"
 
 [[Tables]]
 deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "TableTraits", "Test"]
@@ -1168,83 +1138,71 @@ git-tree-sha1 = "101dcd548d6021b8d3cdaeb66c65c0d85faf1bcb"
 uuid = "cf2f014d-5496-555f-b295-889ac9dfddaa"
 version = "5.0.0+0"
 
-[[Xorg_glproto_jll]]
-deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "16cb7bf73d86119bffe90d3ae7dd17b12281c887"
-uuid = "41595b7c-9afa-5287-863f-896d3380052a"
-version = "1.4.17+0"
-
 [[Xorg_inputproto_jll]]
 deps = ["Libdl", "Pkg"]
 git-tree-sha1 = "a941739b553f589cd264dc16fdeaf5300af30f51"
 uuid = "84d6cd60-beca-5f49-93c5-789031781a2d"
 version = "2.3.2+0"
 
-[[Xorg_kbproto_jll]]
-deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "d0991fb63a9c663108bc5adc2ebdf358be6a289f"
-uuid = "060dd47b-79ec-5ba1-a7b2-f4f2f7dcdd0f"
-version = "1.0.7+0"
-
 [[Xorg_libX11_jll]]
-deps = ["Libdl", "Pkg", "Xorg_inputproto_jll", "Xorg_kbproto_jll", "Xorg_libxcb_jll", "Xorg_util_macros_jll", "Xorg_xextproto_jll", "Xorg_xproto_jll", "Xorg_xtrans_jll"]
-git-tree-sha1 = "a48b5faf2a95933d1249c889a2893f7701935bcb"
+deps = ["Libdl", "Pkg", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
+git-tree-sha1 = "5d97a6e61ab49eeeeca07f8a271cb24144359805"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
-version = "1.6.8+0"
+version = "1.6.9+0"
 
 [[Xorg_libXau_jll]]
 deps = ["Libdl", "Pkg", "Xorg_xproto_jll"]
-git-tree-sha1 = "8cc829c6223f11f06b56108c45e6b1aad13b1fdc"
+git-tree-sha1 = "e47d249f952653b7f1b0d3d7d7ed40d081d7096b"
 uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
-version = "1.0.9+0"
+version = "1.0.9+1"
 
 [[Xorg_libXcursor_jll]]
 deps = ["Libdl", "Pkg", "Xorg_libXfixes_jll", "Xorg_libXrender_jll", "Xorg_util_macros_jll"]
-git-tree-sha1 = "0632e71a9d45f56a84b2cb517773918f3d54ddf3"
+git-tree-sha1 = "2a5883ed563bd0da8976449ea31bba8a922a13c4"
 uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
-version = "1.2.0+0"
+version = "1.2.0+1"
 
 [[Xorg_libXdmcp_jll]]
 deps = ["Libdl", "Pkg", "Xorg_util_macros_jll", "Xorg_xproto_jll"]
-git-tree-sha1 = "1cb581254dd38106e9cfb2c6aa1ed675547fd2e4"
+git-tree-sha1 = "f477af835cd12647d253b9c7a86e768b14d04fff"
 uuid = "a3789734-cfe1-5b06-b2d0-1dd0d9d62d05"
-version = "1.1.3+0"
+version = "1.1.3+1"
 
 [[Xorg_libXext_jll]]
 deps = ["Libdl", "Pkg", "Xorg_libX11_jll", "Xorg_util_macros_jll", "Xorg_xextproto_jll"]
-git-tree-sha1 = "08b8a06261eec5fbe45d4077a993a224af2880e3"
+git-tree-sha1 = "43ff58a4d17cc9710bfadccaa7249f2e44c4b20b"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
-version = "1.3.4+0"
+version = "1.3.4+1"
 
 [[Xorg_libXfixes_jll]]
 deps = ["Libdl", "Pkg", "Xorg_fixesproto_jll", "Xorg_libX11_jll", "Xorg_util_macros_jll"]
-git-tree-sha1 = "d4194996acacdd25f4f86a40ea6b9e497d4c1604"
+git-tree-sha1 = "ff358baf2b575c149d2115a6a1a2ca772868ee97"
 uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
-version = "5.0.3+0"
+version = "5.0.3+1"
 
 [[Xorg_libXi_jll]]
 deps = ["Libdl", "Pkg", "Xorg_inputproto_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "Xorg_util_macros_jll"]
-git-tree-sha1 = "411b9503eb1dd7af3605e51a4cf7e4850a75f20e"
+git-tree-sha1 = "4ea59b9d391a81553d24d68b15dd191e8fe39afc"
 uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
-version = "1.7.10+0"
+version = "1.7.10+1"
 
 [[Xorg_libXinerama_jll]]
 deps = ["Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_util_macros_jll", "Xorg_xineramaproto_jll"]
-git-tree-sha1 = "123ffa8c714ee630dde2256ad91d02322e079074"
+git-tree-sha1 = "fd650df461ecdd390f40d5d909e59e725d44f44c"
 uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
-version = "1.1.4+0"
+version = "1.1.4+1"
 
 [[Xorg_libXrandr_jll]]
 deps = ["Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_randrproto_jll", "Xorg_util_macros_jll"]
-git-tree-sha1 = "122d70832769124a15f2a1623307f4637179b1b3"
+git-tree-sha1 = "eda897668a2a6757a75a46c866b753ad6840a75c"
 uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
-version = "1.5.2+0"
+version = "1.5.2+1"
 
 [[Xorg_libXrender_jll]]
 deps = ["Libdl", "Pkg", "Xorg_libX11_jll", "Xorg_renderproto_jll"]
-git-tree-sha1 = "07abd690ddd09818237a0a21359fd6ef449e820d"
+git-tree-sha1 = "84708092aaae22c33c120064a36f1853a2d99d94"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
-version = "0.9.10+0"
+version = "0.9.10+1"
 
 [[Xorg_libpthread_stubs_jll]]
 deps = ["Libdl", "Pkg"]
@@ -1254,9 +1212,9 @@ version = "0.1.0+0"
 
 [[Xorg_libxcb_jll]]
 deps = ["Libdl", "Pkg", "XSLT_jll", "Xorg_libXau_jll", "Xorg_libXdmcp_jll", "Xorg_libpthread_stubs_jll", "Xorg_util_macros_jll", "Xorg_xcb_proto_jll"]
-git-tree-sha1 = "b3d001a3df5ec00fd677f0ae674127983218ac72"
+git-tree-sha1 = "6f5c3e3d1e3201613f38c4042ca79521e3c0bb97"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
-version = "1.13.0+0"
+version = "1.13.0+1"
 
 [[Xorg_randrproto_jll]]
 deps = ["Libdl", "Pkg"]

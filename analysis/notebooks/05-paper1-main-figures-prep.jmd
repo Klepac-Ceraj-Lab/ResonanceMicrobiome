@@ -13,11 +13,12 @@ using Revise
 
 if endswith(@__FILE__, "jmd")
     include("startup-loadall.jl")
-elseif endswith(@__FILE__, "make.jl")
-    include("analysis/startup-loadall.jl")
+elseif isdir("analysis")
+    include("notebooks/startup-loadall.jl")
 else
     error("not running from an expected file")
 end
+
 ```
 
 
