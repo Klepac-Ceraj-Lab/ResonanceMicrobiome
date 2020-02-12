@@ -8,7 +8,7 @@ This step takes about an hour
 
 ```julia
 using Pkg
-Pkg.activate("analysis/")
+Pkg.activate(normpath(joinpath(@__DIR__, "..")))
 using Revise
 
 include("startup-loadall.jl")
