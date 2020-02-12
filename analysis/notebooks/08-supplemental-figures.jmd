@@ -265,16 +265,13 @@ scene, layout = layoutscene(resolution = res)
 
 layout_S4 = GridLayout()
 
-axes_S4 = layout_S4[1,1] = LAxis(scene, titlevisible=true)
-
-
-
+axes_S4 = layout_S4[1:3,1:2] = [LAxis(scene, titlevisible=true) for row in 1:3 for col in 1:2]
 marker_legend_S4 = layout_S4[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
 
-layout[1, 1] = LText(scene, text="Supplementary Figure 3", textsize=50, width=Auto(false))
+layout[1, 1:2] = LText(scene, text="Supplementary Figure 4", textsize=50, width=Auto(false))
 
 
-layout[2,1] = layout_S4
+layout[2:4,1:2] = layout_S4
 scene
 s4 = scatter!(axes_S4, Group(marker=allmeta.ageLabel),
         Style(color=log2.(allmeta.pcopri .+ (minimum(allmeta.pcopri) / 4))), grid=false,
@@ -303,5 +300,5 @@ marker_legend_S4.entries[] = LegendEntry.(
     ]
 )
 
-save("data/analysis/figures/figure1/suppfigure3.jpeg", scene, resolution=res)
+save("data/analysis/figures/figure1/suppfigure4.jpeg", scene, resolution=res)
 ```

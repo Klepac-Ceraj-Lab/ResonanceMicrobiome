@@ -11,7 +11,7 @@ using Pkg
 Pkg.activate("analysis/")
 using Revise
 
-include("startup-loadall.jl")
+include("notebooks/startup-loadall.jl")
 ```
 
 
