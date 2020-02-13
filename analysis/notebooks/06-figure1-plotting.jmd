@@ -64,8 +64,8 @@ layout[4:5, 1:3] = layout_1G
 layout[6, 1:3] = layout_1G_leg
 
 layout_1ABCD[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-layout_1ABCD[3, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0))
-layout_1ABCD[1, 2, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0))
+layout_1ABCD[3, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 30, 0))
+layout_1ABCD[1, 2, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0))
 layout_1ABCD[3, 2, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 30, 0))
 layout[1, 3, TopLeft()] = LText(scene, "e", textsize = 40, padding = (0, 0, 10, 0))
 layout[3, 3, TopLeft()] = LText(scene, "f", textsize = 40, padding = (0, 0, 10, 0))
@@ -165,8 +165,6 @@ end
 f1d_layout = gridnest!(layout_1ABCD, 3, 2)
 f1d_layout[1, 2] = f1d_legend
 f1d_layout[1, 2, Left()] = LText(scene, "Number of UniRef90s", rotation = pi/2, padding = (0, 5, 0, 0))
-
-scene
 # Figure 1E
 
 eyorder = [
@@ -247,8 +245,7 @@ end
 hm_layout = gridnest!(layout_1E, 1, 1)
 hm_layout[1, 2] = hm_legend
 hm_layout[1, 2, Left()] = LText(scene, "% Variance", rotation = pi/2, padding = (0, 5, 0, 0))
-
-
+scene
 # Figure 1F
 
 let filt = map(!ismissing, allkidsmeta.cogScore)
@@ -391,11 +388,11 @@ save("data/analysis/figures/figure1/figure1-makie.jpg", scene, resolution=res);
 ```julia
 scene, layout = layoutscene()
 lo = GridLayout()
-p1 = lo[1,1] = LAxis(scene)
+p1 = lo[1:2,1] = [LAxis(scene), LAxis(scene)]
 layout[1, 1] = lo
-
-scatter!(p1, rand(10,2), markersize = AbstractPlotting.px *20)
-p1.xticks = ManualTicks(0:0.25:1, string.(0:0.25:1))
-p1.xgridcolor = ColorSchemes.Accent_3.colors
+scene
+boxplot!(p1[1,1], collect(1:10), rand(10,2), markersize = AbstractPlotting.px *20)
+boxplot!(p1[2, 1], collect(1:10), rand(10,2), markersize = AbstractPlotting.px *20,
+    orientation=:horizontal)
 
 ```

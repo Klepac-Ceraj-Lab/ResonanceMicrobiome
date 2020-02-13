@@ -14,7 +14,9 @@ version = "0.2.1"
 
 [[AbstractPlotting]]
 deps = ["AbstractNumbers", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "FreeType", "FreeTypeAbstraction", "GeometryTypes", "ImageMagick", "IntervalSets", "LinearAlgebra", "Markdown", "Observables", "Packing", "PlotUtils", "Printf", "Random", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "StaticArrays", "Statistics", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "0fe853c82e6c08fe9d5452309cf5ace72eae3df3"
+git-tree-sha1 = "ceefe7683332723a311d725fd1c24ab604684adc"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPlots/AbstractPlotting.jl.git"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
 version = "0.9.17"
 
@@ -59,7 +61,7 @@ version = "0.5.8"
 
 [[BiobakeryUtils]]
 deps = ["CSV", "DataFrames", "Microbiome", "RCall", "Statistics"]
-path = "/home/kevin/.julia/dev/BiobakeryUtils"
+path = "/Users/ksb/.julia/dev/BiobakeryUtils"
 uuid = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
 version = "0.3.0"
 
@@ -68,6 +70,11 @@ deps = ["Libdl", "Pkg"]
 git-tree-sha1 = "92463331a641b19fc3baa427e0b76cdbd54dc05d"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.6+1"
+
+[[CEnum]]
+git-tree-sha1 = "62847acab40e6855a9b5905ccb99c2b5cf6b3ebb"
+uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+version = "0.2.0"
 
 [[CSV]]
 deps = ["CategoricalArrays", "DataFrames", "Dates", "FilePathsBase", "Mmap", "Parsers", "PooledArrays", "Tables", "Unicode", "WeakRefStrings"]
@@ -266,7 +273,7 @@ version = "0.8.1"
 
 [[ECHOAnalysis]]
 deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays"]
-path = "/home/kevin/.julia/dev/ECHOAnalysis"
+path = "/Users/ksb/.julia/dev/ECHOAnalysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
 version = "0.0.2"
 
@@ -354,10 +361,10 @@ uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.10.9"
 
 [[FreeType]]
-deps = ["BinaryProvider", "Libdl", "Pkg", "Test"]
-git-tree-sha1 = "06462b9d5aca708d764d16e5ba6a83ba7b753d57"
+deps = ["CEnum", "FreeType2_jll"]
+git-tree-sha1 = "e2986a14a511f9d289b69bbdf09691fea5203976"
 uuid = "b38be410-82b0-50bf-ab77-7b57e271db43"
-version = "2.1.1"
+version = "3.0.0"
 
 [[FreeType2_jll]]
 deps = ["Bzip2_jll", "Libdl", "Pkg", "Zlib_jll"]
@@ -366,10 +373,10 @@ uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
 version = "2.10.1+1"
 
 [[FreeTypeAbstraction]]
-deps = ["ColorVectorSpace", "Colors", "FreeType", "StaticArrays", "Test"]
-git-tree-sha1 = "0128f0469d0ccb97cfaed51e39795ecfac073eb7"
+deps = ["ColorVectorSpace", "Colors", "FreeType", "StaticArrays"]
+git-tree-sha1 = "1a39cea516e709445299a46f0b6b59aa4e3ad9c5"
 uuid = "663a7486-cb36-511b-a19d-713bb74d65c9"
-version = "0.4.2"
+version = "0.5.0"
 
 [[FreqTables]]
 deps = ["CategoricalArrays", "NamedArrays", "Tables", "Test"]
@@ -621,13 +628,17 @@ version = "2019.0.117+2"
 
 [[Makie]]
 deps = ["AbstractPlotting", "FileIO", "GLMakie", "ImageMagick", "StatsMakie"]
-git-tree-sha1 = "82c3e000788930bd3e7e957c2149cbaa7b59960d"
+git-tree-sha1 = "49966c6e2e8ed17664a445e2bf0f7ccf406ec42f"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPlots/Makie.jl.git"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 version = "0.9.5"
 
 [[MakieLayout]]
 deps = ["AbstractPlotting", "Animations", "Formatting", "Match", "Observables"]
-git-tree-sha1 = "503dacf9b66e1062a2a24180b62688ae611732a0"
+git-tree-sha1 = "31db6ee28ce9d8272148060351fb03c63d083038"
+repo-rev = "master"
+repo-url = "https://github.com/jkrumbiegel/MakieLayout.jl.git"
 uuid = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"
 version = "0.2.15"
 
@@ -658,13 +669,13 @@ version = "0.3.1"
 
 [[Microbiome]]
 deps = ["DataFrames", "MultivariateStats", "Reexport", "SpatialEcology", "Statistics", "StatsBase"]
-path = "/home/kevin/.julia/dev/Microbiome"
+path = "/Users/ksb/.julia/dev/Microbiome"
 uuid = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
 version = "0.6.2"
 
 [[MicrobiomePlots]]
 deps = ["Colors", "Microbiome", "Random", "RecipesBase", "Reexport", "StatsPlots"]
-path = "/home/kevin/.julia/dev/MicrobiomePlots"
+path = "/Users/ksb/.julia/dev/MicrobiomePlots"
 uuid = "bed85cf4-5cc8-5ac4-9eb3-09fbf92b2ce2"
 version = "0.2.0"
 
@@ -1012,7 +1023,9 @@ version = "0.9.3"
 
 [[StatsMakie]]
 deps = ["AbstractPlotting", "Distributions", "FileIO", "FreqTables", "IntervalSets", "KernelDensity", "Loess", "NamedArrays", "Observables", "OrderedCollections", "Random", "Statistics", "StatsBase", "StructArrays", "Tables", "Widgets"]
-git-tree-sha1 = "b4dab493b0efac1043d1ede3b54934c711f96134"
+git-tree-sha1 = "ca48c27a21bc8b9ef7ff30c65683da47cacc82a6"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPlots/StatsMakie.jl.git"
 uuid = "65254759-4cff-5aa5-8326-61ce017a8c70"
 version = "0.0.7"
 
