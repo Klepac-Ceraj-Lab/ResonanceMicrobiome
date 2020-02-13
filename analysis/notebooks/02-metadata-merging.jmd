@@ -76,10 +76,6 @@ allmeta[allmeta.timepoint .== 0, :parent_table] |> unique
 ```
 
 Those all look reasonable!
-Well, except for `WeightHeight`,
-which is for some reason part of a table that is not timepoint associated.
-But `childHeight` and `childWeight`
-are found in a different table, so we'll just ignore this one.
 
 ### Summaries and transforms
 
@@ -249,7 +245,7 @@ using the `resolve_letter_timepoint` function.
 
 ```julia
 # convert letter timepoint into number
-brainsid = resolve_letter_timepoint(brainvol.subject)
+brainsid = resolve_letter_timepoint.(brainvol.subject)
 brainsid[1:5]
 ```
 
@@ -273,7 +269,7 @@ rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 rename!(hires2, Dict(:ID=>:subject, :Timepoint=>:timepoint))
 
 
-hr2_samples = resolve_letter_timepoint(string.(hires2.subject))
+hr2_samples = resolve_letter_timepoint.(string.(hires2.subject))
 hires2.subject = subject.(hr2_samples)
 hires2.timepoint = timepoint.(hr2_samples)
 

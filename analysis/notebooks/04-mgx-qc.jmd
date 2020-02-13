@@ -9,6 +9,10 @@ options:
 All of the metagenomes were processed
 using tools from the [bioBakery](https://bitbucket.org/biobakery/biobakery/wiki/Home).
 
+Note - these files needed for this analysis
+are not included in the zenodo data repository,
+but are avaliable on request.
+
 ```julia; results="hidden"
 using Pkg
 Pkg.activate("analysis/")

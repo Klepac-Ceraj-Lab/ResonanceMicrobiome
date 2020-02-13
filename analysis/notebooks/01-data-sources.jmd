@@ -8,17 +8,31 @@ options:
 
 ## Description
 
-Raw data for this paper can be found here **link to OSF repo**
+Raw data for this paper can be [found here](https://zenodo.org/record/3633793).
 
 In order to perform the analyses outlined in the notebooks in this project,
-**description of DataDeps**
+you'll need to download and unpack these files
+and put it into directories that are accessible.
 
-https://github.com/Klepac-Ceraj-Lab/echo_analysis/issues/6
+By default, data generated from the `bioBakery` toolset
+(those found in the `batchXXX_analysis_noknead.tar.gz` archives)
+are expected to be placed in `data/engaging/` folders.
+Paths for other data may be changed in the `data.toml` file
+found in the `data/` directory.
+
+Some of these paths also set where files will be created.
+In particular, you'll likely need to change the paths
+for the `sqlite` databases.
 
 ## Metadata
 
 Patient metadata is kept in a FileMaker Pro database,
 and exported into a file that requires some effort to parse effectively.
+
+If you have downloaded data from Zenodo,
+you may skip ahead to [Creating SQLite databases](#creating-sqlite-databases).
+These next sections document how subject metadata
+is extracted from the internal FilemakerPro database.
 
 ### Export from FilemakerPro
 
@@ -57,12 +71,11 @@ to get the metadata associated with timepoints,
 
 ### Metadata Scrub
 
-**TODO: Update section for split repos**
-
 Once you have this file,
-run the `metascrub.jl` script contained in the `bin/` folder.
-This script does a few things.
+You'll need to run the `metascrub.jl` script contained in the `bin/` folder
+of the [`ECHOAnalysis`](https://doi.org/10.5281/zenodo.3648679) repository.
 
+This script does a few things.
 First, it separates each parent table
 (that is, the stuff before the `::`, eg `TimepointInfo`).
 
@@ -78,9 +91,6 @@ to see the table-specific steps.
 
 Finally, the data is converted to long form.
 
-<!-- TODO: Switch to feather output to preserve type info -->
-<!-- https://github.com/Klepac-Ceraj-Lab/echo_analysis/issues/3 -->
-
 ```
 | subject  | timepoint | metadatum | value    | parent_table |
 |----------|-----------|-----------|----------|--------------|
@@ -94,7 +104,7 @@ are given a timepoint of `0`.
 For more information, run the script with the `--help`:
 
 ```
-$ julia --project=@. bin/metascrub.jl --help
+$ julia --project=@. $REPO_PATH/bin/metascrub.jl --help
 usage: metascrub.jl [-d] [-v] [-q] [-l LOG] [--delim DELIM]
                     [--sheet SHEET] [--dry-run] [-o OUTPUT]
                     [-s SAMPLES] [-h] input
@@ -124,8 +134,8 @@ optional arguments:
 
 For example, to run this script on our example above:
 
-```sh
-$ julia --project=@. bin/metascrub.jl data/metadata/filemakerall.xlsx \
+```
+$ julia --project=@. $REPO_PATH/bin/metascrub.jl data/metadata/filemakerall.xlsx \
     -vl data/metadata/filemakerdb.log \
     -o data/metadata/filemakerdb.csv
 ```
@@ -133,36 +143,11 @@ $ julia --project=@. bin/metascrub.jl data/metadata/filemakerall.xlsx \
 Additional transformations of the metadata to get it into a usable form
 can be found in the next notebook.
 
-```julia; echo=false; results="hidden"
-using Pkg
-Pkg.activate("analysis")
-using Revise
-```
-
-```julia
-using SQLite
-using CSV
-using Pkg.TOML: parsefile
-
-config = parsefile("data/data.toml")
-
-metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
-SQLite.drop!(metadb, "filemakermetadata", ifexists=true)
-SQLite.dropindex!(metadb, "filemakermetadata_subject_idx", ifexists=true)
-SQLite.dropindex!(metadb, "filemakermetadata_metadatum_idx", ifexists=true)
-
-CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(metadb, "filemakermetadata")
-SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_subject_idx", "subject", unique=false)
-SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_metadatum_idx", "metadatum", unique=false)
-```
-
 ## Metagenome data
 
 Compressed quality-scored sequencing files (`.fastq.gz`)
 from the sequencing facility were concatenated
 and run through the bioBakery metagenome workflow.
-
-See **Methods** section of manuscript. <!-- TODO: Add link to manuscript -->
 
 This repository contains samples from sequencing batches 001-012.
 
@@ -187,7 +172,51 @@ $ snakemake -s /home/vklepacc/software/repos/snakemake_workflows/biobakery_all.s
     --latency-wait 15
 ```
 
-### Adding files to sqlite database
+## Adding Metadata to SQLite databases
+
+The following code (and code from all subsequent notebooks)
+assumes that your current working directory is that of this repository.
+I executed the code directly from the markdown file
+using [Juno](https://junolab.org/) IDE extension for the Atom text editor.
+
+You may also copy and paste the following code into a `julia` REPL
+or convert these files into jupyter notebooks
+using the [Weave.jl](http://weavejl.mpastell.com/dev/notebooks/#Output-to-Jupyter-notebooks-1) package.
+
+If you run into path errors,
+check that `data/data.toml` has the correct paths
+to the required files and directories.
+
+```julia; echo=false; results="hidden"
+using Pkg
+Pkg.activate("analysis")
+using Revise
+```
+
+```julia
+using SQLite
+using CSV
+using Pkg.TOML: parsefile
+
+config = parsefile("data/data.toml")
+
+metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
+SQLite.drop!(metadb, "filemakermetadata", ifexists=true)
+SQLite.dropindex!(metadb, "filemakermetadata_subject_idx", ifexists=true)
+SQLite.dropindex!(metadb, "filemakermetadata_metadatum_idx", ifexists=true)
+
+CSV.File(config["tables"]["metadata"]["path"]) |> SQLite.load!(metadb, "filemakermetadata")
+
+SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_subject_idx", "subject", unique=false)
+SQLite.createindex!(metadb, "filemakermetadata", "filemakermetadata_metadatum_idx", "metadatum", unique=false)
+```
+
+
+## Adding Taxonomic and Functional profiles to sqlite database
+
+The following steps can take quite a while,
+especially adding the `genefamilies` tables.
+
 
 ```julia
 using SQLite
@@ -200,7 +229,7 @@ config = parsefile("data/data.toml")
 taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
 add_taxonomic_profiles(taxdb, config["files"]["biobakery"]["path"], replace=true)
 
-allsamples = readdir("/mnt/lovelace/echo/sequencing/mgx/rawfastq")
+allsamples = readdir(config["files"]["rawfastq"]["path"])
 filter!(f-> occursin(r"^[CM]\d+[_\-]\d[EF]", f), allsamples)
 allsamples = unique(stoolsample.(allsamples))
 samples = uniquetimepoints(allsamples, takefirst=false)
@@ -213,62 +242,4 @@ pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
 add_functional_profiles(pfamdb, config["files"]["biobakery"]["path"], kind="pfam_names_relab", replace=true, samples=samples)
 ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
 add_functional_profiles(ecdb, config["files"]["biobakery"]["path"], kind="ec_names_relab", replace=true, samples=samples)
-```
-
-### Concatenating raw sequencing files
-
-**Note:** This is no longer necessary when using the snakemake workflow.
-
-Each set of 4 forward and reverse reads
-were concatenated using the `catfastq.jl` script.
-
-```
-$ julia --project=@. bin/catfastq.jl --help
-usage: catfastq.jl [-i IN-FOLDER] [--delete] [-o OUTPUT-FOLDER]
-                   [--dry-run] [--debug] [-v] [-q] [-l LOG] [-h]
-
-optional arguments:
-  -i, --in-folder IN-FOLDER
-                        Folder containing fastq files (default: ".")
-  --delete              set to remove original files after
-                        concatenation
-  -o, --output-folder OUTPUT-FOLDER
-                        destination folder for concatenated files
-                        (default: "./")
-  --dry-run             print messages but do nothing
-  --debug               Show @debug level logging messages
-  -v, --verbose         Show @info level logging messages
-  -q, --quiet           Only show @error logging messages
-  -l, --log LOG         Write logs to this file. Default - no file
-  -h, --help            show this help message and exit
-```
-
-To run, assuming you have a folder containing the `fastq.gz` files
-from the sequencing facility in a folder called `rawfastq/`:
-
-```
-$ julia --project=@. bin/catfastq.jl -i rawfastq/ -o catfastq/ -vl batch001_concatenate.log
-```
-
-### Running the bioBakery workflow
-
-**Note:** This has been deprecated in favor of the snakemake workflow.
-All samples in this project were analyzed with the snakemake workflow (see above).
-
-The bioBakery `wmgx` workflow was previously used
-with the following software versions:
-
-- Anadama2 v0.5
-- bioBakery Workflows v0.10
-- kneaddata v0.7
-- metaphlan2 v2.2
-- humann2 v0.11.1
-
-The following command was run on the `regal` compute cluster from Harvard
-research computing (a Centos7 environment).
-
-```
-$ biobakery_workflows wmgx --input catfastq/ --output analysis/ \
-  --bypass-strain-profiling --pair-identifier .1 \
-  --grid-jobs 96 --grid-partition serial_requeue,shared,240 # grid options
 ```

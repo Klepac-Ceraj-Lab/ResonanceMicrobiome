@@ -1,0 +1,14 @@
+correctedAgeDays
+languageComposite
+motorComposite
+mullen_EarlyLearningComposite
+fullScaleComposite
+FSIQ_Composite
+breastFedPercent
+birthType
+childGender
+childHeight
+childWeight
+mother_HHS
+birthType
+childRace

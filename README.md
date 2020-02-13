@@ -1,8 +1,24 @@
 # ECHO RESONANCE Microbiome Paper 1
 
-[![Kevin Bonham, PhD](https://img.shields.io/badge/Author-Kevin%20Bonham%2C%20PhD-blueviolet)](http://nequals.me)
-[![Sophie Rowland](https://img.shields.io/badge/Author-Sophie%20Rowland-blueviolet)](http://sophierowland.com/)
-[![Vanja Klepac-Ceraj](https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet)](https://www.vkclab.com/)
+| | |
+|------------:|:----------|
+| **Authors** | [![Kevin Bonham][kevin-badge]][kevin-url] [![Sophie Rowland][sophie-badge]][sophie-url] [![Vanja Klepac-Ceraj][vanja-badge]][vanja-url] |
+| **DOIs**    | Repo: [![repo][repo-badge]][repo-url] Data: [![data][data-badge]][data-url] |
+
+
+
+[kevin-badge]: https://img.shields.io/badge/Author-Kevin%20Bonham%2C%20PhD-blueviolet
+[kevin-url]: http://nequals.me
+[sophie-badge]: https://img.shields.io/badge/Author-Sophie%20Rowland-blueviolet
+[sophie-url]: http://sophierowland.com/
+[vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
+[vanja-url]: https://www.vkclab.com/
+[vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
+[vanja-url]: https://www.vkclab.com/
+[repo-badge]: https://zenodo.org/badge/222533623.svg
+[repo-url]: https://zenodo.org/badge/latestdoi/222533623
+[data-badge]: https://zenodo.org/badge/DOI/10.5281/zenodo.3633793.svg
+[data-url]: https://doi.org/10.5281/zenodo.3633793
 
 ## Installation Instructions
 
@@ -74,7 +90,7 @@ $ curl -o repo.tar.gz
 $ cd resonance_paper1
 ```
 
-### Instantiate the analysis directory
+### Instantiate the `analysis/` directory
 
 The `analysis` directory has two files that enable easy replication
 of the julia project environment and its dependencies,
@@ -104,6 +120,14 @@ Activating environment at `~/repos/lab/testing/resonance_paper1/analysis/Project
 julia> Pkg.instantiate()
 ```
 
+Then, take a look at the files in the `analysis/notebooks/` folder
+to get started.
+The `.jmd` files are julia markdown files,
+and you should view them in order.
+
+Code inside blocks marked with `julia` are julia code
+that should be executed with the analysis environment
+activated and instantiated.
 
   [1]: http://julialang.org
   [2]: https://julialang.org/downloads/

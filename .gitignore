@@ -2,6 +2,7 @@
 *.csv
 *.tsv
 *.fmp12
+*.jld2
 *.xlsx
 Rplots.pdf
 scratch*
