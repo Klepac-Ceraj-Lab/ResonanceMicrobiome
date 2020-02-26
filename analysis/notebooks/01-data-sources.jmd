@@ -230,7 +230,7 @@ taxdb = SQLite.DB(config["sqlite"]["taxa"]["path"])
 add_taxonomic_profiles(taxdb, config["files"]["biobakery"]["path"], replace=true)
 
 allsamples = readdir(config["files"]["rawfastq"]["path"])
-filter!(f-> occursin(r"^[CM]\d+[_\-]\d[EF]", f), allsamples)
+filter!(isstoolsample, allsamples)
 allsamples = unique(stoolsample.(allsamples))
 samples = uniquetimepoints(allsamples, takefirst=false)
 
