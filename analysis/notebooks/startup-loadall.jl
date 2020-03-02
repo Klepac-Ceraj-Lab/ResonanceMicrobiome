@@ -15,7 +15,6 @@ using MultivariateStats
 using Pkg.TOML: parsefile
 using Clustering
 using Combinatorics
-using MicrobiomePlots
 using BiobakeryUtils
 using MultipleTesting
 using ProgressMeter
