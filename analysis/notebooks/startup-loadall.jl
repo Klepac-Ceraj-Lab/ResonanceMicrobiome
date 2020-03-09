@@ -6,7 +6,6 @@ ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
 using SQLite
-using StatsPlots
 using PrettyTables
 using CSV
 using Microbiome

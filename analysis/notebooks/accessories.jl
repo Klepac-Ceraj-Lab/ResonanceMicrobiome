@@ -64,21 +64,21 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVecto
     return fsea(cors, pos)
 end
 
-
-function plotfsea(df::AbstractDataFrame, ymin, ymax)
-    md = first(eachrow(df)).metadatum
-    plt = boxplot(df.cors, color=:lightgrey,
-        legend=false, xticks=(1:nrow(df), df.geneset), xrotation=90,
-        ylabel="Median $md Correlation",
-        yticks= ymin:0.1:ymax)
-    for (i, row) in enumerate(eachrow(df))
-        if row.qvalue < 0.001
-            annotate!(i, ymax -0.1, "***", align=:center)
-        elseif row.qvalue < 0.01
-            annotate!(i, ymax -0.1, "**", align=:center)
-        elseif row.qvalue < 0.1
-            annotate!(i, ymax -0.1, "*", align=:center)
-        end
-    end
-    return(plt)
-end
+#
+# function plotfsea(df::AbstractDataFrame, ymin, ymax)
+#     md = first(eachrow(df)).metadatum
+#     plt = boxplot(df.cors, color=:lightgrey,
+#         legend=false, xticks=(1:nrow(df), df.geneset), xrotation=90,
+#         ylabel="Median $md Correlation",
+#         yticks= ymin:0.1:ymax)
+#     for (i, row) in enumerate(eachrow(df))
+#         if row.qvalue < 0.001
+#             annotate!(i, ymax -0.1, "***", align=:center)
+#         elseif row.qvalue < 0.01
+#             annotate!(i, ymax -0.1, "**", align=:center)
+#         elseif row.qvalue < 0.1
+#             annotate!(i, ymax -0.1, "*", align=:center)
+#         end
+#     end
+#     return(plt)
+# end

@@ -60,7 +60,7 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120)
 
 metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
-allmeta = SQLite.Query(metadb, "SELECT * FROM filemakermetadata") |> DataFrame
+allmeta = DBInterface.execute(metadb, "SELECT * FROM filemakermetadata") |> DataFrame
 # pretty print table
 @pt allmeta
 ```
