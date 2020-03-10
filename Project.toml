@@ -1,7 +1,7 @@
-name = "AnalysisNotebooks"
-uuid = "3b2d9049-98b8-405f-86ea-941837c57c5d"
+name = "ResonancePaper1"
+uuid = "e3f212b0-2403-440f-b379-9e64d5ceb1c4"
 authors = ["kescobo <kbonham@wellesley.edu>"]
-version = "0.0.2"
+version = "0.0.1"
 
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
