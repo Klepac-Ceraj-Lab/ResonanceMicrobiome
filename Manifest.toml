@@ -269,10 +269,10 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.1"
 
 [[ECHOAnalysis]]
-deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Feather", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays"]
+deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays", "Tables"]
 path = "/home/kevin/.julia/dev/ECHOAnalysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
-version = "0.2.0"
+version = "0.0.2"
 
 [[EcoBase]]
 deps = ["RecipesBase"]
@@ -674,15 +674,15 @@ version = "1.0.3"
 
 [[OpenBLAS_jll]]
 deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "adc45e596df7007d48bf6829efb1dc64fdec3ddc"
+git-tree-sha1 = "858f107d79a016d9511e34186fe2af11566ba762"
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.7+6"
+version = "0.3.7+7"
 
 [[OpenSpecFun_jll]]
 deps = ["CompilerSupportLibraries_jll", "Libdl", "Pkg"]
-git-tree-sha1 = "d110040968b9afe95c6bd9c6233570b0fe8abd22"
+git-tree-sha1 = "d51c416559217d974a1113522d5919235ae67a87"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
-version = "0.5.3+2"
+version = "0.5.3+3"
 
 [[Optim]]
 deps = ["FillArrays", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]

@@ -1,3 +1,5 @@
+@info "loading metadata"
+
 using SQLite
 using CSV
 using Pkg.TOML: parsefile
