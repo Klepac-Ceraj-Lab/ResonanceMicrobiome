@@ -269,10 +269,10 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.1"
 
 [[ECHOAnalysis]]
-deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays", "Tables"]
-path = "/home/kevin/.julia/dev/ECHOAnalysis"
+deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "Microbiome", "ProgressMeter", "SQLite", "SparseArrays"]
+path = "dev/ECHOAnalysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
-version = "0.0.2"
+version = "0.2.0"
 
 [[EcoBase]]
 deps = ["RecipesBase"]
@@ -311,9 +311,9 @@ version = "0.5.5"
 
 [[FileIO]]
 deps = ["Pkg"]
-git-tree-sha1 = "2c84c57aced468fa21763c66d3bef33adcd09ec7"
+git-tree-sha1 = "250ac7dfd54b5ce47372505b392756633d4e9732"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.2.2"
+version = "1.2.3"
 
 [[FilePathsBase]]
 deps = ["Dates", "LinearAlgebra", "Printf", "Test", "UUIDs"]
