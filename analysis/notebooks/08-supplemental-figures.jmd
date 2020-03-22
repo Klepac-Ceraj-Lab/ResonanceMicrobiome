@@ -61,7 +61,7 @@ layout_diffs = GridLayout()
 axes_diffs = layout_diffs[1:2,1:2] = [LAxis(scene, titlevisible=true) for row in 1:2, col in 1:2]
 legend_diffs = layout_diffs[3,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
 
-layout[1, :] = LText(scene, text="Supplementary Figure X", textsize=50, width=Auto(false))
+layout[1, :] = LText(scene, text="Supplementary Figure 1", textsize=50, width=Auto(false))
 layout[2,1] = layout_diffs
 layout_diffs[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
 layout_diffs[1, 2, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0))
@@ -151,14 +151,14 @@ scene
 ```
 
 ```julia
-res=(1200, 700)
+res=(1200, 1200)
 scene, layout = layoutscene(resolution = res)
 
 layout_all_mds = GridLayout()
 
 axes_all_mds = layout_all_mds[1:2,1:2] = [LAxis(scene, titlevisible=true) for row in 1:2 for col in 1:2]
 legend_all_mds = layout_all_mds[3,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
-layout[1, :] = LText(scene, text="Supplementary Figure X", textsize=50, width=Auto(false))
+layout[1, :] = LText(scene, text="Supplementary Figure 2", textsize=50, width=Auto(false))
 layout[2,1] = layout_all_mds
 layout_all_mds[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
 layout_all_mds[1, 2, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0))
@@ -182,7 +182,7 @@ all_mds_spec_colorbar_layout[1, 2, Left()] = LText(scene, "Shannon Index", rotat
 
 all_mds_func = scatter!(axes_all_mds[2], Style(color=allmeta.identifiable_unirefs),
         projection(unirefaccessorymds)[:,1:2],
-        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        grid=false,
         markersize = 15 * AbstractPlotting.px,
         strokecolor=:black, strokewidth=1, colormap=:solar)
 axes_all_mds[2].xlabel = "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)"
@@ -256,16 +256,28 @@ layout_pcopri = GridLayout()
 axes_pcopri = layout_pcopri[1,1] = LAxis(scene, titlevisible=true)
 marker_legend_pcopri = layout_pcopri[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
 
-layout[1, 1] = LText(scene, text="Supplementary Figure X", textsize=50, width=Auto(false))
+layout[1, 1] = LText(scene, text="Supplementary Figure 3", textsize=50, width=Auto(false))
 
 
 layout[2,1] = layout_pcopri
 scene
 pcopri = scatter!(axes_pcopri, Group(marker=allmeta.ageLabel),
         Style(color=log2.(allmeta.pcopri .+ (minimum(allmeta.pcopri) / 4))), grid=false,
-        projection(speciesmds)[:,1:2],
+        projection(speciesmds)[:,1:2] .* -1,
         markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
         strokecolor=:black, strokewidth=1, colormap=:BuPu)
+axes_pcopri.xlabel = "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)"
+axes_pcopri.ylabel = "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)"
+axes_pcopri.ygridvisible = false
+axes_pcopri.ygridvisible = false
+axes_pcopri.xgridvisible = false
+axes_pcopri.xgridvisible = false
+axes_pcopri.xticksvisible=false
+axes_pcopri.xticklabelsvisible=false
+axes_pcopri.yticksvisible=false
+axes_pcopri.yticklabelsvisible=false
+axes_pcopri.ylabelpadding=20
+axes_pcopri.xlabelpadding=20
 
 pcopri_colorbar_legend = LColorbar(scene, pcopri, width=30)
 pcopri_colorbar_layout = gridnest!(layout_pcopri, 1, 1)
@@ -296,7 +308,7 @@ scene
 res=(1200, 1200)
 scene, layout = layoutscene(resolution = res)
 
-layout[1, 1:2] = LText(scene, text="Supplementary Figure X", textsize=50, width=Auto(false))
+layout[1, 1:2] = LText(scene, text="Supplementary Figure 4", textsize=50, width=Auto(false))
 
 layout[2:4,1:2] = layout_fsea_hist = GridLayout()
 scene

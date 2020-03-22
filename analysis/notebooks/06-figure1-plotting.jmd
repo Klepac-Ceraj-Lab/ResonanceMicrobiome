@@ -30,7 +30,7 @@ rename!(r2, :unirefaccessory=>:accessory)
 # Figure 1
 
 ```julia
-res=(5*300,6*300)
+res=(5*300,5*300)
 scene, layout = layoutscene(resolution=res)
 
 cohort = load("analysis/figures/img/cohort.png");
@@ -53,9 +53,9 @@ fig1a.ygridvisible = false
 colsize!(layout, 1, Relative(1)) # need to fix this so Aspect with it can work
 rowsize!(layout, 1, Aspect(1, ratio_img))
 
-fig1a_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-fig1bc_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0))
-fig1bc_layout[1, 2, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0))
+fig1a_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+fig1bc_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+fig1bc_layout[1, 2, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 f1b = scatter!(fig1b, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.shannon),
         projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
@@ -134,8 +134,8 @@ scene, layout = layoutscene(resolution=res)
 fig2a = layout[1,1] = LAxis(scene)
 fig2b = layout[2:3,1] = LAxis(scene)
 
-layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-layout[2, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0))
+layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+layout[2, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
 
 
 let filt = map(!ismissing, allkidsmeta.cogScore)
@@ -266,7 +266,7 @@ fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
                                             patchcolor=:transparent
                                             )
 
-fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
+fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
@@ -386,7 +386,7 @@ p1ax = gluts_layout[1,1] = LAxis(scene)
 p1ann = gluts_layout[2,1] = LAxis(scene, height=20)
 p1leg = gluts_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
-p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, color=ColorBrewer.palette("Set1",8))
+p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p1ax)
 hidexdecorations!(p1ax)
 tight_yticklabel_spacing!(p1ax)
@@ -423,7 +423,7 @@ p2ax = glutd_layout[1,1] = LAxis(scene)
 p2ann = glutd_layout[2,1] = LAxis(scene, height=20)
 p2leg = glutd_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
-p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, color=ColorBrewer.palette("Set1",8))
+p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p2ax)
 hidexdecorations!(p2ax)
 tight_yticklabel_spacing!(p2ax)
@@ -458,7 +458,7 @@ p3ax = gabas_layout[1,1] = LAxis(scene)
 p3ann = gabas_layout[2,1] = LAxis(scene, height=20)
 p3leg = gabas_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
-p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, color=ColorBrewer.palette("Set1",8))
+p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p3ax)
 hidexdecorations!(p3ax)
 tight_yticklabel_spacing!(p3ax)
@@ -492,7 +492,7 @@ p4ax = gabad_layout[1,1] = LAxis(scene)
 p4ann = gabad_layout[2,1] = LAxis(scene, height=20)
 p4leg = gabad_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
-p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, color=ColorBrewer.palette("Set1",8))
+p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p4ax)
 hidexdecorations!(p4ax)
 tight_yticklabel_spacing!(p4ax)
@@ -534,11 +534,11 @@ end
 agelegend.attributes.title[] = "Age"
 
 
-fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-gluts_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0))
-glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0))
-gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 10, 0))
-gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (0, 0, 10, 0))
+fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+gluts_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 # save("/Users/ksb/Desktop/test.jpg", scene, resolution=res);
 save("analysis/figures/figure3.jpg", scene, resolution=res);
 scene
