@@ -33,7 +33,7 @@ filter!(row-> !ismissing(row.cogScore), allmeta)
 let samples = Set(allmeta.sample)
     filter!(row-> row.sample in samples, koslong)
 end
-length(unique(koslong.sample))
+
 agelabels = dictionary(sample=>age for (sample, age) in eachrow(allmeta[!, [:sample, :ageLabel]]))
 koslong.agelabel = [agelabels[s] for s in koslong.sample]
 cogscores = dictionary(sample=>score for (sample, score) in eachrow(allmeta[!, [:sample, :cogScore]]))

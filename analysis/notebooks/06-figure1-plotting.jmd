@@ -50,6 +50,10 @@ hidexdecorations!(fig1a)
 fig1a.xgridvisible = false
 hideydecorations!(fig1a)
 fig1a.ygridvisible = false
+fig1a.bottomspinevisible = false
+fig1a.leftspinevisible = false
+fig1a.topspinevisible = false
+fig1a.rightspinevisible = false
 colsize!(layout, 1, Relative(1)) # need to fix this so Aspect with it can work
 rowsize!(layout, 1, Aspect(1, ratio_img))
 
@@ -134,10 +138,6 @@ scene, layout = layoutscene(resolution=res)
 fig2a = layout[1,1] = LAxis(scene)
 fig2b = layout[2:3,1] = LAxis(scene)
 
-layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-layout[2, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
-
-
 let filt = map(!ismissing, allkidsmeta.cogScore)
     x = disallowmissing(allkidsmeta.correctedAgeDays[filt] ./ 365)
     y = disallowmissing(allkidsmeta.cogScore[filt])
@@ -211,7 +211,7 @@ annotations!(scene, labels, pixelvals,
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 16)
 
-sig = vec(permutedims(replace(qa[phmysrt, exsrt], "" => " ")))
+sig = vec(permutedims(replace(qa[phmysrt, phmxsrt], "" => " ")))
 annotations!(scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
@@ -230,9 +230,9 @@ tightlimits!(fig2b)
 fig2b.yticks = ManualTicks(0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
 tight_yticklabel_spacing!(fig2b)
 
-fig2b.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][exsrt]))
+fig2b.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][phmxsrt]))
 
-phm_legend = LColorbar(scene, hm, width=30)
+phm_legend = LColorbar(scene, phm, width=30)
 phm_legend.ticks = let r = range(0, stop=0.20, length=6)
     t = string.(r)
     t[end] = join([">", t[end]])
@@ -245,6 +245,10 @@ phm_layout[1:2, 2, Left()] = LText(scene, "% Variance", rotation = pi/2, padding
 foreach(Union{LColorbar, LAxis}, layout) do obj
     tight_ticklabel_spacing!(obj)
 end
+layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+layout[2, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+
+
 save("analysis/figures/figure2.jpg", scene, resolution=res);
 
 scene
@@ -266,7 +270,6 @@ fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
                                             patchcolor=:transparent
                                             )
 
-fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
@@ -390,7 +393,7 @@ p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, widt
 tightlimits!(p1ax)
 hidexdecorations!(p1ax)
 tight_yticklabel_spacing!(p1ax)
-p1ax.ylabelpadding = 30
+p1ax.ylabelpadding = 50
 p1ax.ylabel = "Glutamate synthesis"
 
 linkxaxes!(p1ax, p1ann)
@@ -402,6 +405,7 @@ for (t,p) in zip(uniquesorted(gluts.taxon), p1.plots)
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+    println(t)
     push!(p1leg,
         LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
         )
@@ -427,7 +431,7 @@ p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, widt
 tightlimits!(p2ax)
 hidexdecorations!(p2ax)
 tight_yticklabel_spacing!(p2ax)
-p2ax.ylabelpadding = 30
+p2ax.ylabelpadding = 40
 p2ax.ylabel = "Glutamate degradation"
 
 linkxaxes!(p2ax, p2ann)
@@ -462,7 +466,7 @@ p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, widt
 tightlimits!(p3ax)
 hidexdecorations!(p3ax)
 tight_yticklabel_spacing!(p3ax)
-p3ax.ylabelpadding = 30
+p3ax.ylabelpadding = 40
 p3ax.ylabel = "GABA synthesis"
 
 linkxaxes!(p3ax, p3ann)
@@ -496,7 +500,7 @@ p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, widt
 tightlimits!(p4ax)
 hidexdecorations!(p4ax)
 tight_yticklabel_spacing!(p4ax)
-p4ax.ylabelpadding = 30
+p4ax.ylabelpadding = 50
 p4ax.ylabel = "GABA degradation"
 
 linkxaxes!(p4ax, p4ann)
@@ -534,11 +538,11 @@ end
 agelegend.attributes.title[] = "Age"
 
 
-fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-gluts_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gluts_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 # save("/Users/ksb/Desktop/test.jpg", scene, resolution=res);
 save("analysis/figures/figure3.jpg", scene, resolution=res);
 scene
