@@ -73,22 +73,20 @@ fig1b.xticklabelsvisible=false
 fig1b.ylabelpadding=20
 fig1b.xlabelpadding=20
 
-legend_1BC_markers = fig1bc_layout[2, 1:2] = LLegend(scene, ncols=4,
-                                                    height=Auto(true), width=Auto(false),
-                                                    titlevisible=false, patchcolor=:transparent)
-
-legend_1BC_markers.entries[] = LegendEntry.(
-    [
-    "1 and under",
-    "1 to 2",
-    "2 and over",
-    ],
-    [
+age_markers = [
     MarkerElement(marker = :utriangle, color=:white, strokecolor=:black),
     MarkerElement(marker = :rect, color=:white, strokecolor=:black),
-    MarkerElement(marker = :circle, color=:white, strokecolor=:black),
-    ]
-)
+    MarkerElement(marker = :circle, color=:white, strokecolor=:black)]
+age_labels = [
+    "1 and under",
+    "1 to 2",
+    "2 and over"]
+
+legend_1BC_markers = fig1bc_layout[2, 1:2] = LLegend(
+    scene, age_markers, age_labels,
+    orientation = :horizontal, width = Auto(false), height = Auto(true),
+    titlevisible=false, patchcolor=:transparent)
+
 
 f1b_colorbar_legend = LColorbar(scene, f1b, width=30)
 f1b_colorbar_layout = gridnest!(fig1bc_layout, 1, 1)
