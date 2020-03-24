@@ -30,48 +30,50 @@ rename!(r2, :unirefaccessory=>:accessory)
 # Figure 1
 
 ```julia
-res=(5*300,5*300)
-scene, layout = layoutscene(resolution=res)
+res=(7*300,5*300)
+f1_scene, f1_layout = layoutscene(resolution=res)
 
-cohort = load("analysis/figures/img/cohort.png");
-ratio_img = size(cohort)[1] / size(cohort)[2]
-fig1a_layout = GridLayout(alignmode=Outside())
-fig1a = fig1a_layout[1,1]= LAxis(scene)
-fig1bc_layout = GridLayout(alignmode=Outside())
-fig1b = fig1bc_layout[1,1]= LAxis(scene)
-fig1c = fig1bc_layout[1,2]= LAxis(scene)
+cohort_img = load("analysis/figures/img/cohort.png");
+ratio_img = size(cohort_img)[1] / size(cohort_img)[2]
+cohort_layout = GridLayout(alignmode=Outside())
+cohort = cohort_layout[1,1]= LAxis(f1_scene)
+pcoas_layout = GridLayout(alignmode=Outside())
+taxpcoa = pcoas_layout[1,1]= LAxis(f1_scene)
+funcpcoa = pcoas_layout[1,2]= LAxis(f1_scene)
+phm_cogage_layout = GridLayout(alignmode=Outside())
+phm = phm_cogage_layout[1,1] = LAxis(f1_scene)
+cogage = phm_cogage_layout[2,1] = LAxis(f1_scene)
 
-layout[1,1] = fig1a_layout
-layout[2,1] = fig1bc_layout
+f1_layout[1,1:2] = cohort_layout
+f1_layout[2,1:2] = pcoas_layout
+f1_layout[1:2, 3] = phm_cogage_layout
 
-image!(fig1a, rotr90(cohort)) # for some reason Makie plots images rotated
-tightlimits!(fig1a)
-hidexdecorations!(fig1a)
-fig1a.xgridvisible = false
-hideydecorations!(fig1a)
-fig1a.ygridvisible = false
-fig1a.bottomspinevisible = false
-fig1a.leftspinevisible = false
-fig1a.topspinevisible = false
-fig1a.rightspinevisible = false
-colsize!(layout, 1, Relative(1)) # need to fix this so Aspect with it can work
-rowsize!(layout, 1, Aspect(1, ratio_img))
+f1_scene
 
-fig1a_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-fig1bc_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
-fig1bc_layout[1, 2, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-
-f1b = scatter!(fig1b, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.shannon),
+image!(cohort, rotr90(cohort_img)) # for some reason Makie plots images rotated
+tightlimits!(cohort)
+hidexdecorations!(cohort)
+cohort.xgridvisible = false
+hideydecorations!(cohort)
+cohort.ygridvisible = false
+cohort.bottomspinevisible = false
+cohort.leftspinevisible = false
+cohort.topspinevisible = false
+cohort.rightspinevisible = false
+# colsize!(cohort_layout, 1, Relative(1)) # need to fix this so Aspect with it can work
+# rowsize!(f1_layout, 1, Aspect(1, ratio_img))
+f1_scene
+taxpcoa_plot = scatter!(taxpcoa, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.shannon),
         projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
         markersize = 10 * AbstractPlotting.px, marker=marker=[:utriangle, :rect, :circle],
         strokecolor=:black, strokewidth=1)
-fig1b.xgridvisible = false
-fig1b.xlabel = "MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)"
-fig1b.ylabel = "Age (years)"
-fig1b.xticksvisible=false
-fig1b.xticklabelsvisible=false
-fig1b.ylabelpadding=20
-fig1b.xlabelpadding=20
+taxpcoa.xgridvisible = false
+taxpcoa.xlabel = "MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)"
+taxpcoa.ylabel = "Age (years)"
+taxpcoa.xticksvisible=false
+taxpcoa.xticklabelsvisible=false
+taxpcoa.ylabelpadding=20
+taxpcoa.xlabelpadding=20
 
 age_markers = [
     MarkerElement(marker = :utriangle, color=:white, strokecolor=:black),
@@ -82,83 +84,66 @@ age_labels = [
     "1 to 2",
     "2 and over"]
 
-legend_1BC_markers = fig1bc_layout[2, 1:2] = LLegend(
-    scene, age_markers, age_labels,
+legend_1BC_markers = pcoas_layout[2, 1:2] = LLegend(
+    f1_scene, age_markers, age_labels,
     orientation = :horizontal, width = Auto(false), height = Auto(true),
     titlevisible=false, patchcolor=:transparent)
 
 
-f1b_colorbar_legend = LColorbar(scene, f1b, width=30)
-f1b_colorbar_layout = gridnest!(fig1bc_layout, 1, 1)
-f1b_colorbar_layout[1, 2] = f1b_colorbar_legend
-f1b_colorbar_layout[1, 2, Left()] = LText(scene, "Shannon Index", rotation = pi/2, padding = (0, 5, 0, 0))
+taxpcoa_plot_colorbar_legend = LColorbar(f1_scene, taxpcoa_plot, width=30)
+taxpcoa_plot_colorbar_layout = gridnest!(pcoas_layout, 1, 1)
+taxpcoa_plot_colorbar_layout[1, 2] = taxpcoa_plot_colorbar_legend
+taxpcoa_plot_colorbar_layout[1, 2, Left()] = LText(f1_scene, "Shannon Index", rotation = pi/2, padding = (0, 5, 0, 0))
 
-f1c = scatter!(fig1c, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.n_unirefs), # identifiable_unirefs?
+funcpcoa_plot = scatter!(funcpcoa, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.n_unirefs), # identifiable_unirefs?
         projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
         markersize = 10 * AbstractPlotting.px, marker=marker=[:utriangle, :rect, :circle],
         strokecolor=:black, strokewidth=1, colormap=:BrBG)
-fig1c.xgridvisible = false
-fig1c.xlabel = "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)"
-fig1c.ylabel = "Age (years)"
-fig1c.xticksvisible=false
-fig1c.xticklabelsvisible=false
-fig1c.ylabelpadding=20
-fig1c.xlabelpadding=20
+funcpcoa.xgridvisible = false
+funcpcoa.xlabel = "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)"
+funcpcoa.ylabel = "Age (years)"
+funcpcoa.xticksvisible=false
+funcpcoa.xticklabelsvisible=false
+funcpcoa.ylabelpadding=20
+funcpcoa.xlabelpadding=20
 
-f1c_colorbar_legend = LColorbar(scene, f1c, width=30)
-f1c_colorbar_legend.ticks = let ur = allkidsmeta.n_unirefs ./ 1e3
+funcpcoa_plot_colorbar_legend = LColorbar(f1_scene, funcpcoa_plot, width=30)
+funcpcoa_plot_colorbar_legend.ticks = let ur = allkidsmeta.n_unirefs ./ 1e3
     r = range(floor(Int, minimum(ur)), stop=ceil(Int,maximum(ur)), length=6)
     ManualTicks(r .* 1e3, map(i-> join([floor(Int,i), " k"]), r))
 end
 
-f1c_layout = gridnest!(fig1bc_layout, 1, 2)
-f1c_layout[1, 2] = f1c_colorbar_legend
-f1c_layout[1, 2, Left()] = LText(scene, "Number of UniRef90s", rotation = pi/2, padding = (0, 5, 0, 0))
+funcpcoa_plot_layout = gridnest!(pcoas_layout, 1, 2)
+funcpcoa_plot_layout[1, 2] = funcpcoa_plot_colorbar_legend
+funcpcoa_plot_layout[1, 2, Left()] = LText(f1_scene, "Number of UniRef90s", rotation = pi/2, padding = (0, 5, 0, 0))
 
-# f1c_colorbar_legend = LColorbar(scene, f1c, width=30)
-# f1c_colorbar_layout = gridnest!(layout, 2, 1)
-# f1c_colorbar_layout[1, 2] = f1c_colorbar_legend
-# f1c_colorbar_layout[1, 2, Left()] = LText(scene, "Fraction Identified", rotation = pi/2, padding = (0, 5, 0, 0))
+# funcpcoa_plot_colorbar_legend = LColorbar(f1_scene, funcpcoa_plot, width=30)
+# funcpcoa_plot_colorbar_layout = gridnest!(layout, 2, 1)
+# funcpcoa_plot_colorbar_layout[1, 2] = funcpcoa_plot_colorbar_legend
+# funcpcoa_plot_colorbar_layout[1, 2, Left()] = LText(f1_scene, "Fraction Identified", rotation = pi/2, padding = (0, 5, 0, 0))
 
-foreach(Union{LColorbar, LAxis}, layout) do obj
-    tight_ticklabel_spacing!(obj)
-end
-save("analysis/figures/figure1.jpg", scene, resolution=res);
-scene
-```
-
-# Figure 2
-
-```julia
-res=(3*300,4*300)
-scene, layout = layoutscene(resolution=res)
-
-fig2a = layout[1,1] = LAxis(scene)
-fig2b = layout[2:3,1] = LAxis(scene)
 
 let filt = map(!ismissing, allkidsmeta.cogScore)
     x = disallowmissing(allkidsmeta.correctedAgeDays[filt] ./ 365)
     y = disallowmissing(allkidsmeta.cogScore[filt])
     g = disallowmissing(allkidsmeta.cogAssessment[filt])
-    scatter!(fig2a, Group(g), x, y,
+    scatter!(cogage, Group(g), x, y,
                 color=ColorSchemes.Set1_5.colors[2:end],
                 markersize = 10 * AbstractPlotting.px,
                 strokecolor=:black, strokewidth=1
                 )
 
 end
-fig2a.xlabel = "Age (years)"
-fig2a.ylabel = "Overall cognitive function"
-fig2a.xlabelpadding = 20
-fig2a.ylabelpadding = 20
+cogage.xlabel = "Age (years)"
+cogage.ylabel = "Overall cognitive function"
+cogage.xlabelpadding = 20
+cogage.ylabelpadding = 20
 
-f2a_layout = gridnest!(layout, 1, 1)
-legend_2a = f2a_layout[1, 2] = LLegend(scene, titlevisible=false, patchcolor=:transparent)
-legend_2a.entries[] = LegendEntry.(
+cogage_layout = gridnest!(phm_cogage_layout, 2, 1)
+legend_cogage = cogage_layout[2, 1] = LLegend(f1_scene,
+    [MarkerElement(marker=:circle, color=ColorSchemes.Set1_7.colors[i], strokecolor=:black) for i in 2:5],
     string.(sort(unique(skipmissing(allkidsmeta.cogAssessment)))),
-    [MarkerElement(marker=:circle, color=ColorSchemes.Set1_7.colors[i], strokecolor=:black) for i in 2:5]
-    )
-
+    titlevisible=false, patchcolor=:transparent, orientation = :horizontal, height=Auto(true), width=Auto(false))
 
 
 phmyorder = [
@@ -191,7 +176,7 @@ phmxsrt = reverse(invperm(sortperm(phmxorder)))
 values = disallowmissing(r2m')[phmxsrt, phmysrt]
 xrange = 0:size(values,1)
 yrange = 0:size(values,2)
-phm = heatmap!(fig2b, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
+phm_plot = heatmap!(phm, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
 
 pixelcentervalues = [Point2f0(x, y)
     for x in midpoints(LinRange(xrange.start, xrange.stop, size(values, 1) + 1)),
@@ -200,56 +185,60 @@ function rect_to_rect(fromrect, torect, point)
     pfrac = (point .- fromrect.origin) ./ fromrect.widths
     pfrac .* torect.widths .+ torect.origin
 end
-pixelvals = lift(fig2b.limits, fig2b.scene.px_area) do lims, pxa
+pixelvals = lift(phm.limits, phm.scene.px_area) do lims, pxa
     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues))
 end
-labels = vec([string(v)[1:5] for v in values])
-annotations!(scene, labels, pixelvals,
+phm_labels = vec([string(v)[1:5] for v in values])
+annotations!(f1_scene, phm_labels, pixelvals,
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 16)
 
 sig = vec(permutedims(replace(qa[phmysrt, phmxsrt], "" => " ")))
-annotations!(scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
+annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 16)
 
-# sigpixelvals = lift(axes_1E.limits, axes_1E.scene.px_area) do lims, pxa
+# sigpixelvals = lift(axes_1E.limits, axes_1E.f1_scene.px_area) do lims, pxa
 #     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues .+ Ref(Point2f0(0.2, 0))))
 # end
-# annotations!(scene, vec([v for v in sig]), sigpixelvals,
+# annotations!(f1_scene, vec([v for v in sig]), sigpixelvals,
 #     align = (:center, :center),
 #     color = ifelse.(values .< 0.14, :black, :white),
 #     textsize = 16)
 
-tightlimits!(fig2b)
+tightlimits!(phm)
 
-fig2b.yticks = ManualTicks(0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
-tight_yticklabel_spacing!(fig2b)
+phm.yticks = ManualTicks(0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
+tight_yticklabel_spacing!(phm)
 
-fig2b.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][phmxsrt]))
+phm.xticks = ManualTicks(0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][phmxsrt]))
 
-phm_legend = LColorbar(scene, phm, width=30)
+phm_legend = LColorbar(f1_scene, phm_plot, width=30)
 phm_legend.ticks = let r = range(0, stop=0.20, length=6)
     t = string.(r)
     t[end] = join([">", t[end]])
     ManualTicks(r,t)
 end
-phm_layout = gridnest!(layout, 2:3, 1)
-phm_layout[1:2, 2] = phm_legend
-phm_layout[1:2, 2, Left()] = LText(scene, "% Variance", rotation = pi/2, padding = (0, 5, 0, 0))
+phm_layout = gridnest!(phm_cogage_layout, 1, 1)
+phm_layout[1, 2] = phm_legend
+phm_layout[1, 2, Left()] = LText(f1_scene, "% Variance", rotation = pi/2, padding = (0, 5, 0, 0))
 
-foreach(Union{LColorbar, LAxis}, layout) do obj
+foreach(Union{LColorbar, LAxis}, f1_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
-layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
-layout[2, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+
+cohort_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+pcoas_layout[1, 2, TopLeft()] = LText(f1_scene, "d", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+
+phm_cogage_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+phm_cogage_layout[2, 1, TopLeft()] = LText(f1_scene, "e", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
 
 
-save("analysis/figures/figure2.jpg", scene, resolution=res);
-
-scene
+save("analysis/figures/figure1.jpg", f1_scene, resolution=res);
+f1_scene
 ```
 
 # Figure 3
@@ -263,18 +252,11 @@ scene, layout = layoutscene(resolution = res)
 
 fsea_layout = GridLayout(alignmode=Outside())
 fsea_axes = fsea_layout[1, 1:5] = [LAxis(scene) for col in 1:5]
-fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
-                                            ncols=7, nrows=2, titlevisible=false,
-                                            patchcolor=:transparent
-                                            )
-
 
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
 cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
-fsea_legend.entries[] = LegendEntry.(
-    ["        ", "median < 0", "      ", "  ", "      ", "median > 0", "        ",
-     "q < 0.001", "q < 0.01", "q < 0.1", "NS", "q < 0.1", "q < 0.01", "q < 0.001"],
+fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
     [
         MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
         MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
@@ -290,8 +272,11 @@ fsea_legend.entries[] = LegendEntry.(
         MarkerElement(marker = :rect, color = cs[5], strokecolor = :black),
         MarkerElement(marker = :rect, color = cs[6], strokecolor = :black),
         MarkerElement(marker = :rect, color = cs[7], strokecolor = :black)
-    ]
-)
+    ],
+    ["        ", "median < 0", "      ", "  ", "      ", "median > 0", "        ",
+     "q < 0.001", "q < 0.01", "q < 0.1", "NS", "q < 0.1", "q < 0.01", "q < 0.001"],
+    nrows=2, titlevisible=false, orientation=:horizontal,
+    patchcolor=:transparent)
 
 allfsea.color = map(eachrow(allfsea)) do row
     m = row.median
@@ -349,22 +334,22 @@ end
 groups = groupby(allfsea2, :metadatum)
 
 let ugs = unique(allfsea2.geneset)
-for (i, gr) in enumerate(groups[2:end])
-    by(gr, :gsindex) do gs
-        g = first(gs.geneset)
-        x = gs.gsindex
-        y = gs.cor
-        c = first(gs.color)
-        boxplot!(fsea_axes[i], x, y, color=c, orientation=:horizontal,
-            markersize = 10 * AbstractPlotting.px, outliercolor=c)
-    end
-    fsea_axes[i].xlabel = first(gr.metadatum)
-    fsea_axes[i].xlabelpadding = 20
-    fsea_axes[i].yticks = ManualTicks(1:length(ugs), ugs)
+    for (i, gr) in enumerate(groups[2:end])
+        by(gr, :gsindex) do gs
+            g = first(gs.geneset)
+            x = gs.gsindex
+            y = gs.cor
+            c = first(gs.color)
+            boxplot!(fsea_axes[i], x, y, color=c, orientation=:horizontal,
+                markersize = 10 * AbstractPlotting.px, outliercolor=c)
+        end
+        fsea_axes[i].xlabel = first(gr.metadatum)
+        fsea_axes[i].xlabelpadding = 20
+        fsea_axes[i].yticks = ManualTicks(1:length(ugs), ugs)
 
-    i !=1 && (fsea_axes[i].yticklabelsvisible = false; fsea_axes[i].yticksvisible = false)
-end # for
-end # let
+        i !=1 && (fsea_axes[i].yticklabelsvisible = false; fsea_axes[i].yticksvisible = false)
+    end
+end
 
 extr = extrema(allfsea2.cor)
 for i in 1:5
@@ -374,8 +359,6 @@ foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 layout[1,1] = fsea_layout
-# save("analysis/figures/figure3.jpg", scene, resolution=res);
-# scene
 ```
 
 ```julia
@@ -385,7 +368,6 @@ stratfunc_layout=GridLayout(alignmode=Outside())
 gluts_layout = GridLayout(alignmode=Outside())
 p1ax = gluts_layout[1,1] = LAxis(scene)
 p1ann = gluts_layout[2,1] = LAxis(scene, height=20)
-p1leg = gluts_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
 p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p1ax)
@@ -399,16 +381,16 @@ tightlimits!(p1ann)
 hidexdecorations!(p1ann)
 hideydecorations!(p1ann)
 
-for (t,p) in zip(uniquesorted(gluts.taxon), p1.plots)
+p1leg_entries = map(uniquesorted(gluts.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
-    println(t)
-    push!(p1leg,
-        LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
-        )
 end
 
+p1leg = gluts_layout[1,2] = LLegend(scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p1leg_entries,
+    patchcolor=:transparent)
 for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gluts[gluts.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
@@ -542,7 +524,7 @@ glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (-20,
 gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 # save("/Users/ksb/Desktop/test.jpg", scene, resolution=res);
-save("analysis/figures/figure3.jpg", scene, resolution=res);
+save("analysis/figures/figure2.jpg", scene, resolution=res);
 scene
 ```
 

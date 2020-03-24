@@ -1,5 +1,7 @@
+using SQLite
 using Colors
 import StatsMakie.StructArrays: uniquesorted
+using ECHOAnalysis
 
 kodb = SQLite.DB("~/Desktop/ko_profiles.sqlite")
 allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite")
