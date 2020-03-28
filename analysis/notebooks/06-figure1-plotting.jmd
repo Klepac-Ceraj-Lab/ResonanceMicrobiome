@@ -60,8 +60,8 @@ cohort.bottomspinevisible = false
 cohort.leftspinevisible = false
 cohort.topspinevisible = false
 cohort.rightspinevisible = false
-# colsize!(cohort_layout, 1, Relative(1)) # need to fix this so Aspect with it can work
-# rowsize!(f1_layout, 1, Aspect(1, ratio_img))
+colsize!(cohort_layout, 1, Relative(0.9)) # need to fix this so Aspect with it can work
+rowsize!(cohort_layout, 1, Aspect(1, ratio_img))
 f1_scene
 taxpcoa_plot = scatter!(taxpcoa, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.shannon),
         projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
@@ -230,8 +230,8 @@ foreach(Union{LColorbar, LAxis}, f1_layout) do obj
 end
 
 cohort_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
-pcoas_layout[1, 2, TopLeft()] = LText(f1_scene, "d", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
+pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+pcoas_layout[1, 2, TopLeft()] = LText(f1_scene, "d", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 phm_cogage_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
 phm_cogage_layout[2, 1, TopLeft()] = LText(f1_scene, "e", textsize = 40, padding = (0, 0, 30, 0), halign=:left)
@@ -241,7 +241,7 @@ save("analysis/figures/figure1.jpg", f1_scene, resolution=res);
 f1_scene
 ```
 
-# Figure 3
+# Figure 2
 
 ```julia
 include("../scripts/stratified_functions.jl")
@@ -275,7 +275,7 @@ fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
     ],
     ["        ", "median < 0", "      ", "  ", "      ", "median > 0", "        ",
      "q < 0.001", "q < 0.01", "q < 0.1", "NS", "q < 0.1", "q < 0.01", "q < 0.001"],
-    nrows=2, titlevisible=false, orientation=:horizontal,
+    titlevisible=false, orientation=:horizontal, nbanks=2,
     patchcolor=:transparent)
 
 allfsea.color = map(eachrow(allfsea)) do row
@@ -396,7 +396,7 @@ for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p1leg.attributes.title[] = "Species"
+p1leg.attributes.label[] = "Species"
 # layout[1,1] = gluts_layout
 # scene
 
@@ -405,7 +405,6 @@ p1leg.attributes.title[] = "Species"
 glutd_layout = GridLayout(alignmode=Outside())
 p2ax = glutd_layout[1,1] = LAxis(scene)
 p2ann = glutd_layout[2,1] = LAxis(scene, height=20)
-p2leg = glutd_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
 p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p2ax)
@@ -419,28 +418,35 @@ tightlimits!(p2ann)
 hidexdecorations!(p2ann)
 hideydecorations!(p2ann)
 
-for (t,p) in zip(uniquesorted(glutd.taxon), p2.plots)
+p2leg_entries = map(uniquesorted(glutd.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
-    push!(p2leg,
-        LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
-        )
 end
+
+p2leg = glutd_layout[1,2] = LLegend(scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p2leg_entries,
+    patchcolor=:transparent)
+for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+p2leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
     poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p2leg.attributes.title[] = "Species"
+p2leg.attributes.label[] = "Species"
 
 ## gabas, p3
 
 gabas_layout = GridLayout(alignmode=Outside())
 p3ax = gabas_layout[1,1] = LAxis(scene)
 p3ann = gabas_layout[2,1] = LAxis(scene, height=20)
-p3leg = gabas_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
 p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p3ax)
@@ -454,27 +460,33 @@ tightlimits!(p3ann)
 hidexdecorations!(p3ann)
 hideydecorations!(p3ann)
 
-for (t,p) in zip(uniquesorted(gabas.taxon), p3.plots)
+p3leg_entries = map(uniquesorted(gabas.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
-    push!(p3leg,
-        LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
-        )
 end
+
+p3leg = gabas_layout[1,2] = LLegend(scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p3leg_entries,
+    patchcolor=:transparent)
+for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+p3leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
     poly!(p3ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p3leg.attributes.title[] = "Species"
 ## gabad, p4
 
 gabad_layout = GridLayout(alignmode=Outside())
 p4ax = gabad_layout[1,1] = LAxis(scene)
 p4ann = gabad_layout[2,1] = LAxis(scene, height=20)
-p4leg = gabad_layout[1,2] = LLegend(scene, patchcolor=:transparent)
 
 p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
 tightlimits!(p4ax)
@@ -488,41 +500,47 @@ tightlimits!(p4ann)
 hidexdecorations!(p4ann)
 hideydecorations!(p4ann)
 
-for (t,p) in zip(uniquesorted(gabad.taxon), p4.plots)
+p1leg_entries = map(uniquesorted(gluts.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
-    push!(p4leg,
-        LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
-        )
 end
+
+p4leg = gabad_layout[1,2] = LLegend(scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p1leg_entries,
+    patchcolor=:transparent)
+for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+p4leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
     poly!(p4ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p4leg.attributes.title[] = "Species"
+p4leg.attributes.label[] = "Species"
 
 ##
-stratfunc_layout[1:2, 1:2] = [gluts_layout glutd_layout;
-                              gabas_layout gabad_layout]
+stratfunc_layout[1:2, 1:2] = [gabas_layout gabad_layout;
+                              gluts_layout glutd_layout]
 
 layout[2, 1] = stratfunc_layout
 
-agelegend = layout[3,1] = LLegend(scene, ncols=3, height=Auto(true), width=Auto(false),
-                                                    patchcolor=:transparent)
-for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
-    push!(agelegend, LegendEntry(l, MarkerElement(color=c, marker=:rect, strokecolor=:black)))
-end
-agelegend.attributes.title[] = "Age"
+agelegend = layout[3,1] = LLegend(scene, height=Auto(true), width=Auto(false), orientation=:horizontal,
+                                    [MarkerElement(color=c, marker=:rect, strokecolor=:black) for c in ColorBrewer.palette("Set3", 3)],
+                                    collect(uniquesorted(gabad.agelabel)), patchcolor=:transparent)
+agelegend.attributes.label[] = "Age"
 
 
 fsea_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
-gluts_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
-glutd_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
-gabas_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
-gabad_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabas_layout[1, 1, TopLeft()] = LText(scene, "b", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabad_layout[1, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gluts_layout[1, 1, TopLeft()] = LText(scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+glutd_layout[1, 1, TopLeft()] = LText(scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 # save("/Users/ksb/Desktop/test.jpg", scene, resolution=res);
 save("analysis/figures/figure2.jpg", scene, resolution=res);
 scene
@@ -531,19 +549,4 @@ scene
 ```julia
 # CairoMakie.activate!(type = "svg")
 # save("data/analysis/figures/figure1/figure1-makie.svg", scene, resolution=res);
-```
-
-
-```julia
-df = DataFrame(g = repeat(["a", "b"], 5), x = [1,1,2,2,3,3,4,4,5,5], y=rand(10))
-scene, layout = layoutscene()
-ax = layout[1,1] = LAxis(scene)
-p1 = barplot!(ax, Position.stack, Data(df), Group(:g), :x, :y, color=ColorBrewer.palette("Set1", 4))
-leg = layout[1,2] = LLegend(scene)
-for (t,p) in zip(uniquesorted(df.g), p1.plots)
-    push!(leg,
-        LegendEntry(t, MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black))
-        )
-end
-scene
 ```

@@ -6,7 +6,6 @@ using ECHOAnalysis
 kodb = SQLite.DB("~/Desktop/ko_profiles.sqlite")
 allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite")
 allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite",samples=uniquetimepoints(allmeta.sample, takefirst=false))
-include("accessories.jl")
 # add_functional_profiles(kodb, "data/engaging", stratified=true, kind="kos_relab")
 
 koslong = DataFrame(DBInterface.execute(kodb, "SELECT * FROM ko_names_relab"))
