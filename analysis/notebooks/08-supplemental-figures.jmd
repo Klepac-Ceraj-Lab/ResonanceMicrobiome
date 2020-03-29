@@ -59,7 +59,13 @@ scene, layout = layoutscene(resolution = res)
 layout_diffs = GridLayout()
 
 axes_diffs = layout_diffs[1:2,1:2] = [LAxis(scene, titlevisible=true) for row in 1:2, col in 1:2]
-legend_diffs = layout_diffs[3,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+
+legend_diffs = layout_diffs[3,1:2] = LLegend(scene,
+    [MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[i], strokecolor=:black) for i in 1:4],
+    ["1 and under","1 to 2","2 and over","mom"],
+    "Compared to",
+    height=Auto(true), width=Auto(false), orientation=:horizontal)
+
 
 layout[1, :] = LText(scene, text="Supplementary Figure 1", textsize=50, width=Auto(false))
 layout[2,1] = layout_diffs
@@ -121,21 +127,7 @@ axes_diffs[1,1].title = "Species Diffs"
 axes_diffs[1,2].title = "Accessory Diffs"
 axes_diffs[2,1].title = "Pfams Diffs"
 axes_diffs[2,2].title = "KOs Diffs"
-legend_diffs.title = "Compared to"
-legend_diffs.entries[] = LegendEntry.(
-    [
-    "1 and under",
-    "1 to 2",
-    "2 and over",
-    "mom"
-    ],
-    [
-    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[1], strokecolor=:black),
-    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[2], strokecolor=:black),
-    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[3], strokecolor=:black),
-    MarkerElement(marker = :rect, color=ColorSchemes.Set3_5.colors[4], strokecolor=:black)
-    ]
-)
+
 
 
 for i in 1:4
@@ -157,7 +149,14 @@ scene, layout = layoutscene(resolution = res)
 layout_all_mds = GridLayout()
 
 axes_all_mds = layout_all_mds[1:2,1:2] = [LAxis(scene, titlevisible=true) for row in 1:2 for col in 1:2]
-legend_all_mds = layout_all_mds[3,1:2] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+legend_all_mds = layout_all_mds[3,1:2] = LLegend(scene,
+    [MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[i], strokecolor=:black) for i in 1:4],
+    ["1 and under","1 to 2","2 and over","mom"],
+    "Subject Age", orientation=:horizontal,
+    height=Auto(true), width=Auto(false))
+
+
+
 layout[1, :] = LText(scene, text="Supplementary Figure 2", textsize=50, width=Auto(false))
 layout[2,1] = layout_all_mds
 layout_all_mds[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
@@ -226,21 +225,7 @@ for i in 1:4
     axes_all_mds[i].ylabelpadding=20
     axes_all_mds[i].xlabelpadding=20
 end
-legend_all_mds.title = "Subject Age"
-legend_all_mds.entries[] = LegendEntry.(
-    [
-    "1 and under",
-    "1 to 2",
-    "2 and over",
-    "mom"
-    ],
-    [
-    MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[1], strokecolor=:black),
-    MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[2], strokecolor=:black),
-    MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[3], strokecolor=:black),
-    MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[4], strokecolor=:black)
-    ]
-)
+
 
 save("analysis/figures/suppfigure_all_mds.jpeg", scene, resolution=res)
 scene
@@ -254,7 +239,20 @@ scene, layout = layoutscene(resolution = res)
 layout_pcopri = GridLayout()
 
 axes_pcopri = layout_pcopri[1,1] = LAxis(scene, titlevisible=true)
-marker_legend_pcopri = layout_pcopri[2,1] = LLegend(scene, height=Auto(true), width=Auto(false), ncols=4)
+marker_legend_pcopri = layout_pcopri[2,1] = LLegend(scene,
+    [
+    MarkerElement(marker = :utriangle, color=:white, strokecolor=:black),
+    MarkerElement(marker = :hexagon, color=:white, strokecolor=:black),
+    MarkerElement(marker = :rect, color=:white, strokecolor=:black),
+    MarkerElement(marker = :cross, color=:white, strokecolor=:black)
+    ],
+    [
+    "1 and under",
+    "1 to 2",
+    "2 and over",
+    "mom"
+    ],
+    "Subject Age", height=Auto(true), width=Auto(false), orientation=:horizontal)
 
 layout[1, 1] = LText(scene, text="Supplementary Figure 3", textsize=50, width=Auto(false))
 
@@ -284,21 +282,6 @@ pcopri_colorbar_layout = gridnest!(layout_pcopri, 1, 1)
 pcopri_colorbar_layout[1, 2] = pcopri_colorbar_legend
 pcopri_colorbar_layout[1, 2, Left()] = LText(scene, "log2(P. copri abundance)", rotation = pi/2, padding = (0, 5, 0, 0))
 
-marker_legend_pcopri.title = "Subject Age"
-marker_legend_pcopri.entries[] = LegendEntry.(
-    [
-    "1 and under",
-    "1 to 2",
-    "2 and over",
-    "mom"
-    ],
-    [
-    MarkerElement(marker = :utriangle, color=:white, strokecolor=:black),
-    MarkerElement(marker = :hexagon, color=:white, strokecolor=:black),
-    MarkerElement(marker = :rect, color=:white, strokecolor=:black),
-    MarkerElement(marker = :cross, color=:white, strokecolor=:black)
-    ]
-)
 
 save("analysis/figures/suppfigure_pcopri.jpeg", scene, resolution=res)
 scene
