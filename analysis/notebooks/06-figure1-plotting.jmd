@@ -256,27 +256,21 @@ fsea_axes = fsea_layout[1, 1:5] = [LAxis(scene) for col in 1:5]
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
 cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
-fsea_legend = fsea_layout[2, 1:5] = LLegend(scene, height=100,
+
+fsea_legend = fsea_layout[2, 1:5] = LLegend(scene,
     [
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color=:white, strokecolor=:white, patchcolor=:white),
-        MarkerElement(marker = :rect, color = cs[1], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[2], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[3], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[4], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[5], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[6], strokecolor = :black),
-        MarkerElement(marker = :rect, color = cs[7], strokecolor = :black)
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 1:3],
+        [MarkerElement(marker = :rect, color = cs[4], strokecolor = :black)],
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 5:7],
     ],
-    ["        ", "median < 0", "      ", "  ", "      ", "median > 0", "        ",
-     "q < 0.001", "q < 0.01", "q < 0.1", "NS", "q < 0.1", "q < 0.01", "q < 0.001"],
-    titlevisible=false, orientation=:horizontal, nbanks=2,
-    patchcolor=:transparent)
+    [
+         ["q < 0.001", "q < 0.01", "q < 0.1"],
+         ["NS"],
+         ["q < 0.1", "q < 0.01", "q < 0.001"],
+     ],
+     ["median < 0", nothing, "median > 0"],
+    titlevisible=false, orientation=:horizontal,
+    patchcolor=:transparent, height = Auto(true), width = Auto(false))
 
 allfsea.color = map(eachrow(allfsea)) do row
     m = row.median
@@ -359,6 +353,7 @@ foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 layout[1,1] = fsea_layout
+scene
 ```
 
 ```julia
@@ -389,14 +384,13 @@ end
 
 p1leg = gluts_layout[1,2] = LLegend(scene,
     [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
-    p1leg_entries,
+    p1leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gluts[gluts.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p1leg.attributes.label[] = "Species"
 # layout[1,1] = gluts_layout
 # scene
 
@@ -426,21 +420,19 @@ end
 
 p2leg = glutd_layout[1,2] = LLegend(scene,
     [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
-    p2leg_entries,
+    p2leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p2leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
     poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p2leg.attributes.label[] = "Species"
 
 ## gabas, p3
 
@@ -468,14 +460,13 @@ end
 
 p3leg = gabas_layout[1,2] = LLegend(scene,
     [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
-    p3leg_entries,
+    p3leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p3leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
@@ -508,14 +499,13 @@ end
 
 p4leg = gabad_layout[1,2] = LLegend(scene,
     [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
-    p1leg_entries,
+    p1leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
-p4leg.attributes.label[] = "Species"
 
 for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
