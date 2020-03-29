@@ -1,0 +1,12 @@
+
+unirefdb = SQLite.DB(config["sqlite"]["uniref90"]["path"])
+unirefs = sqlprofile(unirefdb, tablename="genefamilies_relab", kind="genefamilies_relab")
+kodb = SQLite.DB(config["sqlite"]["ko"]["path"])
+kos = sqlprofile(kodb, tablename="ko_names_relab", kind="ko_names_relab")
+kos = view(kos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(kos)))
+pfamdb = SQLite.DB(config["sqlite"]["pfam"]["path"])
+pfams = sqlprofile(pfamdb, tablename="pfam_names_relab", kind="pfam_names_relab")
+pfams = view(pfams, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(pfams)))
+ecdb = SQLite.DB(config["sqlite"]["ec"]["path"])
+ecs = sqlprofile(ecdb, tablename="ec_names_relab", kind="ec_names_relab")
+ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs)))

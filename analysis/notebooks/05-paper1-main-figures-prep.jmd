@@ -8,13 +8,13 @@ This step takes about an hour
 
 ```julia
 using Pkg
-Pkg.activate("analysis/")
+Pkg.activate(".")
 using Revise
 
 if endswith(@__FILE__, "jmd")
-    include("startup-loadall.jl")
+    include("../scripts/startup_loadall.jl")
 elseif isdir("analysis")
-    include("notebooks/startup-loadall.jl")
+    include("scripts/startup_loadall.jl")
 else
     error("not running from an expected file")
 end
@@ -299,4 +299,8 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/notebooks/figure1assets/figure1e.jld2" r2 r2m qa allpermanovas
 @save "analysis/notebooks/figure1assets/figure1g.jld2" allfsea mdcors
 @save "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
+```
+
+```julia
+allfsea
 ```
