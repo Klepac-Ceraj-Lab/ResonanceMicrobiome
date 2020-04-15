@@ -7,7 +7,7 @@ kodb = SQLite.DB("~/Desktop/ko_profiles.sqlite")
 allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite")
 allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite",samples=uniquetimepoints(allmeta.sample, takefirst=false))
 # add_functional_profiles(kodb, "data/engaging", stratified=true, kind="kos_relab")
-
+include("accessories.jl")
 koslong = DataFrame(DBInterface.execute(kodb, "SELECT * FROM ko_names_relab"))
 nko = get_neuroactive_kos()
 
