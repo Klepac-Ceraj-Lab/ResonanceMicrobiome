@@ -73,6 +73,20 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], ukidsmeta.breastfeeding, label="breastfeeding"),
     permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
+
+permanova(speciesdm[ukids,ukids], ukidsmeta.childRace, label="BMI")
+
+function simple_race(race)
+    if occursin("Decline to Answer", race) || race == "Unknown"
+        return missing
+    elseif occursin("Mixed race", race) || occursin("___", race) # I replaced newlines with `___`
+        return "mixed"
+    else
+        return race
+    end
+end
+
+
 ```
 ```julia
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), species_permanovas)
@@ -292,13 +306,13 @@ using JLD2
 @assert sitenames(species) == allmeta.sample
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
-@save "analysis/notebooks/figure1assets/figure1a.jld2" speciesmds allmeta speciesmdsaxes color3
+@save "analysis/notebooks/figure1assets/figure1a.jld2" speciesmds allmeta speciesmdsaxes
 @save "analysis/notebooks/figure1assets/figure1b.jld2" kidsspeciesmds kidsspeciesmdsaxes allkidsmeta
 @save "analysis/notebooks/figure1assets/figure1c.jld2" unirefaccessorymds ubothmeta unirefaccessorymdsaxes
 @save "analysis/notebooks/figure1assets/figure1d.jld2" kidsunirefaccessorymds kidsunirefaccessorymdsaxes
 @save "analysis/notebooks/figure1assets/figure1e.jld2" r2 r2m qa allpermanovas
 @save "analysis/notebooks/figure1assets/figure1g.jld2" allfsea mdcors
-@save "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs keypairs
+@save "analysis/notebooks/suppfigureassets/s1.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 ```
 
 ```julia

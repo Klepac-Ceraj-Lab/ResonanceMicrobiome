@@ -48,6 +48,8 @@ f1_layout[1,1:2] = cohort_layout
 f1_layout[2,1:2] = pcoas_layout
 f1_layout[1:2, 3] = phm_cogage_layout
 
+f1_scene
+
 image!(cohort, rotr90(cohort_img)) # for some reason Makie plots images rotated
 tightlimits!(cohort)
 hidexdecorations!(cohort)
@@ -351,8 +353,10 @@ foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 layout[1,1] = fsea_layout
+scene
+```
 
-
+```julia
 ## gluts, p1
 stratfunc_layout=GridLayout(alignmode=Outside())
 
@@ -415,12 +419,12 @@ p2leg_entries = map(uniquesorted(glutd.taxon)) do t
 end
 
 p2leg = glutd_layout[1,2] = LLegend(scene,
-    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p2.plots],
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
     p2leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
-    poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
 
@@ -455,12 +459,12 @@ p3leg_entries = map(uniquesorted(gabas.taxon)) do t
 end
 
 p3leg = gabas_layout[1,2] = LLegend(scene,
-    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p3.plots],
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
     p3leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
-    poly!(p3ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
 
@@ -487,19 +491,19 @@ tightlimits!(p4ann)
 hidexdecorations!(p4ann)
 hideydecorations!(p4ann)
 
-p4leg_entries = map(uniquesorted(gabad.taxon)) do t
+p1leg_entries = map(uniquesorted(gluts.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
 end
 
 p4leg = gabad_layout[1,2] = LLegend(scene,
-    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p4.plots],
-    p4leg_entries, "Species",
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p1leg_entries, "Species",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
-    poly!(p4ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
 

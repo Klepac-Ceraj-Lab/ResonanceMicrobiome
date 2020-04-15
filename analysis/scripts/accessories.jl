@@ -6,7 +6,7 @@ using Dictionaries
 
 const color1 = ColorBrewer.palette("Set1", 9)
 const color2 = ColorBrewer.palette("Set2", 8)
-# const color3 = ColorBrewer.palette("Set3", 12)
+const color3 = ColorBrewer.palette("Set3", 12)
 const color4 = ColorBrewer.palette("Paired", 12)
 
 function get_neuroactive_kos(neuroactivepath="data/uniprot/gbm.txt")
@@ -42,7 +42,7 @@ function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt")
     for na in keys(neuroactivekos)
         searchfor = [kos2uniref[ko] for ko in neuroactivekos[na] if ko in keys(kos2uniref)]
         pos = findall(u-> u in searchfor, features)
-        insert!(neuroactive, na, pos)
+        insert!(neuroactive_index, na, pos)
     end
     for k in keys(neuroactive_index)
         unique!(neuroactive_index[k])
