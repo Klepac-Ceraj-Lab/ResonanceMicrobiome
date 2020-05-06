@@ -1,17 +1,21 @@
 @warn "Loading packages"
 
 ENV["GKSwstype"] = "100"
-using ECHOAnalysis
-using DataFrames
-using SQLite
+using BiobakeryUtils
+using Clustering
+using ColorBrewer
+using Combinatorics
 using CSV
-using Microbiome
+using DataFrames
+using Dictionaries
 using Distances
+using ECHOAnalysis
+using HypothesisTests
+using InvertedIndices
+using JLD2
+using Microbiome
+using MultipleTesting
 using MultivariateStats
 using Pkg.TOML: parsefile
-using Clustering
-using Combinatorics
-using BiobakeryUtils
-using MultipleTesting
 using ProgressMeter
-using JLD2
+using Statistics

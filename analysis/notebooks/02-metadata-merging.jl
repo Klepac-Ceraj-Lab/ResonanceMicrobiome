@@ -57,7 +57,7 @@ brainfiles = config["tables"]["brain_structure"]
 brainvol = CSV.read(brainfiles["lowres"])
 
 # remove spaces from columns names
-names!(brainvol, map(names(brainvol)) do n
+rename!(brainvol, map(names(brainvol)) do n
                         replace(String(n), " "=>"_") |> lowercase |> Symbol
                     end)
 rename!(brainvol, :study_id => :subject)
