@@ -1,30 +1,22 @@
----
-title: "Notebook 2: Working with Metadata"
-author: "Kevin Bonham, PhD"
-options:
-    line_width : 120
-    wrap : false
----
+# ---
+# title: "Notebook 2: Working with Metadata"
+# author: "Kevin Bonham, PhD"
+# options:
+#     line_width : 120
+#     wrap : false
+# ---
+#
 
-In the previous notebook,
-we extracted metadata tables from FilemakerPro
-and added them to a `sqlite` database.
-Now, we'll get these into a more usable format for analysis.
+# ## Accessing TOML data in julia
+#
+# Information about the locations of data are found in `Data.toml`.
+# If you've downloaded the data from Zenodo,
+# be sure to update the paths in that file for this code to run successfully.
+# Parsing this file gives a set of nested key:value pairs.
+#
+# Extra code for much of this analysis is found in the `ECHOAnalysis` julia package.
+# The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
-## Accessing TOML data in julia
-
-Information about the locations of data are found in `data/data.toml`.
-Parsing this file gives a set of nested key:value pairs.
-
-Extra code for much of this analysis is found in the `ECHOAnalysis` julia package.
-The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
-
-```julia; results="hidden"
-using Pkg
-Pkg.activate("analysis/")
-using Revise
-```
-```julia; results="hidden"
 using ECHOAnalysis
 using Pkg.TOML: parsefile
 config = parsefile("data/data.toml")
@@ -32,18 +24,10 @@ for (key, value) in config
     println(key,":")
     println("\t",value)
 end
-```
 
-## Long form data
+##
+# Subject Metadata is stored in a CSV and can be easily loaded
 
-The `metascrubjl` script generates a table in long-form,
-meaning each metadatum has its own row.
-In the previous notebook,
-we saved it to an SQLite database for easy retrieval
-
-
-```julia
-using SQLite
 using CSV
 using DataFrames
 using PrettyTables
@@ -55,131 +39,17 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 
 @ptconfclean # clear previous configuration
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
-
 # set configuration for printing tables
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120)
 
-metadb = SQLite.DB(config["sqlite"]["metadata"]["path"])
-allmeta = DBInterface.execute(metadb, "SELECT * FROM filemakermetadata") |> DataFrame
+##
+
+include("airtable.key")
+subjectmeta = echo_
 # pretty print table
 @pt allmeta
-```
 
-The `metadatascrub` script tries to find `timepoint` values for everything,
-and if it can't,
-it assumes that the matadatum applies to all timepoints for that subject.
-These are marked with `timepoint = 0`.
-Let's look at which variables that applies to:
-
-```julia
-allmeta[allmeta.timepoint .== 0, :parent_table] |> unique
-```
-
-Those all look reasonable!
-
-### Summaries and transforms
-
-There are a few bits of metadata where it's useful
-to have a summary or a slightly transformed version.
-One example of this is age -
-For reasons that will be clear later,
-it's useful to group gids by age groups:
-
-- under 1 year old
-- between 1 and 2 years old
-- over 2 years old
-
-
-```julia
-using Statistics
-
-agelabels = by(allmeta, [:subject, :timepoint]) do sample
-    age = filter(row-> row.metadatum == "correctedAgeDays", sample)
-    if nrow(age) > 0
-        years = mean(parse.(Float64, skipmissing(age.value))) / 365
-        if ismissing(years) || isnan(years)
-            label=missing
-        elseif years <= 1
-            label="1 and under"
-        elseif 1 < years < 2
-            label="1 to 2"
-        else
-            label="2 and over"
-        end
-    else
-        label=missing
-    end
-    return DataFrame(
-            metadatum="ageLabel",
-            value=label,
-            parent_table="Calculated"
-            )
-end
-dropmissing!(agelabels)
-@pt agelabels
-```
-```julia; results="hidden"
-# add to main metadata dataframe
-append!(allmeta, agelabels)
-```
-
-
-For cognitive scores (eg. Mullen),
-we want to use a normalized score that's comparable across tests.
-
-
-```julia
-cogcols = [
-    "languageComposite", # this is from Bayleys
-    "motorComposite", # also Bayleys
-    "mullen_EarlyLearningComposite",
-    # "mullen_NonVerbalComposite", # used because composite score includes verbal, very young children not always verbal
-    "fullScaleComposite", # this is from WPPSI
-    "FSIQ_Composite",  # this is from WISC
-    ]
-cogscores = by(allmeta, [:subject, :timepoint]) do sample
-    cogs = filter(row-> in(row.metadatum, cogcols) &&
-                        !ismissing(row.value),
-                    sample)
-    if nrow(cogs) > 0
-        parent = cogs.parent_table[1]
-        if parent == "Bayley's"
-            nrow(cogs) != 2 && throw(ErrorException("Wrong number of rows for $parent"))
-            assessment = "Bayleys"
-            score = string(mean(parse.(Float64, cogs.value)))
-        else
-            nrow(cogs) != 1 && throw(ErrorException("Wrong number of rows for $parent"))
-            metadatum = cogs.metadatum[1]
-            if metadatum == "mullen_EarlyLearningComposite"
-                assessment = "Mullen"
-            elseif metadatum == "fullScaleComposite"
-                assessment = "WPPSI"
-            elseif metadatum == "FSIQ_Composite"
-                assessment = "WISC"
-            else
-                throw(ErrorException("Couldn't figure out assessment $metadatum"))
-            end
-            score = cogs.value[1]
-        end
-    else
-        assessment = missing
-        score = missing
-    end
-    return DataFrame(metadatum    = ["cogAssessment", "cogScore"],
-                     value        = [assessment,      score],
-                     parent_table = ["Calculated",    "Calculated"])
-end
-
-dropmissing!(cogscores)
-@pt cogscores[.!ismissing.(cogscores.value), :]
-```
-```julia; results="hidden"
-# add to main metadata dataframe
-append!(allmeta, cogscores)
-```
-
-
-## Sample Metadata
+## Sample metadata
 
 In addition to the FilemakerPro database,
 we also have metdata info stored for each of the samples that are processed.
