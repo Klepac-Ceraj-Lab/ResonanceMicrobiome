@@ -8,7 +8,7 @@ taxonomic_profiles = "/babbage/echo/profiles/taxonomic"
 functional_profiles = "/babbage/echo/profiles/functional"
 
 [tables]
-subject_metadata="data/metadata/20200506_metaexport.csv"
+subject_metadata="data/metadata/20200507_metaexport.csv"
 sample_metadata="data/metadata/airtable_export.csv"
 joined_metadata="data/metadata/joined.csv"
 
