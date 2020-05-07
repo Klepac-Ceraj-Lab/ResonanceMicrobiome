@@ -25,7 +25,7 @@ for (key, value) in config
     println("\t",value)
 end
 
-# Subject Metadata is stored in a CSV and can be easily loaded
+## Subject Metadata is stored in a CSV and can be easily loaded
 
 using CSV
 using DataFrames
