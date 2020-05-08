@@ -1,16 +1,6 @@
-using SQLite
-using Colors
-import StatsMakie.StructArrays: uniquesorted
-using ECHOAnalysis
-
-kodb = SQLite.DB("~/Desktop/ko_profiles.sqlite")
-allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite")
-allmeta = getmgxmetadata("/Users/ksb/Desktop/metadata.sqlite",samples=uniquetimepoints(allmeta.sample, takefirst=false))
-# add_functional_profiles(kodb, "data/engaging", stratified=true, kind="kos_relab")
-
-koslong = DataFrame(DBInterface.execute(kodb, "SELECT * FROM ko_names_relab"))
+include("accessories.jl")
 nko = get_neuroactive_kos()
-
+stratkos = functional_profiles(kind="kos_relab", stratified=true)
 # replace this with `select!()` once it's added https://github.com/JuliaData/DataFrames.jl/pull/2080
 
 koslong = hcat(koslong, DataFrame(map(eachrow(koslong)) do row
