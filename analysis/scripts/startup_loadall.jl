@@ -21,8 +21,6 @@ unirefs = widen2comm(functional_profiles(kind="genefamilies_relab")..., featurec
 
 ### Just get metadata found in tax/func profiles, and in same order
 
-allsamples = intersect(map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
-
 allmeta.ageLabel = map(eachrow(allmeta)) do row
     startswith(row.sample, "M") && return "mom"
     ismissing(row.correctedAgeDays) && return missing
@@ -30,14 +28,16 @@ allmeta.ageLabel = map(eachrow(allmeta)) do row
     row.correctedAgeDays < 365*2 && return "1 to 2"
     return "2 and over"
 end
-
 dropmissing!(allmeta, :ageLabel)
+allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
+filter!(row-> row.sample in allsamples, allmeta)
 
-species = view(species, sites=allmeta.sample) |> copy
-unirefs = view(unirefs, sites=allmeta.sample) |> copy
-kos     = view(kos, sites=allmeta.sample)     |> copy
-pfams   = view(pfams, sites=allmeta.sample)   |> copy
-ecs     = view(ecs, sites=allmeta.sample)     |> copy
+species  = view(species, sites=allmeta.sample)  |> copy
+unirefs  = view(unirefs, sites=allmeta.sample)  |> copy
+kos      = view(kos, sites=allmeta.sample)      |> copy
+stratkos = view(stratkos, sites=allmeta.sample) |> copy
+pfams    = view(pfams, sites=allmeta.sample)    |> copy
+ecs      = view(ecs, sites=allmeta.sample)      |> copy
 
 @assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
 

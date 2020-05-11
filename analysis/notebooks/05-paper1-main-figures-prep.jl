@@ -259,3 +259,4 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @save "analysis/figures/assets/fsea.jld2" allfsea mdcors
 @save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
+@save "analysis/figures/assets/stratkos.jld2" stratkos
