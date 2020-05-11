@@ -85,7 +85,7 @@ age_labels = [
 legend_1BC_markers = pcoas_layout[2, 1:2] = LLegend(
     f1_scene, age_markers, age_labels,
     orientation = :horizontal,
-    titlevisible=false, patchcolor=:transparent)
+    titlevisible=false, patchcolor=:transparent, tellheight=true, height=Auto())
 
 
 taxpcoa_plot_colorbar_legend = LColorbar(f1_scene, taxpcoa_plot, width=30)
@@ -138,7 +138,7 @@ cogage_layout = gridnest!(phm_cogage_layout, 2, 1)
 legend_cogage = cogage_layout[2, 1] = LLegend(f1_scene,
     [MarkerElement(marker=:circle, color=ColorSchemes.Set1_7.colors[i], strokecolor=:black) for i in 2:5],
     string.(sort(unique(skipmissing(allkidsmeta.cogAssessment)))),
-    titlevisible=false, patchcolor=:transparent, orientation = :horizontal)
+    titlevisible=false, patchcolor=:transparent, orientation = :horizontal, tellheight=true, height=Auto())
 
 phmyorder = [
     "subject",

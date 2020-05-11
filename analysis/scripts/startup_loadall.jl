@@ -4,7 +4,7 @@ include("startup_loadpackages.jl")
 include("accessories.jl")
 
 config = parsefile("Data.toml")
-allmeta = CSV.File(config["tables"]["joined_metadata"]) |> DataFrame
+allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
 
 ## Feature tables
 @warn "Loading feature tables"

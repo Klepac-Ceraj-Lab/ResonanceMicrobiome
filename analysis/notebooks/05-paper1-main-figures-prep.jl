@@ -48,7 +48,6 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], ukidsmeta.simple_race, label="race")
     # permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
     )
-
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), species_permanovas)
 species_permanovas[!, :feature] .= "species"
 rename!(species_permanovas, Symbol("Pr(>F)")=>:p_value)
