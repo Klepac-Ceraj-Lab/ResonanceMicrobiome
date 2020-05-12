@@ -1,6 +1,7 @@
+import StatsMakie.StructArrays: uniquesorted
+
 include("accessories.jl")
 nko = get_neuroactive_kos()
-stratkos = functional_profiles(kind="kos_relab", stratified=true)
 # replace this with `select!()` once it's added https://github.com/JuliaData/DataFrames.jl/pull/2080
 
 function longfromcomm(cm; stratified=false)

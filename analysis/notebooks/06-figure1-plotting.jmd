@@ -9,7 +9,6 @@ using Makie
 using ColorSchemes
 using FileIO
 using StatsBase: midpoints
-using 
 
 AbstractPlotting.inline!(false)
 
@@ -518,7 +517,8 @@ layout[2, 1] = stratfunc_layout
 
 agelegend = layout[3,1] = LLegend(scene, orientation=:horizontal,
                                     [MarkerElement(color=c, marker=:rect, strokecolor=:black) for c in ColorBrewer.palette("Set3", 3)],
-                                    collect(uniquesorted(gabad.agelabel)), patchcolor=:transparent)
+                                    collect(uniquesorted(gabad.agelabel)), patchcolor=:transparent, tellwidth=false, width=Auto(), tellheight=true,
+                                    height=Auto())
 agelegend.attributes.label[] = "Age"
 
 
@@ -534,5 +534,5 @@ scene
 
 ```julia
 # CairoMakie.activate!(type = "svg")
-# save("data/analysis/figures/figure1/figure1-makie.svg", scene, resolution=res);
+# save("analysis/figures/figure2.svg", scene, resolution=res);
 ```
