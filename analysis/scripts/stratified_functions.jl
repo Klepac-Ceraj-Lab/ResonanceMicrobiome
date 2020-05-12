@@ -3,20 +3,53 @@ nko = get_neuroactive_kos()
 stratkos = functional_profiles(kind="kos_relab", stratified=true)
 # replace this with `select!()` once it's added https://github.com/JuliaData/DataFrames.jl/pull/2080
 
-koslong = hcat(koslong, DataFrame(map(eachrow(koslong)) do row
-    m = match(r"^(.+?)\|?(?:(?:g__([\w]+)\.s__([\w]+))?|(unclassified))$", row.function)
-    isnothing(m) && @show row.function
-    (ko, genus, species, unclass) = m.captures
-    if isnothing(genus) && isnothing(unclass)
-        ko == row.function || error("Weird function $(row.function)")
-        taxon = nothing
+function longfromcomm(cm; stratified=false)
+    features = featurenames(cm)
+    samples  = samplenames(cm)
+    if stratified
+        taxa = Union{Nothing,String}[]
+        for (i, f) in enumerate(features)
+            m = match(r"^(.+?)\|?(?:(?:g__([\w]+)\.s__([\w]+))?|(unclassified))$", f)
+            (ko, genus, species, unclass) = m.captures
+            if isnothing(genus) && isnothing(unclass)
+                ko == f || error("Weird function $f")
+                taxon = nothing
+            else
+                isnothing(unclass) ? taxon = "$species" : taxon = "unclassified"
+            end
+            ko = split(ko, ':')[1]
+            features[i] = ko
+            push!(taxa, taxon)
+        end
     else
-        isnothing(unclass) ? taxon = "$species" : taxon = "unclassified"
+        taxa = fill("unlassified", length(features))
     end
-    ko = split(ko, ':')[1]
-    (ko=ko, taxon=taxon)
-    end
-))
+    occ = occurrences(cm)
+
+    df = DataFrame((sample=samples[j], func=features[i], taxon=taxa[i], abundance=occ[i,j])
+                        for i in eachindex(features)
+                        for j in eachindex(samples) if occ[i,j] > 0)
+    return df
+end
+
+koslong = longfromcomm(stratkos, stratified=true)
+rename!(koslong, :func=>:ko)
+filter!(row->row.abundance > 0, koslong)
+
+# koslong = hcat(koslong, DataFrame(map(eachrow(koslong)) do row
+#     m = match(r"^(.+?)\|?(?:(?:g__([\w]+)\.s__([\w]+))?|(unclassified))$", row.function)
+#     isnothing(m) && @show row.function
+#     (ko, genus, species, unclass) = m.captures
+#     if isnothing(genus) && isnothing(unclass)
+#         ko == row.function || error("Weird function $(row.function)")
+#         taxon = nothing
+#     else
+#         isnothing(unclass) ? taxon = "$species" : taxon = "unclassified"
+#     end
+#     ko = split(ko, ':')[1]
+#     (ko=ko, taxon=taxon)
+#     end
+# ))
 
 filter!(row-> !ismissing(row.ageLabel) && row.ageLabel != "mom", allmeta)
 filter!(row-> !ismissing(row.cogScore), allmeta)

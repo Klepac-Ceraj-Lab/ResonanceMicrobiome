@@ -9,6 +9,7 @@ using Makie
 using ColorSchemes
 using FileIO
 using StatsBase: midpoints
+using 
 
 AbstractPlotting.inline!(false)
 
@@ -19,6 +20,7 @@ AbstractPlotting.inline!(false)
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @load "analysis/figures/assets/fsea.jld2" allfsea mdcors
 @load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
+@load "analysis/figures/assets/stratkos.jld2" stratkos
 
 allfsea.median = map(median, allfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
@@ -264,7 +266,7 @@ fsea_legend = fsea_layout[2, 1:5] = LLegend(scene,
      ],
      ["median < 0", nothing, "median > 0"],
     titlevisible=false, orientation=:horizontal,
-    patchcolor=:transparent)
+    patchcolor=:transparent, tellheight=true, height=Auto())
 
 allfsea.color = map(eachrow(allfsea)) do row
     m = row.median
