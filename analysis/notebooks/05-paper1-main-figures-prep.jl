@@ -245,6 +245,92 @@ unirefaccessorydiffs = labeldiff(unirefaccessorydm[uboth,uboth], allmeta.ageLabe
 pfamsdiffs = labeldiff(pfamsdm[uboth,uboth], allmeta.ageLabel[uboth])
 kosdiffs = labeldiff(kosdm[uboth,uboth], allmeta.ageLabel[uboth])
 
+
+# ## Additional stats
+
+lowidx, upidx = let (l, u) = quantile(skipmissing(ukidsmeta.cogScore), [0.25,0.75])
+    lower = findall(s-> !ismissing(s) && s <= l, ukidsmeta.cogScore)
+    upper = findall(s-> !ismissing(s) && s >= u, ukidsmeta.cogScore)
+    lower, upper
+end
+
+
+quartmeta = copy(ukidsmeta[[lowidx..., upidx...], :])
+quartmeta[!,:quartile] = [i <= length(lowidx) ? "bottom 25%" : "top 25%" for i in 1:nrow(quartmeta)]
+quartspecies = view(species, sites=quartmeta.sample)
+quartspecies = view(quartspecies, species=[sum(row) > 0 for row in eachrow(occurrences(quartspecies))]) |> copy
+quartspeciesdm = pairwise(BrayCurtis(), quartspecies)
+quartspeciesmds = fit(MDS, quartspeciesdm, distances=true)
+quartspeciesmdsaxes = [v / sum(eigvals(quartspeciesmds)) for v in eigvals(quartspeciesmds)]
+
+quartpermanova = permanova(quartspeciesdm, quartmeta.quartile)
+
+MannWhitneyUTest(quartmeta.shannon[1:length(lowidx)], quartmeta.shannon[(length(lowidx)+1):end])
+describe(quartmeta.shannon[1:length(lowidx)])
+describe(quartmeta.shannon[(length(lowidx)+1):end])
+
+quartiletests = DataFrame()
+
+for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
+    row = vec(row)
+    sp = featurenames(quartspecies)[i]
+    l = row[1:length(lowidx)]
+    u = row[(1+length(lowidx)):end]
+    mwu = MannWhitneyUTest(l, u)
+    push!(quartiletests, (
+        species=sp,
+        median_lower = median(l),
+        median_upper = median(u),
+        nsamples = count(>(0), row),
+        pvalue = pvalue(mwu)
+    ))
+end
+quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
+
+CSV.write("analysis/quartiletests.csv", quartiletests)
+
+# ## Older kids
+
+olderkids = Set(sampleid.(uniquetimepoints(allkidsmeta[[!ismissing(a) && a > 365 for a in allkidsmeta.correctedAgeDays], :sample])))
+olderkidsmeta = view(allkidsmeta, in.(allkidsmeta.sample, Ref(olderkids)),:)
+olderkidsspecies = view(species, sites=olderkidsmeta.sample) |> copy
+
+lowidx, upidx = let (l, u) = quantile(skipmissing(olderkidsmeta.cogScore), [0.25,0.75])
+    lower = findall(s-> !ismissing(s) && s <= l, olderkidsmeta.cogScore)
+    upper = findall(s-> !ismissing(s) && s >= u, olderkidsmeta.cogScore)
+    lower, upper
+end
+
+
+quartmeta = copy(olderkidsmeta[[lowidx..., upidx...], :])
+quartmeta[!,:quartile] = [i <= length(lowidx) ? "bottom 25%" : "top 25%" for i in 1:nrow(quartmeta)]
+quartspecies = view(species, sites=quartmeta.sample)
+quartspecies = view(quartspecies, species=[sum(row) > 0 for row in eachrow(occurrences(quartspecies))]) |> copy
+quartspeciesdm = pairwise(BrayCurtis(), quartspecies)
+quartspeciesmds = fit(MDS, quartspeciesdm, distances=true)
+quartspeciesmdsaxes = [v / sum(eigvals(quartspeciesmds)) for v in eigvals(quartspeciesmds)]
+
+quartpermanova = permanova(quartspeciesdm, quartmeta.quartile)
+quartiletests = DataFrame()
+
+for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
+    row = vec(row)
+    sp = featurenames(quartspecies)[i]
+    l = row[1:length(lowidx)]
+    u = row[(1+length(lowidx)):end]
+    mwu = MannWhitneyUTest(l, u)
+    push!(quartiletests, (
+        species=sp,
+        median_lower = median(l),
+        median_upper = median(u),
+        nsamples = count(>(0), row),
+        pvalue = pvalue(mwu)
+    ))
+end
+quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
+
+CSV.write("analysis/olderkidsquartiletests.csv", quartiletests)
+
 # ## Exports
 
 using JLD2
@@ -260,3 +346,106 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/fsea.jld2" allfsea mdcors
 @save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @save "analysis/figures/assets/stratkos.jld2" stratkos
+@save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes
+
+
+
+
+# # ## Linear Models
+# # None of these find anything significant
+#
+# using GLM
+#
+# function longtaxfromcomm(cm)
+#     features = featurenames(cm)
+#     samples  = samplenames(cm)
+#
+#     occ = occurrences(cm)
+#
+#     df = DataFrame((sample=samples[j], taxon=features[i], abundance=occ[i,j])
+#                         for i in eachindex(features)
+#                         for j in eachindex(samples))
+#     return df
+# end
+#
+# taxlong = longtaxfromcomm(olderkidsspecies)
+# taxlong = join(taxlong, select(olderkidsmeta,
+#                             [:sample, :childGender, :correctedAgeDays,
+#                              :mother_HHS, :cogScore, :limbic_normed,
+#                              :subcortical_normed, :neocortical_normed,
+#                              :cerebellar_normed]),
+#                          on=:sample, kind=:left)
+#
+# taxlong.asq = asin.(sqrt.(taxlong.abundance))
+#
+# glms = DataFrame()
+#
+# for grp in groupby(taxlong, :taxon)
+#     grp = filter(row-> !ismissing(row.cogScore) && row.abundance > 0, grp)
+#     nrow(grp) > 10 || continue
+#     sp = first(grp.taxon)
+#     m = lm(@formula(asq ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp)
+#     tbl = coeftable(m)
+#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+#     df[!, :taxon] .= sp
+#     append!(glms, df)
+# end
+#
+# cogs = findall(row->row.variable == "cogScore", eachrow(glms))
+# glms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(glms)]
+# glms.qvalue[cogs] .= adjust(glms[cogs,:pvalue], BenjaminiHochberg())
+#
+# CSV.write("analysis/speciesglms.csv", glms)
+#
+# # ## upper/lower quartile
+#
+# longquartiles = filter(row-> row.sample in olderkids, taxlong)
+# longquartiles = join(longquartiles, quartmeta[!, [:sample, :quartile]], on=:sample, kind=:left)
+# quartglms = DataFrame()
+#
+# for grp in groupby(longquartiles, :taxon)
+#     grp = filter(row-> !ismissing(row.quartile) && row.abundance > 0, grp)
+#     nrow(grp) > 10 || continue
+#     if length(unique(grp.quartile)) == 1
+#         @info "df for $(first(grp.taxon)) only has 1 quartile ($(first(grp.quartile)))"
+#         continue
+#     end
+#
+#     sp = first(grp.taxon)
+#     m = lm(@formula(asq ~ quartile + correctedAgeDays + childGender + mother_HHS), grp)
+#     tbl = coeftable(m)
+#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+#     df[!, :taxon] .= sp
+#     append!(quartglms, df)
+# end
+#
+# cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
+# quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
+# quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
+#
+# CSV.write("analysis/quartilespeciesglms.csv", quartglms)
+#
+# # ## Presence/Absence
+#
+# paglms = DataFrame()
+#
+# for grp in groupby(taxlong, :taxon)
+#     grp = filter(row-> !ismissing(row.cogScore), grp)
+#     nrow(grp) > 10 || continue
+#     sp = first(grp.taxon)
+#     grp.present = grp.abundance .> 0.
+#     m = glm(@formula(present ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp, Bernoulli(), LogitLink())
+#     tbl = coeftable(m)
+#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+#     df[!, :taxon] .= sp
+#     append!(paglms, df)
+# end
+#
+# cogs = findall(row-> startswith(row.variable, "cogScore"), eachrow(paglms))
+# paglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(paglms)]
+# paglms.qvalue[cogs] .= adjust(paglms[cogs,:pvalue], BenjaminiHochberg())
+#
+# CSV.write("analysis/paspeciesglms.csv", paglms)
