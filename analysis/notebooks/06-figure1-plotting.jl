@@ -21,6 +21,7 @@ AbstractPlotting.inline!(false)
 @load "analysis/figures/assets/fsea.jld2" allfsea mdcors
 @load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @load "analysis/figures/assets/stratkos.jld2" stratkos
+@load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
 
 allfsea.median = map(median, allfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
@@ -229,8 +230,8 @@ let filt = map(!ismissing, allkidsmeta.cogScore)
     g = disallowmissing(allkidsmeta.cogAssessment[filt])
     scatter!(cogage, Group(g), x, y,
                 color=ColorSchemes.Set1_5.colors[2:end],
-                markersize = 10 * AbstractPlotting.px,
-                strokecolor=:black
+                markersize = 22 * AbstractPlotting.px,
+                strokewidth=5
                 )
 
 end
@@ -239,15 +240,114 @@ cogage.ylabel = "Overall cognitive function"
 cogage.xlabelpadding = 20
 cogage.ylabelpadding = 20
 
-legend_cogage = f2_layout[2,1] = LLegend(f2_scene,
+f2_legends_layout = GridLayout(f2_scene, 1,2, colsizes=[Auto(), Relative(0.7)])
+f2_layout[2,1] = f2_legends_layout
+legend_cogage = f2_legends_layout[1,1] = LLegend(f2_scene,
     [MarkerElement(marker=:circle, color=ColorSchemes.Set1_7.colors[i], strokecolor=:black) for i in 2:5],
     string.(sort(unique(skipmissing(allkidsmeta.cogAssessment)))),
-    titlevisible=false, patchcolor=:transparent, orientation = :horizontal, tellheight=true, height=Auto(), tellwidth=false)
+    titlevisible=false, patchcolor=:transparent, tellwidth=false)
+
+
+cogage_quartiles = f2_legends_layout[1,2] = LAxis(f2_scene)
+
+let
+    x = disallowmissing(quartmeta.correctedAgeDays ./ 365)
+    y = disallowmissing(quartmeta.cogScore)
+    q = disallowmissing(quartmeta.quartile)
+    c = ColorSchemes.Accent_3.colors[2:end]
+    scatter!(cogage_quartiles, x, y,
+                color=[startswith(g, "bottom") ? c[1] : c[2] for g in q],
+                markersize = 15 * AbstractPlotting.px,
+                strokewidth=5
+                )
+
+end
+let df = filter(row-> !ismissing(row.cogScore) && !in(row.sample, quartmeta.sample), allkidsmeta)
+    x = disallowmissing(df.correctedAgeDays ./ 365)
+    y = disallowmissing(df.cogScore)
+    c = ColorSchemes.Greys_3.colors[1]
+    scatter!(cogage_quartiles, x, y,
+                color=fill(c, length(y)),
+                markersize = 15 * AbstractPlotting.px,
+                strokewidth=5
+                )
+
+end
+cogage_quartiles.xlabel = " "
+cogage_quartiles.ylabel = " "
+rowsize!(f2_layout, 2, Relative(0.25))
+##
+
+sigbugs = ["Ruminococcus_gnavus",
+           "Coprococcus_sp_ART55_1",
+           "Eubacterium_eligens",
+           "Coprobacillus_unclassified",
+           "Roseburia_hominis",
+           "Adlercreutzia_equolifaciens",
+           "Lachnospiraceae_bacterium_2_1_58FAA",
+           "Clostridium_symbiosum",
+           "Bifidobacterium_breve",
+           "Coprococcus_catus",
+           "Ruminococcus_sp_5_1_39BFAA"
+           ]
+
+@assert sitenames(quartspecies) == quartmeta.sample
+
+for bug in sigbugs
+    quartmeta[!, Symbol(bug)] = vec(occurrences(view(quartspecies, species=[bug])))
+end
+quartmeta.x = [Int(startswith(x, "bottom")) for x in quartmeta.quartile]
+
+quartilescatters = GridLayout()
+
+f2_layout[1:2,2:3] = quartilescatters
+
+##
+
+gnavus = quartilescatters[1,1] = LAxis(f2_scene, title="Ruminococcus gnavus")
+boxplot!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
+        markersize=AbstractPlotting.px *10, strokewidth=5, color=ColorSchemes.Accent_3.colors[[3,2]])
+limits!(gnavus, (-0.5,1.5), (0, maximum(quartmeta.Ruminococcus_gnavus) + 0.01))
+gnavus.xticks = ([0,1], ["bottom 25%", "top 25%"])
+gnavus.xlabel = "Cognitive score"
+gnavus.ylabel = "Relative abundance"
+
+eligens = quartilescatters[1,2] = LAxis(f2_scene, title="Eubacterium eligens")
+boxplot!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=5)
+limits!(eligens, (-0.5,1.5), (0, maximum(quartmeta.Eubacterium_eligens) + 0.005))
+eligens.xticks = ([0,1], ["bottom 25%", "top 25%"])
+eligens.xlabel = "Cognitive score"
+eligens.ylabel = "Relative abundance"
+
+
+hominis = quartilescatters[2,1] = LAxis(f2_scene, title="Roseburia hominis")
+boxplot!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=5)
+limits!(hominis, (-0.5,1.5), (0, maximum(quartmeta.Roseburia_hominis) + 0.001))
+hominis.xticks = ([0,1], ["bottom 25%", "top 25%"])
+hominis.xlabel = "Cognitive score"
+hominis.ylabel = "Relative abundance"
+
+
+equolifaciens = quartilescatters[2,2] = LAxis(f2_scene, title="Adlercreutzia equolifaciens")
+boxplot!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=5)
+limits!(equolifaciens, (-0.5,1.5), (0, maximum(quartmeta.Adlercreutzia_equolifaciens) + 0.001))
+equolifaciens.xticks = ([0,1], ["bottom 25%", "top 25%"])
+equolifaciens.xlabel = "Cognitive score"
+equolifaciens.ylabel = "Relative abundance"
+
+colsize!(f2_layout, 1, Relative(0.5))
 f2_scene
-
-
-
-
 # ## Figure 3
 
 include("../scripts/stratified_functions.jl")

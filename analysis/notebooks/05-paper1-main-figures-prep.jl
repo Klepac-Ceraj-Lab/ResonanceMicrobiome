@@ -346,7 +346,7 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/fsea.jld2" allfsea mdcors
 @save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @save "analysis/figures/assets/stratkos.jld2" stratkos
-@save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes
+@save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
 
 
 
