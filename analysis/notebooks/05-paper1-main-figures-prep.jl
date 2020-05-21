@@ -277,8 +277,10 @@ for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
     l = row[1:length(lowidx)]
     u = row[(1+length(lowidx)):end]
     mwu = MannWhitneyUTest(l, u)
+    assoc = mean(l) > mean(u) ? "-" : "+"
     push!(quartiletests, (
         species=sp,
+        association=accoc,
         median_lower = median(l),
         median_upper = median(u),
         nsamples = count(>(0), row),
@@ -318,9 +320,11 @@ for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
     sp = featurenames(quartspecies)[i]
     l = row[1:length(lowidx)]
     u = row[(1+length(lowidx)):end]
+    assoc = mean(l) > mean(u) ? "-" : "+"
     mwu = MannWhitneyUTest(l, u)
     push!(quartiletests, (
         species=sp,
+        association=accoc,
         median_lower = median(l),
         median_upper = median(u),
         nsamples = count(>(0), row),
