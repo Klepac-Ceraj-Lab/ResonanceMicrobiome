@@ -4,11 +4,11 @@
 #
 # ## Setup
 #
-# This step takes about an hour
+# This step takes about 10 min
 
 include("../scripts/startup_loadall.jl")
 ## Figure 1A-B
-    speciesdm = pairwise(BrayCurtis(), species)
+speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)
 speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
 

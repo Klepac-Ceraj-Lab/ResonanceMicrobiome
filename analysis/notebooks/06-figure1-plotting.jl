@@ -92,7 +92,7 @@ phmxorder = [
 ]
 phmxsrt = reverse(invperm(sortperm(phmxorder)))
 
- ## "BMI" is index 10
+## "BMI" is index 10
 values = disallowmissing(r2m')[phmxsrt, phmysrt]
 xrange = 0:size(values,1)
 yrange = 0:size(values,2)
@@ -279,6 +279,8 @@ end
 cogage_quartiles.xlabel = " "
 cogage_quartiles.ylabel = " "
 rowsize!(f2_layout, 2, Relative(0.25))
+f2_scene
+
 ##
 
 sigbugs = ["Ruminococcus_gnavus",
@@ -388,7 +390,6 @@ equolifaciens.titlefont = "DejaVu Sans Oblique"
 colsize!(f2_layout, 1, Relative(0.5))
 
 # ### Save figure 2
-
 f2_layout[1, 1, TopLeft()] = LText(f2_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 quartilescatters[1, 1, TopLeft()] = LText(f2_scene, "b", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 quartilescatters[1, 2, TopLeft()] = LText(f2_scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
@@ -641,7 +642,7 @@ tightlimits!(p4ann)
 hidexdecorations!(p4ann)
 hideydecorations!(p4ann)
 
-p1leg_entries = map(uniquesorted(gluts.taxon)) do t
+p4leg_entries = map(uniquesorted(gabad.taxon)) do t
     t = lstrip(t)
     t = split(t, "_")
     length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
@@ -649,7 +650,7 @@ end
 
 p4leg = gabad_layout[1,2] = LLegend(f3_scene,
     [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
-    p1leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    p4leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
     patchcolor=:transparent)
 for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
@@ -662,6 +663,13 @@ for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
     poly!(p4ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
 
+p4et = p4leg.decorations[:entrytexts][1][1]
+for et in p4leg.decorations[:entrytexts][1]
+    if et.text[] == "other"
+        et.font = "DejaVu Sans"
+    end
+end
+f3_scene
 ##
 stratfunc_layout[1:2, 1:2] = [gabas_layout gabad_layout;
                               gluts_layout glutd_layout]
@@ -684,7 +692,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 save("analysis/figures/figure3.jpg", f3_scene, resolution=res);
 f3_scene
 
-# ## Scratch
+## ## Scratch
 
 scene, layout = layoutscene()
 plt = layout[1,1] = LAxis(scene)
@@ -703,3 +711,4 @@ keep = findall(name -> !(eltype(bugdiff[!,name]) <: Number) || sum(bugdiff[!,nam
 CSV.write("/Users/ksb/Downloads/youngchildren_bug_diff_present.csv", bugdiff[!, keep])
 
 ENV["FREETYPE_ABSTRACTION_FONT_PATH"] = ["/System/Library/Fonts/", "/Users/ksb/Library/Fonts"]
+
