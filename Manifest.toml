@@ -100,9 +100,9 @@ version = "1.0.3"
 
 [[CairoMakie]]
 deps = ["AbstractPlotting", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "StaticArrays"]
-git-tree-sha1 = "73b09690be3ef2f5b9348697b04aaaec5ab4a826"
+git-tree-sha1 = "ef0e63735383cc59160aaae18d1126a8e44fff26"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.2.6"
+version = "0.2.7"
 
 [[Cairo_jll]]
 deps = ["Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -557,9 +557,9 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[Interpolations]]
 deps = ["AxisAlgorithms", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
-git-tree-sha1 = "3af735234d9b1ff9ff1af89875735cd9549c0c5f"
+git-tree-sha1 = "2b7d4e9be8b74f03115e64cf36ed2f48ae83d946"
 uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-version = "0.12.9"
+version = "0.12.10"
 
 [[IntervalSets]]
 deps = ["Dates", "EllipsisNotation", "Statistics"]
@@ -719,9 +719,9 @@ version = "0.10.0"
 
 [[MakieLayout]]
 deps = ["AbstractPlotting", "Animations", "Formatting", "GridLayoutBase", "Match", "Observables", "PlotUtils", "Showoff"]
-git-tree-sha1 = "cc6b7c9d978a1408b9ea2026ec345a13baeca67e"
+git-tree-sha1 = "c916f69e0db3b8eb5a359bc73d3dd0c34ca64055"
 uuid = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"
-version = "0.9.8"
+version = "0.9.9"
 
 [[MappedArrays]]
 git-tree-sha1 = "e2a02fe7ee86a10c707ff1756ab1650b40b140bb"
@@ -1143,9 +1143,9 @@ version = "0.9.5"
 
 [[StatsMakie]]
 deps = ["AbstractPlotting", "Distributions", "GLM", "IntervalSets", "KernelDensity", "Loess", "Observables", "Random", "Statistics", "StatsBase", "StructArrays", "Tables"]
-git-tree-sha1 = "64dc4424c8cb4218938d8e5300e9c1c4d37d1c51"
+git-tree-sha1 = "830dfb8badab545cc1a05076da5a188f35e29e3c"
 uuid = "65254759-4cff-5aa5-8326-61ce017a8c70"
-version = "0.2.1"
+version = "0.2.2"
 
 [[StatsModels]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "ShiftedArrays", "SparseArrays", "StatsBase", "Tables"]

@@ -194,7 +194,8 @@ metadatums = [:correctedAgeDays,
               :neocortical_normed,
               :subcortical_normed,
               :limbic_normed,
-              :cerebellar_normed]
+              :cerebellar_normed,
+              :breastfeeding]
 
 allfsea = DataFrame(
             geneset   = String[],
