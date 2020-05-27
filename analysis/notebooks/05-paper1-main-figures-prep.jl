@@ -184,18 +184,18 @@ abxr = CSV.read("data/uniprot/uniprot-abxr.tsv")
 carbs = CSV.read("data/uniprot/uniprot-carbohydrate.tsv")
 fa = CSV.read("data/uniprot/uniprot-fa.tsv")
 unirefnames = map(u-> match.(r"UniRef90_(\w+)",u).captures[1], featurenames(unirefaccessory))
+carbs = Set(carbs.Entry)
+carbpos = findall(x-> in(x, carbs), unirefnames)
 
 neuroactive = getneuroactive(unirefnames) # function in accessories.jl
 
 allneuroactive = union([neuroactive[k] for k in keys(neuroactive)]...)
-
 metadatums = [:correctedAgeDays,
               :cogScore,
               :neocortical_normed,
               :subcortical_normed,
               :limbic_normed,
-              :cerebellar_normed,
-              :breastfeeding]
+              :cerebellar_normed]
 
 allfsea = DataFrame(
             geneset   = String[],
@@ -223,8 +223,39 @@ for md in metadatums
     end
 end
 
-allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
+using StatsBase
 
+ukidsmeta = copy(ukidsmeta)
+ukidsmeta[!,:bfnumber] = map(ukidsmeta.breastfeeding) do bf
+    ismissing(bf) && return missing
+    occursin("formula", bf) && return 0
+    occursin("breast", bf) && return 2
+    return 1
+end
+let md = :bfnumber
+    @info "Working on $md"
+    filt = map(!ismissing, ukidsmeta[!,md])
+    cors = Float64[]
+    mdcol = disallowmissing(ukidsmeta[filt, md])
+    for row in eachrow(occurrences(view(unirefaccessory, sites=ukids))[:,filt])
+        row = collect(vec(row))
+        push!(cors, corspearman(mdcol, row))
+    end
+
+    mdcors[md] = filter(!isnan, cors)
+    for (key, pos) in [pairs(neuroactive)...; ["Carbohydrate metabolism"=>carbpos]]
+        allcors = filter(!isnan, cors[pos])
+        notcors = filter(!isnan, cors[Not(pos)])
+        length(allcors) < 4 && continue
+        @info "    $key"
+        mwu = MannWhitneyUTest(allcors, notcors)
+        m = median(allcors)
+        p = pvalue(mwu)
+        push!(allfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=allcors))
+    end
+end
+
+allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
 # ## Supplementary Figure 1
 
 function labeldiff(dm, labels)
