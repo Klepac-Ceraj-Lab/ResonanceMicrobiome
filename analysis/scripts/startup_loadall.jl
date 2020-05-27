@@ -32,6 +32,8 @@ allmeta.ageLabel = map(eachrow(allmeta)) do row
 end
 
 dropmissing!(allmeta, :ageLabel)
+filter!(row->row.ageLabel == "mom" || !ismissing(row.cogScore) || !ismissing(allmeta.hires_total), allmeta)
+
 allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
 filter!(row-> row.sample in allsamples, allmeta)
 
