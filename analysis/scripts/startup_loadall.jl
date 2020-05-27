@@ -1,30 +1,46 @@
 # NOTE: This can take 30 minutes to a few hours to run
 
-using ProgressMeter
-
-include("accessories.jl")
 include("startup_loadpackages.jl")
-include("startup_loadmetadata.jl")
+include("accessories.jl")
+
+config = parsefile("Data.toml")
+allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
 
 ## Feature tables
 @warn "Loading feature tables"
 
-include("startup_loadtaxonomic.jl")
+species = widen2comm(taxonomic_profiles()...)
+# Total sum scaling - function in Microbiome
+relativeabundance!(species)
+
+# all but unirefs
 include("startup_loadfunctional.jl")
+unirefs = widen2comm(functional_profiles(kind="genefamilies_relab")..., featurecol=:func)
 
 @warn "Getting metadata and subgroups"
 
 ### Just get metadata found in tax/func profiles, and in same order
 
 allsamples = intersect(map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
-allmeta = getmgxmetadata(samples=allsamples)
+
+allmeta.ageLabel = map(eachrow(allmeta)) do row
+    startswith(row.sample, "M") && return "mom"
+    ismissing(row.correctedAgeDays) && return missing
+    row.correctedAgeDays < 365 && return "1 and under"
+    row.correctedAgeDays < 365*2 && return "1 to 2"
+    return "2 and over"
+end
 
 dropmissing!(allmeta, :ageLabel)
-species = view(species, sites=allmeta.sample) |> copy
-unirefs = view(unirefs, sites=allmeta.sample) |> copy
-kos     = view(kos, sites=allmeta.sample)     |> copy
-pfams   = view(pfams, sites=allmeta.sample)   |> copy
-ecs     = view(ecs, sites=allmeta.sample)     |> copy
+allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
+filter!(row-> row.sample in allsamples, allmeta)
+
+species  = view(species, sites=allmeta.sample)  |> copy
+unirefs  = view(unirefs, sites=allmeta.sample)  |> copy
+kos      = view(kos, sites=allmeta.sample)      |> copy
+stratkos = view(stratkos, sites=allmeta.sample) |> copy
+pfams    = view(pfams, sites=allmeta.sample)    |> copy
+ecs      = view(ecs, sites=allmeta.sample)      |> copy
 
 @assert samplenames(species) == samplenames(unirefs) == samplenames(pfams) == samplenames(kos) == samplenames(ecs)
 
@@ -70,20 +86,7 @@ unirefaccessory = view(unirefs, species=[p[2] for p in unirefprevfilt])
 @warn "Adding additional info to metadata tables"
 
 ### Calculate some additional metadata
-allmeta.breastfeeding = map(eachrow(allmeta)) do row
-    ismissing(row.breastFedPercent) && return missing
-    !(row.breastFedPercent isa Number) && error(":breastFedPercent should be a number or missing")
-    if row.breastFedPercent < 5
-        return "exclussive formula"
-    elseif row.breastFedPercent > 80
-        return "exclussive breast"
-    else
-        return "mixed"
-    end
-end
 
-allmeta.childWeight = map(w-> ismissing(w) ? w : parse(Float64, w), allmeta.childWeight)
-allmeta.BMI_calc = map(row-> row.childWeight / (row.childHeight^2) * 703, eachrow(allmeta))
 allmeta.shannon = shannon(species)
 allmeta.identifiable_unirefs = 1 .- Vector(occurrences(unirefs)[1,:])
 allmeta.n_unirefs = vec(sum(!=(0.), occurrences(unirefs)[1:end,:], dims=1))

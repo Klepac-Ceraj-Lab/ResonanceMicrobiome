@@ -1,9 +1,3 @@
-using ColorBrewer
-using HypothesisTests
-using InvertedIndices
-using Statistics
-using Dictionaries
-
 const color1 = ColorBrewer.palette("Set1", 9)
 const color2 = ColorBrewer.palette("Set2", 8)
 const color3 = ColorBrewer.palette("Set3", 12)
@@ -33,14 +27,14 @@ function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt")
     neuroactivekos = get_neuroactive_kos(neuroactivepath)
 
     kos2uniref = Dict()
-    for line in eachline("data/engaging/ko2uniref90.txt")
+    for line in eachline("data/biobakery2/ko2uniref90.txt")
         line = split(line, '\t')
         kos2uniref[line[1]] = map(x-> String(match(r"UniRef90_(\w+)", x).captures[1]), line[2:end])
     end
 
     neuroactive_index = HashDictionary{String, Vector{Int}}()
     for na in keys(neuroactivekos)
-        searchfor = [kos2uniref[ko] for ko in neuroactivekos[na] if ko in keys(kos2uniref)]
+        searchfor = Iterators.flatten([kos2uniref[ko] for ko in neuroactivekos[na] if ko in keys(kos2uniref)]) |> Set
         pos = findall(u-> u in searchfor, features)
         insert!(neuroactive_index, na, pos)
     end
