@@ -4,7 +4,7 @@
 #
 # ## Setup
 #
-# This step takes about 10 min
+# This step takes about 20 min
 
 include("../scripts/startup_loadall.jl")
 ## Figure 1A-B
@@ -80,7 +80,7 @@ unirefaccessory_permanovas = vcat(
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), unirefaccessory_permanovas)
-unirefaccessory_permanovas[!, :feature] .= "unirefaccessory"
+unirefaccessory_permanovas[!, :feature] .= "accessory"
 rename!(unirefaccessory_permanovas, Symbol("Pr(>F)")=>:p_value)
 disallowmissing!(unirefaccessory_permanovas)
 unirefaccessory_permanovas.q_value = adjust(unirefaccessory_permanovas.p_value, BenjaminiHochberg())
@@ -157,11 +157,11 @@ allpermanovas = vcat(
     pfams_permanovas,
     kos_permanovas
     )
-sort!(allpermanovas, :R2)
+sort!(allpermanovas, [:label, :feature])
 r2 = unstack(allpermanovas, :label, :feature, :R2)
-r2m = Matrix(r2[!,[:species, :unirefaccessory, :pfams, :kos]])
+r2m = Matrix(r2[!,[:species, :accessory, :pfams, :kos]])
 q = unstack(allpermanovas, :label, :feature, :q_value)
-qm = Matrix(q[!,[:species, :unirefaccessory, :pfams, :kos]])
+qm = Matrix(q[!,[:species, :accessory, :pfams, :kos]])
 
 qa = let M = fill("", size(qm))
     for i in eachindex(qm)
