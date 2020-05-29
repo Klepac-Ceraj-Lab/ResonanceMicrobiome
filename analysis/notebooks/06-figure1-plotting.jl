@@ -26,7 +26,6 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 
 allfsea.median = map(median, allfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
-rename!(r2, :unirefaccessory=>:accessory)
 
 set_theme!(
     LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
@@ -453,7 +452,7 @@ allfsea.color = map(eachrow(allfsea)) do row
     c
 end
 
-
+filter
 allfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,
@@ -463,6 +462,9 @@ allfsea2 = vcat(
                 ) for i in row.cors)
     for row in eachrow(allfsea))...
     )
+
+filter!(row->row.metadatum != "bfnumber", allfsea2)
+
 allfsea2.geneset = map(allfsea2.geneset) do gs
     gs = replace(gs, r" \(.+\)"=>"")
     gs = replace(gs, r"^.+Estradiol"=>"Estradiol")
@@ -703,12 +705,5 @@ CairoMakie.activate!(type = "pdf")
 scene, layout = layoutscene()
 plt = layout[1,1] = LAxis(scene)
 scene
-save("/Users/ksb/Desktop/test.pdf", f1_scene);
-
-bugdiff = CSV.File("/Users/ksb/Downloads/youngchildren_bug_diff.csv") |> DataFrame
-keep = findall(name -> !(eltype(bugdiff[!,name]) <: Number) || sum(bugdiff[!,name]) > 0, names(bugdiff))
-
-CSV.write("/Users/ksb/Downloads/youngchildren_bug_diff_present.csv", bugdiff[!, keep])
-
-ENV["FREETYPE_ABSTRACTION_FONT_PATH"] = ["/System/Library/Fonts/", "/Users/ksb/Library/Fonts"]
+save("/Users/ksb/Desktop/test.pdf", scene);
 
