@@ -12,8 +12,8 @@ speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)
 speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
 
-kidsspeciesmds = fit(MDS, speciesdm[allkids,allkids], distances=true)
-kidsspeciesmdsaxes = [v / sum(eigvals(kidsspeciesmds)) for v in eigvals(kidsspeciesmds)]
+ukidsspeciesmds = fit(MDS, speciesdm[ukids,ukids], distances=true)
+ukidsspeciesmdsaxes = [v / sum(eigvals(ukidsspeciesmds)) for v in eigvals(ukidsspeciesmds)]
 
 # ## Figure 1C-D
 
@@ -21,8 +21,8 @@ unirefaccessorydm = pairwise(BrayCurtis(), unirefaccessory)
 unirefaccessorymds = fit(MDS, unirefaccessorydm[uboth, uboth], distances=true)
 unirefaccessorymdsaxes = [v / sum(eigvals(unirefaccessorymds)) for v in eigvals(unirefaccessorymds)]
 
-kidsunirefaccessorymds = fit(MDS, unirefaccessorydm[allkids,allkids], distances=true)
-kidsunirefaccessorymdsaxes = [v / sum(eigvals(kidsunirefaccessorymds)) for v in eigvals(kidsunirefaccessorymds)]
+ukidsunirefaccessorymds = fit(MDS, unirefaccessorydm[ukids,ukids], distances=true)
+ukidsunirefaccessorymdsaxes = [v / sum(eigvals(ukidsunirefaccessorymds)) for v in eigvals(ukidsunirefaccessorymds)]
 
 # ## Figure 1E
 
@@ -45,8 +45,8 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
     permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
-    permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
+    permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
+    permanova(speciesdm[ukids,ukids], ukidsmeta.childBMI, label="BMI")
     )
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), species_permanovas)
 species_permanovas[!, :feature] .= "species"
@@ -75,8 +75,8 @@ unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
-    permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
+    permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.childBMI, label="BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), unirefaccessory_permanovas)
@@ -109,8 +109,8 @@ pfams_permanovas = vcat(
     permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
     permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
-    permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    permanova(pfamsdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
+    permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.childBMI, label="BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), pfams_permanovas)
@@ -139,8 +139,8 @@ kos_permanovas = vcat(
     permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
     permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
-    permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    permanova(kosdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
+    permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
+    permanova(kosdm[ukids,ukids], ukidsmeta.childBMI, label="BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), kos_permanovas)
@@ -378,8 +378,8 @@ using JLD2
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
 @save "analysis/figures/assets/metadata.jld2" allmeta ubothmeta ukidsmeta allkidsmeta allmoms allkids umoms ukids oldkids uboth
-@save "analysis/figures/assets/taxa.jld2" species speciesmds kidsspeciesmds kidsspeciesmdsaxes
-@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@save "analysis/figures/assets/taxa.jld2" species speciesmds ukidsspeciesmds ukidsspeciesmdsaxes
+@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @save "analysis/figures/assets/fsea.jld2" allfsea mdcors
