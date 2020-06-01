@@ -1,11 +1,9 @@
 # # Figure Plotting
 
 include("../scripts/startup_loadpackages.jl")
-using JLD2
 using MakieLayout
 using AbstractPlotting
 using StatsMakie
-using CairoMakie
 using Makie
 using ColorSchemes
 using FileIO
@@ -57,7 +55,15 @@ cohort.leftspinevisible = false
 cohort.topspinevisible = false
 cohort.rightspinevisible = false
 
-# ### Figure 1b - Permanovas
+## ### Figure 1b - Permanovas
+
+select!(r2, [:label, :species, :accessory, :pfams, :kos])
+r2m = Matrix(r2[!,2:end])
+
+q = unstack(allpermanovas, :label, :feature, :q_value)
+select!(q, [:label, :species, :accessory, :pfams, :kos])
+qm = Matrix(q[!,2:end])
+
 
 phm_layout = GridLayout(alignmode=Outside())
 phm = phm_layout[1,1] = LAxis(f1_scene)
@@ -71,28 +77,21 @@ phmyorder = [
     "age",
     "2+ age",
     "child gender",
+    "child race",
     "birth type",
     "breastfeeding",
     "mother SES",
-    "BMI",
+    # "child BMI",
     "cognitive function",
     "neocortical",
     "subcortical",
     "limbic",
     "cerebellar"
 ]
+
 phmysrt = reverse(invperm(sortperm(phmyorder)))
 
-phmxorder = [
-    "species",
-    "accessory",
-    "kos",
-    "pfams"
-]
-phmxsrt = reverse(invperm(sortperm(phmxorder)))
-
-## "BMI" is index 10
-values = disallowmissing(r2m')[phmxsrt, phmysrt]
+values = disallowmissing(transpose(r2m))[:, phmysrt]
 xrange = 0:size(values,1)
 yrange = 0:size(values,2)
 phm_plot = heatmap!(phm, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
@@ -115,7 +114,7 @@ annotations!(f1_scene, phm_labels, pixelvals,
     color = ifelse.(values .< 0.14, :black, :white),
     textsize = 20)
 
-sig = vec(permutedims(replace(qa[phmysrt, phmxsrt], "" => " ")))
+sig = vec(permutedims(replace(qa[phmysrt, :], "" => " ")))
 annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
     color = ifelse.(values .< 0.14, :black, :white),
@@ -134,7 +133,7 @@ tightlimits!(phm)
 phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
 tight_yticklabel_spacing!(phm)
 
-phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][phmxsrt]))
+phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end]))
 
 phm_legend = LColorbar(f1_scene, phm_plot, width=30)
 phm_legend.ticks = let r = range(0, stop=0.20, length=6)
@@ -145,8 +144,8 @@ end
 phm_layout[1, 2] = phm_legend
 phm_layout[1, 2, Left()] = LText(f1_scene, "% Variance", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-
-# ### Figure 1cd
+f1_scene
+## ### Figure 1cd
 
 pcoas_layout = GridLayout()
 taxpcoa = pcoas_layout[1,1]= LAxis(f1_scene)
@@ -207,7 +206,7 @@ funcpcoa_plot_layout = gridnest!(pcoas_layout, 1, 2)
 funcpcoa_plot_layout[1, 2] = funcpcoa_plot_colorbar_legend
 funcpcoa_plot_layout[1, 2, Left()] = LText(f1_scene, "Number of UniRef90s", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-# ## Save Figure 1
+## ## Save Figure 1
 
 cohort_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, halign=:left)
 phm_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, halign=:left)
@@ -221,10 +220,10 @@ end
 save("analysis/figures/figure1.jpg", f1_scene, resolution=res);
 f1_scene
 
-# ## Figure 2
+## ## Figure 2
 
 f2_scene, f2_layout = layoutscene(resolution=res, alignmode=Outside())
-# ### Heatmap and cognitive scores by age
+## ### Cognitive scores by age
 
 cogage = f2_layout[1,1] = LAxis(f2_scene)
 
@@ -701,9 +700,9 @@ plt = layout[1,1] = LAxis(scene)
 scatter!(plt, rand(10), rand(10), markersize=AbstractPlotting.px*10)
 scene
 
-CairoMakie.activate!(type = "pdf")
-scene, layout = layoutscene()
-plt = layout[1,1] = LAxis(scene)
-scene
-save("/Users/ksb/Desktop/test.pdf", scene);
+# CairoMakie.activate!(type = "pdf")
+# scene, layout = layoutscene()
+# plt = layout[1,1] = LAxis(scene)
+# scene
+# save("/Users/ksb/Desktop/test.pdf", scene);
 

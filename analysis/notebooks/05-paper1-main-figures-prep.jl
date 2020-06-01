@@ -46,7 +46,7 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    # permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
+    permanova(speciesdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
     )
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), species_permanovas)
 species_permanovas[!, :feature] .= "species"
@@ -76,7 +76,7 @@ unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    # permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), unirefaccessory_permanovas)
@@ -110,7 +110,7 @@ pfams_permanovas = vcat(
     permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    # permanova(pfamsdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
+    permanova(pfamsdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), pfams_permanovas)
@@ -140,7 +140,7 @@ kos_permanovas = vcat(
     permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race")
-    # permanova(kosdm[ukids,ukids], ukidsmeta.BMI_calc, label="BMI")
+    permanova(kosdm[ukids,ukids], ukidsmeta.BMI_calc, label="child BMI")
     )
 
 filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), kos_permanovas)
@@ -159,9 +159,12 @@ allpermanovas = vcat(
     )
 sort!(allpermanovas, [:label, :feature])
 r2 = unstack(allpermanovas, :label, :feature, :R2)
-r2m = Matrix(r2[!,[:species, :accessory, :pfams, :kos]])
+select!(r2, [:label, :species, :accessory, :pfams, :kos])
+r2m = Matrix(r2[!,2:end])
+
 q = unstack(allpermanovas, :label, :feature, :q_value)
-qm = Matrix(q[!,[:species, :accessory, :pfams, :kos]])
+select!(q, [:label, :species, :accessory, :pfams, :kos])
+qm = Matrix(q[!,2:end])
 
 qa = let M = fill("", size(qm))
     for i in eachindex(qm)
