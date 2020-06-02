@@ -280,3 +280,35 @@ end
 
 save("analysis/figures/suppfigure_fsea_hist.jpeg", s4_scene, resolution=res)
 s4_scene
+
+##
+res=(1200, 1600)
+s5_scene, s5_layout = layoutscene(resolution=res)
+s5_scene
+
+##
+brainvols = select(filter(row->!ismissing(row.hires_total), ukidsmeta), 
+        [:correctedAgeDays,
+        :neocortical_normed, :subcortical_normed, :cerebellar_normed, :limbic_normed,
+        :neocortical, :subcortical, :cerebellar, :limbic])
+disallowmissing!(brainvols)
+
+neocortical = s5_layout[1,1] = LAxis(s5_scene, title="Neocortex")
+scatter!(neocortical, brainvols.correctedAgeDays, brainvols.neocortical, markersize = 10 * AbstractPlotting.px)
+neocortical_normed = s5_layout[1,2] = LAxis(s5_scene, title="Neocortex age normalized")
+scatter!(neocortical_normed, brainvols.correctedAgeDays, brainvols.neocortical_normed, markersize = 10 * AbstractPlotting.px)
+
+subcortical = s5_layout[2,1] = LAxis(s5_scene, title="Subcortex")
+scatter!(subcortical, brainvols.correctedAgeDays, brainvols.subcortical, markersize = 10 * AbstractPlotting.px)
+subcortical_normed = s5_layout[2,2] = LAxis(s5_scene, title="Subcortex age normalized")
+scatter!(subcortical_normed, brainvols.correctedAgeDays, brainvols.subcortical_normed, markersize = 10 * AbstractPlotting.px)
+
+cerebellar = s5_layout[3,1] = LAxis(s5_scene, title="Cerebellum")
+scatter!(cerebellar, brainvols.correctedAgeDays, brainvols.cerebellar, markersize = 10 * AbstractPlotting.px)
+cerebellar_normed = s5_layout[3,2] = LAxis(s5_scene, title="Cerebellum age normalized")
+scatter!(cerebellar_normed, brainvols.correctedAgeDays, brainvols.cerebellar_normed, markersize = 10 * AbstractPlotting.px)
+
+limbic = s5_layout[4,1] = LAxis(s5_scene, title="Limbic")
+scatter!(limbic, brainvols.correctedAgeDays, brainvols.limbic, markersize = 10 * AbstractPlotting.px)
+limbic_normed = s5_layout[4,2] = LAxis(s5_scene, title="Limbic age normalized")
+scatter!(limbic_normed, brainvols.correctedAgeDays, brainvols.limbic_normed, markersize = 10 * AbstractPlotting.px)

@@ -37,14 +37,6 @@ f1_scene
 
 ## ### Figure 1a - Permanovas
 
-select!(r2, [:label, :species, :accessory, :pfams, :kos])
-r2m = Matrix(r2[!,2:end])
-
-q = unstack(allpermanovas, :label, :feature, :q_value)
-select!(q, [:label, :species, :accessory, :pfams, :kos])
-qm = Matrix(q[!,2:end])
-
-
 phm_layout = GridLayout(alignmode=Outside())
 phm = phm_layout[1,1] = LAxis(f1_scene)
 f1_layout[1,1] = phm_layout
@@ -324,7 +316,7 @@ let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
     scatter!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
 f2_scene
-limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Ruminococcus_gnavus) + 0.01))
+limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Eubacterium_eligens) + 0.01))
 eligens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
 eligens.xlabel = "Cognitive score"
 eligens.ylabel = "Relative abundance"

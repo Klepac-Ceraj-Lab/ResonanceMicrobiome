@@ -164,6 +164,7 @@ allpermanovas = vcat(
     kos_permanovas
     )
 sort!(allpermanovas, [:label, :feature])
+
 r2 = unstack(allpermanovas, :label, :feature, :R2)
 select!(r2, [:label, :species, :accessory, :pfams, :kos])
 r2m = Matrix(r2[!,2:end])
