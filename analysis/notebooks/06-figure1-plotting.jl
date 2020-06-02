@@ -1,11 +1,9 @@
 # # Figure Plotting
 
 include("../scripts/startup_loadpackages.jl")
-using JLD2
 using MakieLayout
 using AbstractPlotting
 using StatsMakie
-using CairoMakie
 using Makie
 using ColorSchemes
 using FileIO
@@ -13,10 +11,10 @@ using StatsBase: midpoints
 
 AbstractPlotting.inline!(false)
 
-@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta ukidsmeta allkidsmeta allmoms allkids umoms ukids oldkids uboth
+@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
 allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
-@load "analysis/figures/assets/taxa.jld2" species speciesmds kidsspeciesmds kidsspeciesmdsaxes
-@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes kidsunirefaccessorymds kidsunirefaccessorymdsaxes
+@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @load "analysis/figures/assets/fsea.jld2" allfsea mdcors
@@ -26,7 +24,6 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 
 allfsea.median = map(median, allfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
-rename!(r2, :unirefaccessory=>:accessory)
 
 set_theme!(
     LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
@@ -34,35 +31,15 @@ set_theme!(
 )
 # ## Figure 1
 
-res=(7*300,5*300)
+res=(6*300,5*300)
 f1_scene, f1_layout = layoutscene(resolution=res, alignmode=Outside())
 f1_scene
 
-# ### Figure 1a
-cohort_img = load("analysis/figures/img/cohort.png");
-ratio_img = size(cohort_img)[1] / size(cohort_img)[2]
-
-cohort_layout = GridLayout(alignmode=Outside())
-f1_layout[1,1] = cohort_layout
-
-cohort = cohort_layout[1,1] = LAxis(f1_scene)
-image!(cohort, rotr90(cohort_img)) # for some reason Makie plots images rotated
-tightlimits!(cohort)
-hidexdecorations!(cohort)
-hideydecorations!(cohort)
-colsize!(f1_layout, 1, Relative(0.6)) # need to fix this so Aspect with it can work
-rowsize!(f1_layout, 1, Aspect(1, ratio_img))
-
-cohort.bottomspinevisible = false
-cohort.leftspinevisible = false
-cohort.topspinevisible = false
-cohort.rightspinevisible = false
-
-# ### Figure 1b - Permanovas
+## ### Figure 1a - Permanovas
 
 phm_layout = GridLayout(alignmode=Outside())
 phm = phm_layout[1,1] = LAxis(f1_scene)
-f1_layout[1,2] = phm_layout
+f1_layout[1,1] = phm_layout
 
 
 phmyorder = [
@@ -71,7 +48,8 @@ phmyorder = [
     "2+ subject type",
     "age",
     "2+ age",
-    "child gender",
+    "gender",
+    "race",
     "birth type",
     "breastfeeding",
     "mother SES",
@@ -82,27 +60,19 @@ phmyorder = [
     "limbic",
     "cerebellar"
 ]
+
 phmysrt = reverse(invperm(sortperm(phmyorder)))
 
-phmxorder = [
-    "species",
-    "accessory",
-    "kos",
-    "pfams"
-]
-phmxsrt = reverse(invperm(sortperm(phmxorder)))
-
-## "BMI" is index 10
-values = disallowmissing(r2m')[phmxsrt, phmysrt]
-xrange = 0:size(values,1)
-yrange = 0:size(values,2)
-phm_plot = heatmap!(phm, xrange, yrange, values, colorrange=(0,0.21), colormap=:PuBu)
+vals = disallowmissing(transpose(r2m))[:, phmysrt]
+xrange = 0:size(vals,1)
+yrange = 0:size(vals,2)
+phm_plot = heatmap!(phm, xrange, yrange, vals, colorrange=(0,0.21), colormap=:PuBu)
 phm.xticklabelsize = 25
 phm.yticklabelsize = 25
 
 pixelcentervalues = [Point2f0(x, y)
-    for x in midpoints(LinRange(xrange.start, xrange.stop, size(values, 1) + 1)),
-        y in midpoints(LinRange(yrange.start, yrange.stop, size(values, 2) + 1)) .- 0.1]
+    for x in midpoints(LinRange(xrange.start, xrange.stop, size(vals, 1) + 1)),
+        y in midpoints(LinRange(yrange.start, yrange.stop, size(vals, 2) + 1)) .- 0.1]
 function rect_to_rect(fromrect, torect, point)
     pfrac = (point .- fromrect.origin) ./ fromrect.widths
     pfrac .* torect.widths .+ torect.origin
@@ -110,16 +80,16 @@ end
 pixelvals = lift(phm.limits, phm.scene.px_area) do lims, pxa
     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues))
 end
-phm_labels = vec([string(v)[1:5] for v in values])
+phm_labels = vec([string(v)[1:5] for v in vals])
 annotations!(f1_scene, phm_labels, pixelvals,
     align = (:center, :center),
-    color = ifelse.(values .< 0.14, :black, :white),
+    color = ifelse.(vals .< 0.14, :black, :white),
     textsize = 20)
 
-sig = vec(permutedims(replace(qa[phmysrt, phmxsrt], "" => " ")))
+sig = vec(permutedims(replace(qa[phmysrt, :], "" => " ")))
 annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
-    color = ifelse.(values .< 0.14, :black, :white),
+    color = ifelse.(vals .< 0.14, :black, :white),
     textsize = 20)
 
 # sigpixelvals = lift(axes_1E.limits, axes_1E.f1_scene.px_area) do lims, pxa
@@ -127,7 +97,7 @@ annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
 # end
 # annotations!(f1_scene, vec([v for v in sig]), sigpixelvals,
 #     align = (:center, :center),
-#     color = ifelse.(values .< 0.14, :black, :white),
+#     color = ifelse.(vals .< 0.14, :black, :white),
 #     textsize = 16)
 
 tightlimits!(phm)
@@ -135,7 +105,7 @@ tightlimits!(phm)
 phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
 tight_yticklabel_spacing!(phm)
 
-phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end][phmxsrt]))
+phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end]))
 
 phm_legend = LColorbar(f1_scene, phm_plot, width=30)
 phm_legend.ticks = let r = range(0, stop=0.20, length=6)
@@ -146,24 +116,25 @@ end
 phm_layout[1, 2] = phm_legend
 phm_layout[1, 2, Left()] = LText(f1_scene, "% Variance", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
+f1_scene
 
-# ### Figure 1cd
+## ### Figure 1bc
 
 pcoas_layout = GridLayout()
 taxpcoa = pcoas_layout[1,1]= LAxis(f1_scene)
-funcpcoa = pcoas_layout[1,2]= LAxis(f1_scene)
+funcpcoa = pcoas_layout[3,1]= LAxis(f1_scene)
 
-f1_layout[2,1:2] = pcoas_layout
+f1_layout[1,2] = pcoas_layout
 
-taxpcoa_plot = scatter!(taxpcoa, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.shannon),
-        projection(kidsspeciesmds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+taxpcoa_plot = scatter!(taxpcoa, Group(marker=ukidsmeta.ageLabel), Style(color=ukidsmeta.shannon),
+        projection(ukidsspeciesmds)[:,1], ukidsmeta.correctedAgeDays ./ 365,
         markersize = 10 * AbstractPlotting.px, marker=[:utriangle, :rect, :circle],
         strokecolor=:black, strokewidth=1)
 taxpcoa.xgridvisible = false
 taxpcoa.xticksvisible=false
 taxpcoa.xticklabelsvisible=false
 taxpcoa.xlabelpadding=20
-taxpcoa.xlabel = "MDS1 ($(round(kidsspeciesmdsaxes[1]*100, digits=2)) %)"
+taxpcoa.xlabel = "MDS1 ($(round(ukidsspeciesmdsaxes[1]*100, digits=2)) %)"
 
 taxpcoa.ylabel = "Age (years)"
 taxpcoa.ylabelpadding=20
@@ -177,18 +148,18 @@ age_labels = [
     "1 to 2",
     "2 and over"]
 
-legend_pcoa_markers = pcoas_layout[2, 1:2] = LLegend(
+legend_pcoa_markers = pcoas_layout[2, 1] = LLegend(
     f1_scene, age_markers, age_labels,
     orientation = :horizontal,
-    titlevisible=false, patchcolor=:transparent, tellheight=true, height=Auto())
+    titlevisible=false, patchcolor=:transparent, tellheight=true, tellwidth=false, height=Auto())
 
 taxpcoa_plot_colorbar_legend = LColorbar(f1_scene, taxpcoa_plot, width=30)
 taxpcoa_plot_colorbar_layout = gridnest!(pcoas_layout, 1, 1)
 taxpcoa_plot_colorbar_layout[1, 2] = taxpcoa_plot_colorbar_legend
 taxpcoa_plot_colorbar_layout[1, 2, Left()] = LText(f1_scene, "Shannon Index", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-funcpcoa_plot = scatter!(funcpcoa, Group(marker=allkidsmeta.ageLabel), Style(color=allkidsmeta.n_unirefs), # identifiable_unirefs?
-        projection(kidsunirefaccessorymds)[:,1], allkidsmeta.correctedAgeDays ./ 365,
+funcpcoa_plot = scatter!(funcpcoa, Group(marker=ukidsmeta.ageLabel), Style(color=ukidsmeta.n_unirefs), # identifiable_unirefs?
+        projection(ukidsunirefaccessorymds)[:,1], ukidsmeta.correctedAgeDays ./ 365,
         markersize = 10 * AbstractPlotting.px, marker=marker=[:utriangle, :rect, :circle],
         strokecolor=:black, strokewidth=1, colormap=:BrBG)
 
@@ -196,7 +167,7 @@ funcpcoa.xgridvisible = false
 funcpcoa.xticksvisible=false
 funcpcoa.xticklabelsvisible=false
 funcpcoa.xlabelpadding=20
-funcpcoa.xlabel = "MDS1 ($(round(kidsunirefaccessorymdsaxes[1]*100, digits=2)) %)"
+funcpcoa.xlabel = "MDS1 ($(round(ukidsunirefaccessorymdsaxes[1]*100, digits=2)) %)"
 
 funcpcoa.ylabel = "Age (years)"
 funcpcoa.ylabelpadding=20
@@ -204,16 +175,17 @@ funcpcoa.ylabelpadding=20
 funcpcoa_plot_colorbar_legend = LColorbar(f1_scene, funcpcoa_plot, width=30)
 funcpcoa_plot_colorbar_legend.tickformat = xs-> ["$(round(Int, x/1000))k" for x in xs]
 
-funcpcoa_plot_layout = gridnest!(pcoas_layout, 1, 2)
+funcpcoa_plot_layout = gridnest!(pcoas_layout, 3, 1)
 funcpcoa_plot_layout[1, 2] = funcpcoa_plot_colorbar_legend
 funcpcoa_plot_layout[1, 2, Left()] = LText(f1_scene, "Number of UniRef90s", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-# ## Save Figure 1
+## ## Save Figure 1
 
-cohort_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, halign=:left)
-phm_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, halign=:left)
-pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
-pcoas_layout[1, 2, TopLeft()] = LText(f1_scene, "d", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
+f1_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, halign=:left)
+pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, halign=:left)
+pcoas_layout[3, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, halign=:left)
+
+colsize!(f1_layout, 1, Relative(0.6))
 
 foreach(Union{LColorbar, LAxis}, f1_layout) do obj
     tight_ticklabel_spacing!(obj)
@@ -222,17 +194,17 @@ end
 save("analysis/figures/figure1.jpg", f1_scene, resolution=res);
 f1_scene
 
-# ## Figure 2
-
+## ## Figure 2
+res = (6*300, 3*300)
 f2_scene, f2_layout = layoutscene(resolution=res, alignmode=Outside())
-# ### Heatmap and cognitive scores by age
+## ### Cognitive scores by age
 
 cogage = f2_layout[1,1] = LAxis(f2_scene)
 
-let filt = map(!ismissing, allkidsmeta.cogScore)
-    x = disallowmissing(allkidsmeta.correctedAgeDays[filt] ./ 365)
-    y = disallowmissing(allkidsmeta.cogScore[filt])
-    g = disallowmissing(allkidsmeta.cogAssessment[filt])
+let filt = map(!ismissing, ukidsmeta.cogScore)
+    x = disallowmissing(ukidsmeta.correctedAgeDays[filt] ./ 365)
+    y = disallowmissing(ukidsmeta.cogScore[filt])
+    g = disallowmissing(ukidsmeta.cogAssessment[filt])
     scatter!(cogage, Group(g), x, y,
                 color=ColorSchemes.Set3_5.colors[[1,2,4,5]],
                 markersize = 22 * AbstractPlotting.px,
@@ -245,11 +217,11 @@ cogage.ylabel = "Overall cognitive function"
 cogage.xlabelpadding = 20
 cogage.ylabelpadding = 20
 
-f2_legends_layout = GridLayout(f2_scene, 1,2, colsizes=[Auto(), Relative(0.7)])
+f2_legends_layout = GridLayout(f2_scene, 1,2, colsizes=[Auto(), Relative(0.6)])
 f2_layout[2,1] = f2_legends_layout
 legend_cogage = f2_legends_layout[1,1] = LLegend(f2_scene,
     [MarkerElement(marker=:circle, color=ColorSchemes.Set3_5.colors[i], strokecolor=:black) for i in [1,2,4,5]],
-    string.(sort(unique(skipmissing(allkidsmeta.cogAssessment)))),
+    string.(sort(unique(skipmissing(ukidsmeta.cogAssessment))[1:4])),
     titlevisible=false, patchcolor=:transparent, tellwidth=false)
 
 legend_cogage.labelsize=30
@@ -266,7 +238,7 @@ let
                 )
 
 end
-let df = filter(row-> !ismissing(row.cogScore) && !in(row.sample, quartmeta.sample), allkidsmeta)
+let df = filter(row-> !ismissing(row.cogScore) && !(row.cogScore=="None") && !in(row.sample, quartmeta.sample), ukidsmeta)
     x = disallowmissing(df.correctedAgeDays ./ 365)
     y = disallowmissing(df.cogScore)
     c = ColorSchemes.Greys_3.colors[1]
@@ -315,10 +287,10 @@ boxplot!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
 scatter!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
 
-let plus1 = vec(occurrences(view(species, sites=allkidsmeta[
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(allkidsmeta)), :sample],
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
                   species=["Ruminococcus_gnavus"])))
     boxplot!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
     scatter!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
@@ -335,16 +307,16 @@ boxplot!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
 scatter!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=allkidsmeta[
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(allkidsmeta)), :sample],
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
                   species=["Eubacterium_eligens"])))
     boxplot!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
     scatter!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
 f2_scene
-limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Ruminococcus_gnavus) + 0.01))
+limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Eubacterium_eligens) + 0.01))
 eligens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
 eligens.xlabel = "Cognitive score"
 eligens.ylabel = "Relative abundance"
@@ -355,10 +327,10 @@ boxplot!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
 scatter!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=allkidsmeta[
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(allkidsmeta)), :sample],
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
                   species=["Roseburia_hominis"])))
     boxplot!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
     scatter!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
@@ -374,10 +346,10 @@ boxplot!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_eq
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
 scatter!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=allkidsmeta[
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(allkidsmeta)), :sample],
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
                   species=["Adlercreutzia_equolifaciens"])))
     boxplot!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
     scatter!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
@@ -387,7 +359,7 @@ equolifaciens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
 equolifaciens.xlabel = "Cognitive score"
 equolifaciens.ylabel = "Relative abundance"
 equolifaciens.titlefont = "DejaVu Sans Oblique"
-colsize!(f2_layout, 1, Relative(0.5))
+colsize!(f2_layout, 1, Relative(0.4))
 
 # ### Save figure 2
 f2_layout[1, 1, TopLeft()] = LText(f2_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
@@ -399,7 +371,7 @@ quartilescatters[2, 2, TopLeft()] = LText(f2_scene, "e", textsize = 40, padding 
 save("analysis/figures/figure2.jpg", f2_scene, resolution=res);
 f2_scene
 
-# ## Figure 3
+## ## Figure 3
 
 include("../scripts/stratified_functions.jl")
 
@@ -453,7 +425,7 @@ allfsea.color = map(eachrow(allfsea)) do row
     c
 end
 
-
+filter
 allfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,
@@ -463,6 +435,9 @@ allfsea2 = vcat(
                 ) for i in row.cors)
     for row in eachrow(allfsea))...
     )
+
+filter!(row->row.metadatum != "bfnumber", allfsea2)
+
 allfsea2.geneset = map(allfsea2.geneset) do gs
     gs = replace(gs, r" \(.+\)"=>"")
     gs = replace(gs, r"^.+Estradiol"=>"Estradiol")
@@ -553,6 +528,13 @@ for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gluts[gluts.agelabel .== l, :x])
     poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
+p1et = p1leg.decorations[:entrytexts][1][1]
+for et in p1leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
 ## glutd, p2
 
 glutd_layout = GridLayout(alignmode=Outside())
@@ -586,6 +568,12 @@ p2leg = glutd_layout[1,2] = LLegend(f3_scene,
 for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
     poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p2et = p2leg.decorations[:entrytexts][1][1]
+for et in p2leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
 end
 
 ## gabas, p3
@@ -622,6 +610,13 @@ for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
     (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
     poly!(p3ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
 end
+p3et = p3leg.decorations[:entrytexts][1][1]
+for et in p3leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
 
 ## gabad, p4
 
@@ -665,7 +660,7 @@ end
 
 p4et = p4leg.decorations[:entrytexts][1][1]
 for et in p4leg.decorations[:entrytexts][1]
-    if et.text[] == "other"
+    if et.text[] in ("other", "unclassified")
         et.font = "DejaVu Sans"
     end
 end
@@ -699,16 +694,9 @@ plt = layout[1,1] = LAxis(scene)
 scatter!(plt, rand(10), rand(10), markersize=AbstractPlotting.px*10)
 scene
 
-CairoMakie.activate!(type = "pdf")
-scene, layout = layoutscene()
-plt = layout[1,1] = LAxis(scene)
-scene
-save("/Users/ksb/Desktop/test.pdf", f1_scene);
-
-bugdiff = CSV.File("/Users/ksb/Downloads/youngchildren_bug_diff.csv") |> DataFrame
-keep = findall(name -> !(eltype(bugdiff[!,name]) <: Number) || sum(bugdiff[!,name]) > 0, names(bugdiff))
-
-CSV.write("/Users/ksb/Downloads/youngchildren_bug_diff_present.csv", bugdiff[!, keep])
-
-ENV["FREETYPE_ABSTRACTION_FONT_PATH"] = ["/System/Library/Fonts/", "/Users/ksb/Library/Fonts"]
+# CairoMakie.activate!(type = "pdf")
+# scene, layout = layoutscene()
+# plt = layout[1,1] = LAxis(scene)
+# scene
+# save("/Users/ksb/Desktop/test.pdf", scene);
 

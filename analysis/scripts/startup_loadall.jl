@@ -21,8 +21,6 @@ unirefs = widen2comm(functional_profiles(kind="genefamilies_relab")..., featurec
 
 ### Just get metadata found in tax/func profiles, and in same order
 
-allsamples = intersect(map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
-
 allmeta.ageLabel = map(eachrow(allmeta)) do row
     startswith(row.sample, "M") && return "mom"
     ismissing(row.correctedAgeDays) && return missing
@@ -30,8 +28,15 @@ allmeta.ageLabel = map(eachrow(allmeta)) do row
     row.correctedAgeDays < 365*2 && return "1 to 2"
     return "2 and over"
 end
-
 dropmissing!(allmeta, :ageLabel)
+
+filter!(allmeta) do row
+    row.ageLabel == "mom" ||
+    !ismissing(row.cogScore) ||
+    !ismissing(row.hires_total)
+end
+
+
 allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
 filter!(row-> row.sample in allsamples, allmeta)
 
