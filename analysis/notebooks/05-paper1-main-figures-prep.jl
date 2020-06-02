@@ -7,24 +7,30 @@
 # This step takes about 20 min
 
 include("../scripts/startup_loadall.jl")
-## Figure 1A-B
+## Figure 1B
 speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)
 speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
 
+ubothspeciesmds = fit(MDS, speciesdm[uboth,uboth], distances=true)
+ubothspeciesmdsaxes = [v / sum(eigvals(ubothspeciesmds)) for v in eigvals(ubothspeciesmds)]
+
 ukidsspeciesmds = fit(MDS, speciesdm[ukids,ukids], distances=true)
 ukidsspeciesmdsaxes = [v / sum(eigvals(ukidsspeciesmds)) for v in eigvals(ukidsspeciesmds)]
 
-# ## Figure 1C-D
+#### Figure 1C
 
 unirefaccessorydm = pairwise(BrayCurtis(), unirefaccessory)
 unirefaccessorymds = fit(MDS, unirefaccessorydm[uboth, uboth], distances=true)
 unirefaccessorymdsaxes = [v / sum(eigvals(unirefaccessorymds)) for v in eigvals(unirefaccessorymds)]
 
+ubothunirefaccessorymds = fit(MDS, unirefaccessorydm[uboth,uboth], distances=true)
+ubothunirefaccessorymdsaxes = [v / sum(eigvals(ubothunirefaccessorymds)) for v in eigvals(ubothunirefaccessorymds)]
+
 ukidsunirefaccessorymds = fit(MDS, unirefaccessorydm[ukids,ukids], distances=true)
 ukidsunirefaccessorymdsaxes = [v / sum(eigvals(ukidsunirefaccessorymds)) for v in eigvals(ukidsunirefaccessorymds)]
 
-# ## Figure 1E
+## ## Figure 1A
 
 species_permanovas = vcat(
     permanova(speciesdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
@@ -181,7 +187,7 @@ qa = let M = fill("", size(qm))
 end
 
 
-## Figure 1G
+## Figure 3
 
 abxr = CSV.read("data/uniprot/uniprot-abxr.tsv")
 carbs = CSV.read("data/uniprot/uniprot-carbohydrate.tsv")
@@ -378,8 +384,8 @@ using JLD2
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
 @save "analysis/figures/assets/metadata.jld2" allmeta ubothmeta ukidsmeta allkidsmeta allmoms allkids umoms ukids oldkids uboth
-@save "analysis/figures/assets/taxa.jld2" species speciesmds ukidsspeciesmds ukidsspeciesmdsaxes
-@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @save "analysis/figures/assets/fsea.jld2" allfsea mdcors
