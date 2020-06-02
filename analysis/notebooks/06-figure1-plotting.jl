@@ -13,8 +13,8 @@ AbstractPlotting.inline!(false)
 
 @load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
 allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
-@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxis ukidsspeciesmds ukidsspeciesmdsaxes
-@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @load "analysis/figures/assets/fsea.jld2" allfsea mdcors

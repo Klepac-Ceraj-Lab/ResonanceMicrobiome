@@ -13,8 +13,8 @@ AbstractPlotting.inline!(false)
 
 @load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
 allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
-@load "analysis/figures/assets/taxa.jld2" species speciesmds ukidsspeciesmds ukidsspeciesmdsaxes
-@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @load "analysis/figures/assets/fsea.jld2" allfsea mdcors
@@ -150,14 +150,14 @@ s2_scene
 
 s2a = s2_layout[1,1] = LAxis(s2_scene, title="Taxonomic Profiles MDS")
 
-scatter!(s2a, Group(allmeta.ageLabel),
-        projection(speciesmds)[:,1] .* -1, projection(speciesmds)[:,2] .* -1,
+scatter!(s2a, Group(ubothmeta.ageLabel),
+        projection(ubothspeciesmds)[:,1], projection(ubothspeciesmds)[:,2],
         grid=false, color=ColorSchemes.Set3_5.colors[1:4],
         markersize = 15 * AbstractPlotting.px,
         strokecolor=:black, strokewidth=1)
 
-# s2a.xlabel = "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)"
-# s2a.ylabel = "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)"
+s2a.xlabel = "MDS1 ($(round(ubothspeciesmdsaxes[1]*100, digits=2)) %)"
+s2a.ylabel = "MDS2 ($(round(ubothspeciesmdsaxes[2]*100, digits=2)) %)"
 s2a.xgridvisible = false
 s2a.ygridvisible = false
 s2a.xticksvisible = false
@@ -170,12 +170,12 @@ s2a.yticklabelsvisible = false
 s2b = s2_layout[1,2] = LAxis(s2_scene, title="Uniref90 Accessory MDS")
 
 scatter!(s2b, Group(ubothmeta.ageLabel),
-        projection(unirefaccessorymds)[:,1:2],
+        projection(ubothunirefaccessorymds)[:,1:2],
         grid=false, color=ColorSchemes.Set3_5.colors[1:4],
         markersize = 15 * AbstractPlotting.px,
         strokecolor=:black, strokewidth=1)
-s2b.xlabel = "MDS1 ($(round(unirefaccessorymdsaxes[1]*100, digits=2)) %)"
-s2b.ylabel = "MDS2 ($(round(unirefaccessorymdsaxes[2]*100, digits=2)) %)"
+s2b.xlabel = "MDS1 ($(round(ubothunirefaccessorymdsaxes[1]*100, digits=2)) %)"
+s2b.ylabel = "MDS2 ($(round(ubothunirefaccessorymdsaxes[2]*100, digits=2)) %)"
 s2b.xgridvisible = false
 s2b.ygridvisible = false
 s2b.xticksvisible = false
@@ -206,14 +206,14 @@ s3_scene
 ##
 
 s3 = s3_layout[1,1] = LAxis(s3_scene)
-pcopri = scatter!(s3, Group(marker=allmeta.ageLabel),
-        Style(color=log2.(allmeta.pcopri .+ (minimum(allmeta.pcopri) / 4))), grid=false,
-        projection(speciesmds)[:,1:2] .* -1,
+pcopri = scatter!(s3, Group(marker=ubothmeta.ageLabel),
+        Style(color=log2.(ubothmeta.pcopri .+ (minimum(ubothmeta.pcopri) / 4))), grid=false,
+        projection(ubothspeciesmds)[:,1:2],
         markersize = 15 * AbstractPlotting.px, marker=[:utriangle, :hexagon, :rect, :cross],
         strokecolor=:black, strokewidth=1, colormap=:BuPu)
 
-# s3.xlabel = "MDS1 ($(round(speciesmdsaxes[1]*100, digits=2)) %)"
-# s3.ylabel = "MDS2 ($(round(speciesmdsaxes[2]*100, digits=2)) %)"
+s3.xlabel = "MDS1 ($(round(ubothspeciesmdsaxes[1]*100, digits=2)) %)"
+s3.ylabel = "MDS2 ($(round(ubothspeciesmdsaxes[2]*100, digits=2)) %)"
 s3.xgridvisible = false
 s3.ygridvisible = false
 s3.xticksvisible=false
@@ -278,5 +278,5 @@ foreach(LAxis, s4_layout) do obj
     obj.xlabel = "Pearson correlation"
 end
 
-save("analysis/figures/suppfigure_fsea_hist.jpeg", scene, resolution=res)
+save("analysis/figures/suppfigure_fsea_hist.jpeg", s4_scene, resolution=res)
 s4_scene
