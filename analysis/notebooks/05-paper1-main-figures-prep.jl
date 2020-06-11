@@ -36,12 +36,12 @@ species_permanovas = vcat(
     permanova(speciesdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
     permanova(speciesdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
     permanova(speciesdm[uboth,uboth], ubothmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:subject_type], label="2+ subject type"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:subject_type], label="1+ subject type"),
     permanova(speciesdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(speciesdm[ukids,ukids], ukidsmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:correctedAgeDays], label="2+ age"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:correctedAgeDays], label="1+ age"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(speciesdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
@@ -66,12 +66,12 @@ unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
     permanova(unirefaccessorydm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
     permanova(unirefaccessorydm[uboth,uboth], ubothmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:subject_type], label="2+ subject type"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:subject_type], label="1+ subject type"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:correctedAgeDays], label="2+ age"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:correctedAgeDays], label="1+ age"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
@@ -100,12 +100,12 @@ pfams_permanovas = vcat(
     permanova(pfamsdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
     permanova(pfamsdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
     permanova(pfamsdm[uboth,uboth], ubothmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:subject_type], label="2+ subject type"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:subject_type], label="1+ subject type"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:correctedAgeDays], label="2+ age"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:correctedAgeDays], label="1+ age"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
@@ -130,12 +130,12 @@ kos_permanovas = vcat(
     permanova(kosdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
     permanova(kosdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
     permanova(kosdm[uboth,uboth], ubothmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:subject_type], label="2+ subject type"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:subject_type], label="1+ subject type"),
     permanova(kosdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(kosdm[ukids,ukids], ukidsmeta,
-        datafilter=row-> in(row.ageLabel, ("2 and over", "mom")),
-        fields=[:correctedAgeDays], label="2+ age"),
+        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+        fields=[:correctedAgeDays], label="1+ age"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(kosdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
@@ -266,6 +266,68 @@ let md = :bfnumber
 end
 
 allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
+
+## older kids
+olderkids = Set(sampleid.(uniquetimepoints(allkidsmeta[[!ismissing(a) && a > 365 for a in allkidsmeta.correctedAgeDays], :sample])))
+olderkidsmeta = view(allkidsmeta, in.(allkidsmeta.sample, Ref(olderkids)),:)
+
+olderfsea = DataFrame(
+            geneset   = String[],
+            metadatum = String[],
+            median    = Float64[],
+            pvalue    = Float64[],
+            cors      = Vector{Float64}[])
+
+oldermdcors = Dict(m=>Float64[] for m in metadatums)
+
+for md in metadatums
+    @info "Working on $md"
+    filt = map(!ismissing, olderkidsmeta[!,md])
+    cors = cor(olderkidsmeta[filt, md], occurrences(view(unirefaccessory, sites=olderkidsmeta.sample))[:,filt], dims=2)'
+    oldermdcors[md] = filter(!isnan, cors)
+    for (key, pos) in pairs(neuroactive)
+        oldercors = filter(!isnan, cors[pos])
+        notcors = filter(!isnan, cors[Not(pos)])
+        length(oldercors) < 4 && continue
+        @info "    $key"
+        mwu = MannWhitneyUTest(oldercors, notcors)
+        m = median(oldercors)
+        p = pvalue(mwu)
+        push!(olderfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=oldercors))
+    end
+end
+
+olderkidsmeta = copy(olderkidsmeta)
+olderkidsmeta[!,:bfnumber] = map(olderkidsmeta.breastfeeding) do bf
+    ismissing(bf) && return missing
+    occursin("formula", bf) && return 0
+    occursin("breast", bf) && return 2
+    return 1
+end
+let md = :bfnumber
+    @info "Working on $md"
+    filt = map(!ismissing, olderkidsmeta[!,md])
+    cors = Float64[]
+    mdcol = disallowmissing(olderkidsmeta[filt, md])
+    for row in eachrow(occurrences(view(unirefaccessory, sites=olderkidsmeta.sample))[:,filt])
+        row = collect(vec(row))
+        push!(cors, corspearman(mdcol, row))
+    end
+
+    oldermdcors[md] = filter(!isnan, cors)
+    for (key, pos) in [pairs(neuroactive)...; ["Carbohydrate metabolism"=>carbpos]]
+        oldercors = filter(!isnan, cors[pos])
+        notcors = filter(!isnan, cors[Not(pos)])
+        length(oldercors) < 4 && continue
+        @info "    $key"
+        mwu = MannWhitneyUTest(oldercors, notcors)
+        m = median(oldercors)
+        p = pvalue(mwu)
+        push!(olderfsea, (geneset=key, metadatum=String(md), median=m, pvalue=p, cors=oldercors))
+    end
+end
+
+olderfsea.qvalue = adjust(olderfsea.pvalue, BenjaminiHochberg())
 # ## Supplementary Figure 1
 
 function labeldiff(dm, labels)
@@ -335,8 +397,6 @@ CSV.write("analysis/quartiletests.csv", quartiletests)
 
 # ## Older kids
 
-olderkids = Set(sampleid.(uniquetimepoints(allkidsmeta[[!ismissing(a) && a > 365 for a in allkidsmeta.correctedAgeDays], :sample])))
-olderkidsmeta = view(allkidsmeta, in.(allkidsmeta.sample, Ref(olderkids)),:)
 olderkidsspecies = view(species, sites=olderkidsmeta.sample) |> copy
 
 lowidx, upidx = let (l, u) = quantile(skipmissing(olderkidsmeta.cogScore), [0.25,0.75])
@@ -389,7 +449,7 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@save "analysis/figures/assets/fsea.jld2" allfsea mdcors
+@save "analysis/figures/assets/fsea.jld2" allfsea olderfsea
 @save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @save "analysis/figures/assets/stratkos.jld2" stratkos
 @save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
