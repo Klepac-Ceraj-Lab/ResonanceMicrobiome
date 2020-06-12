@@ -11,7 +11,7 @@ using StatsBase: midpoints
 
 AbstractPlotting.inline!(false)
 
-@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
+@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta oldkidsmeta allmoms allkids umoms ukids oldkids uboth oldkids
 allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
 @load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
@@ -23,6 +23,7 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
 
 allfsea.median = map(median, allfsea.cors)
+olderfsea.median = map(median, olderfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
 
 set_theme!(
@@ -401,7 +402,7 @@ fsea_legend = fsea_layout[2, 1:5] = LLegend(f3_scene,
     titlevisible=false, orientation=:horizontal,
     patchcolor=:transparent, tellheight=true, height=Auto())
 
-allfsea.color = map(eachrow(allfsea)) do row
+olderfsea.color = map(eachrow(olderfsea)) do row
     m = row.median
     q = row.qvalue
     c = cs[4]
@@ -426,19 +427,19 @@ allfsea.color = map(eachrow(allfsea)) do row
 end
 
 filter
-allfsea2 = vcat(
+olderfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,
                 cor=i,
                 color=row.color,
                 qvalue=row.qvalue
                 ) for i in row.cors)
-    for row in eachrow(allfsea))...
+    for row in eachrow(olderfsea))...
     )
 
-filter!(row->row.metadatum != "bfnumber", allfsea2)
+filter!(row->row.metadatum != "bfnumber", olderfsea2)
 
-allfsea2.geneset = map(allfsea2.geneset) do gs
+olderfsea2.geneset = map(olderfsea2.geneset) do gs
     gs = replace(gs, r" \(.+\)"=>"")
     gs = replace(gs, r"^.+Estradiol"=>"Estradiol")
     gs = replace(gs, "degradation"=>"deg")
@@ -446,20 +447,20 @@ allfsea2.geneset = map(allfsea2.geneset) do gs
     gs
 end
 
-siggs = filter(row-> row.anysig, by(allfsea2, :geneset) do gs
+siggs = filter(row-> row.anysig, by(olderfsea2, :geneset) do gs
                 (anysig = any(<(0.1), gs.qvalue),)
             end).geneset |> Set
 
-filter!(row-> row.geneset in siggs, allfsea2)
-sort!(allfsea2, :geneset, rev=true)
-let genesets = unique(allfsea2.geneset)
+filter!(row-> row.geneset in siggs, olderfsea2)
+sort!(olderfsea2, :geneset, rev=true)
+let genesets = unique(olderfsea2.geneset)
     gmap = Dict(g=>i for (i,g) in enumerate(genesets))
-    allfsea2.gsindex = [gmap[g] for g in allfsea2.geneset]
+    olderfsea2.gsindex = [gmap[g] for g in olderfsea2.geneset]
 end
 
-groups = groupby(allfsea2, :metadatum)
+groups = groupby(olderfsea2, :metadatum)
 
-let ugs = unique(allfsea2.geneset)
+let ugs = unique(olderfsea2.geneset)
     for (i, gr) in enumerate(groups[2:end])
         md = string(first(gr.metadatum))
         md == "cogScore" && (md = "Cognitive score")
@@ -483,7 +484,7 @@ let ugs = unique(allfsea2.geneset)
     end
 end
 
-extr = extrema(allfsea2.cor)
+extr = extrema(olderfsea2.cor)
 for i in 1:5
     xlims!(fsea_axes[i], extr)
 end
