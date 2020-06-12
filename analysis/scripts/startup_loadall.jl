@@ -65,7 +65,7 @@ end
 
 ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid)))
     (map(s-> in(s, samples), allmeta.sample),
-    map(row-> in(row.sample, samples) && row.ageLabel == "2 and over", eachrow(allmeta)))
+    map(row-> in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmeta)))
 end
 
 uboth = map(any, zip(umoms, ukids))
