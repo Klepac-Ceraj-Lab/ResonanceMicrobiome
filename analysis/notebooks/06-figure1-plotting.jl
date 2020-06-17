@@ -11,18 +11,19 @@ using StatsBase: midpoints
 
 AbstractPlotting.inline!(false)
 
-@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
+@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta oldkidsmeta allmoms allkids umoms ukids oldkids uboth
 allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
 @load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@load "analysis/figures/assets/fsea.jld2" allfsea mdcors
+@load "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea
 @load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @load "analysis/figures/assets/stratkos.jld2" stratkos
 @load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
 
 allfsea.median = map(median, allfsea.cors)
+oldkidsfsea.median = map(median, oldkidsfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
 
 set_theme!(
@@ -43,7 +44,6 @@ f1_layout[1,1] = phm_layout
 
 
 phmyorder = [
-    "subject",
     "subject type",
     "2+ subject type",
     "age",
@@ -60,6 +60,28 @@ phmyorder = [
     "limbic",
     "cerebellar"
 ]
+nosubjperm = filter(row-> row.label != "subject", allpermanovas)
+r2 = unstack(nosubjperm, :label, :feature, :R2)
+select!(r2, [:label, :species, :accessory, :pfams, :kos])
+r2m = Matrix(r2[!,2:end])
+
+q = unstack(nosubjperm, :label, :feature, :q_value)
+select!(q, [:label, :species, :accessory, :pfams, :kos])
+qm = Matrix(q[!,2:end])
+
+qa = let M = fill("", size(qm))
+    for i in eachindex(qm)
+        ismissing(qm[i]) && continue
+        if qm[i] < 0.005
+            M[i] = "***"
+        elseif qm[i] < 0.05
+            M[i] = "**"
+        elseif qm[i] < 0.1
+            M[i] = "*"
+        end
+    end
+    M
+end
 
 phmysrt = reverse(invperm(sortperm(phmyorder)))
 

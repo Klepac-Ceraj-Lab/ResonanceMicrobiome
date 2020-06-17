@@ -142,20 +142,18 @@ s1_scene
 
 ##
 
-res=(1200, 900)
+res=(1200, 1200)
 s2_scene, s2_layout = layoutscene(resolution = res)
 s2_scene
 
 ##
-
 s2a = s2_layout[1,1] = LAxis(s2_scene, title="Taxonomic Profiles MDS")
 
-scatter!(s2a, Group(ubothmeta.ageLabel),
-        projection(ubothspeciesmds)[:,1], projection(ubothspeciesmds)[:,2],
+mdsshannon = scatter!(s2a, Style(color=allmeta.shannon),
+        projection(ubothspeciesmds)[:,1:2],
         grid=false, color=ColorSchemes.Set3_5.colors[1:4],
         markersize = 15 * AbstractPlotting.px,
         strokecolor=:black, strokewidth=1)
-
 s2a.xlabel = "MDS1 ($(round(ubothspeciesmdsaxes[1]*100, digits=2)) %)"
 s2a.ylabel = "MDS2 ($(round(ubothspeciesmdsaxes[2]*100, digits=2)) %)"
 s2a.xgridvisible = false
@@ -165,15 +163,16 @@ s2a.yticksvisible = false
 s2a.xticklabelsvisible = false
 s2a.yticklabelsvisible = false
 
-##
+mdsshannon_leg = s2_layout[1,2] = LColorbar(s2_scene, mdsshannon, width=30)
+s2_layout[1, 2, Left()] = LText(s2_scene, "Shannon Index", rotation = pi/2, padding = (0, 5, 0, 0))
 
-s2b = s2_layout[1,2] = LAxis(s2_scene, title="Uniref90 Accessory MDS")
+s2b = s2_layout[1,3] = LAxis(s2_scene, title="Functional Profiles MDS")
 
-scatter!(s2b, Group(ubothmeta.ageLabel),
+mdsident = scatter!(s2b, Style(color=ubothmeta.identifiable_unirefs),
         projection(ubothunirefaccessorymds)[:,1:2],
-        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        grid=false,
         markersize = 15 * AbstractPlotting.px,
-        strokecolor=:black, strokewidth=1)
+        strokecolor=:black, strokewidth=1, colormap=:solar)
 s2b.xlabel = "MDS1 ($(round(ubothunirefaccessorymdsaxes[1]*100, digits=2)) %)"
 s2b.ylabel = "MDS2 ($(round(ubothunirefaccessorymdsaxes[2]*100, digits=2)) %)"
 s2b.xgridvisible = false
@@ -183,7 +182,45 @@ s2b.yticksvisible = false
 s2b.xticklabelsvisible = false
 s2b.yticklabelsvisible = false
 
-legend_all_mds = s2_layout[2,1:2] = LLegend(s2_scene,
+mdsident_leg = s2_layout[1,4] = LColorbar(s2_scene, mdsident, width=30)
+s2_layout[1, 4, Left()] = LText(s2_scene, "Fraction Identified", rotation = pi/2, padding = (0, 5, 0, 0))
+s2_scene
+
+s2c = s2_layout[2,1] = LAxis(s2_scene, title="Taxonomic Profiles MDS")
+scatter!(s2c, Group(ubothmeta.ageLabel),
+        projection(ubothspeciesmds)[:,1], projection(ubothspeciesmds)[:,2],
+        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        markersize = 15 * AbstractPlotting.px,
+        strokecolor=:black, strokewidth=1)
+
+s2c.xlabel = "MDS1 ($(round(ubothspeciesmdsaxes[1]*100, digits=2)) %)"
+s2c.ylabel = "MDS2 ($(round(ubothspeciesmdsaxes[2]*100, digits=2)) %)"
+s2c.xgridvisible = false
+s2c.ygridvisible = false
+s2c.xticksvisible = false
+s2c.yticksvisible = false
+s2c.xticklabelsvisible = false
+s2c.yticklabelsvisible = false
+
+##
+
+s2d = s2_layout[2,3] = LAxis(s2_scene, title="Uniref90 Accessory MDS")
+
+scatter!(s2d, Group(ubothmeta.ageLabel),
+        projection(ubothunirefaccessorymds)[:,1:2],
+        grid=false, color=ColorSchemes.Set3_5.colors[1:4],
+        markersize = 15 * AbstractPlotting.px,
+        strokecolor=:black, strokewidth=1)
+s2d.xlabel = "MDS1 ($(round(ubothunirefaccessorymdsaxes[1]*100, digits=2)) %)"
+s2d.ylabel = "MDS2 ($(round(ubothunirefaccessorymdsaxes[2]*100, digits=2)) %)"
+s2d.xgridvisible = false
+s2d.ygridvisible = false
+s2d.xticksvisible = false
+s2d.yticksvisible = false
+s2d.xticklabelsvisible = false
+s2d.yticklabelsvisible = false
+
+legend_all_mds = s2_layout[3,1:end] = LLegend(s2_scene,
     [MarkerElement(marker = :circle, color=ColorSchemes.Set3_5.colors[i], strokecolor=:black) for i in 1:4],
     ["1 and under","1 to 2","2 and over","mom"],
     "Subject Age", orientation=:horizontal,
@@ -192,7 +229,9 @@ legend_all_mds = s2_layout[2,1:2] = LLegend(s2_scene,
 ##
 
 s2_layout[1, 1, TopLeft()] = LText(s2_scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-s2_layout[1, 2, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
+s2_layout[1, 3, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
+s2_layout[2, 1, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
+s2_layout[2, 3, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
 
 save("analysis/figures/suppfigure_all_mds.jpeg", s2_scene, resolution=res)
 s2_scene
