@@ -93,7 +93,11 @@ unirefaccessory = view(unirefs, species=[p[2] for p in unirefprevfilt])
 ### Calculate some additional metadata
 
 allmeta.shannon = shannon(species)
-allmeta.identifiable_unirefs = 1 .- Vector(occurrences(unirefs)[1,:])
+
+unmappedidx = findall(u-> occursin("UNMAPPED",u), featurenames(unirefs))[1]
+
+allmeta.identifiable_unirefs = 1 .- Vector(occurrences(unirefs)[unmappedidx,:])
+
 allmeta.n_unirefs = vec(sum(!=(0.), occurrences(unirefs)[1:end,:], dims=1))
 allmeta.subject_type = [ismom(s) ? "Mother" :
                         iskid(s) ? "Child"  :
