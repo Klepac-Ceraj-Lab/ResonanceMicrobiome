@@ -438,7 +438,6 @@ CSV.write("analysis/oldkidsquartiletests.csv", quartiletests)
 # ## Exports
 
 using JLD2
-
 @assert sitenames(species) == allmeta.sample
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
