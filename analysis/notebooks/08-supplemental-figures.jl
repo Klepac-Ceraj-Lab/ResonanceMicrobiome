@@ -1,5 +1,4 @@
 # Supplementary Figures
-
 include("../scripts/startup_loadpackages.jl")
 using MakieLayout
 using AbstractPlotting
@@ -19,7 +18,7 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@load "analysis/figures/assets/fsea.jld2" allfsea
+@load "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors
 @load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @load "analysis/figures/assets/stratkos.jld2" stratkos
 @load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
@@ -69,10 +68,10 @@ legend_diffs = s1_layout[3,1:2] = LLegend(s1_scene,
     height=Auto(true), tellheight=true, orientation=:horizontal)
 s1_scene
 
-s1_layout[1, 1, TopLeft()] = LText(scene, "a", textsize = 40, padding = (0, 0, 10, 0))
-s1_layout[1, 2, TopLeft()] = LText(scene, "b", textsize = 40, padding = (0, 0, 10, 0))
-s1_layout[2, 1, TopLeft()] = LText(scene, "c", textsize = 40, padding = (0, 0, 10, 0))
-s1_layout[2, 2, TopLeft()] = LText(scene, "d", textsize = 40, padding = (0, 0, 10, 0))
+s1_layout[1, 1, TopLeft()] = LText(s1_scene, "a", textsize = 40, padding = (0, 0, 10, 0))
+s1_layout[1, 2, TopLeft()] = LText(s1_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
+s1_layout[2, 1, TopLeft()] = LText(s1_scene, "c", textsize = 40, padding = (0, 0, 10, 0))
+s1_layout[2, 2, TopLeft()] = LText(s1_scene, "d", textsize = 40, padding = (0, 0, 10, 0))
 
 ##
 
@@ -139,7 +138,7 @@ for i in 1:4
     ylims!(axes_diffs[i], (0.,1))
 end
 
-s1_layout[0,:] = LText(f1_scene, "Figure S1", textsize = 40, halign=:left)
+s1_layout[0,:] = LText(s1_scene, "Figure S1", textsize = 40, halign=:left)
 
 save("analysis/figures/suppfigure_diffs.pdf", s1_scene, resolution=res)
 s1_scene
@@ -237,7 +236,7 @@ s2_layout[1, 3, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0
 s2_layout[2, 1, TopLeft()] = LText(s2_scene, "c", textsize = 40, padding = (0, 0, 10, 0))
 s2_layout[2, 3, TopLeft()] = LText(s2_scene, "d", textsize = 40, padding = (0, 0, 10, 0))
 
-s2_layout[0,:] = LText(f2_scene, "Figure S2", textsize = 40, halign=:left)
+s2_layout[0,:] = LText(s2_scene, "Figure S2", textsize = 40, halign=:left)
 save("analysis/figures/suppfigure_all_mds.pdf", s2_scene, resolution=res)
 s2_scene
 
@@ -283,7 +282,7 @@ marker_legend_pcopri = s3_layout[2,1] = LLegend(s3_scene,
     ],
     "Subject Age", height=Auto(), tellheight=true, tellwidth=false, orientation=:horizontal)
 ##
-s3_layout[0,:] = LText(f3_scene, "Figure S3", textsize = 40, halign=:left)
+s3_layout[0,:] = LText(s3_scene, "Figure S3", textsize = 40, halign=:left)
 save("analysis/figures/suppfigure_pcopri.pdf", s3_scene, resolution=res)
 s3_scene
 
@@ -323,7 +322,7 @@ foreach(LAxis, s4_layout) do obj
     obj.xlabel = "Pearson correlation"
 end
 
-s4_layout[0,:] = LText(f4_scene, "Figure S4", textsize = 40, halign=:left)
+s4_layout[0,:] = LText(s4_scene, "Figure S4", textsize = 40, halign=:left)
 save("analysis/figures/suppfigure_fsea_hist.pdf", s4_scene, resolution=res)
 s4_scene
 
