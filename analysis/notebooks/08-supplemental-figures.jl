@@ -6,9 +6,11 @@ using AbstractPlotting
 using StatsMakie
 using Makie
 using ColorSchemes
+using CairoMakie
 using FileIO
 using StatsBase: midpoints
 
+CairoMakie.activate!(type="pdf")
 AbstractPlotting.inline!(false)
 
 @load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta allmoms allkids umoms ukids oldkids uboth
@@ -17,7 +19,7 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@load "analysis/figures/assets/fsea.jld2" allfsea mdcors
+@load "analysis/figures/assets/fsea.jld2" allfsea
 @load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
 @load "analysis/figures/assets/stratkos.jld2" stratkos
 @load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
@@ -26,8 +28,8 @@ allfsea.median = map(median, allfsea.cors)
 allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
 
 set_theme!(
-    LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
-    LLegend = (labelsize=25, markersize=20, patchlabelgap=20)
+    LAxis = (titlesize=25, xlabelsize=20, ylabelsize=20),
+    LLegend = (labelsize=25, markersize=20, patchlabelgap=20),
 )
 
 ## 
@@ -137,7 +139,9 @@ for i in 1:4
     ylims!(axes_diffs[i], (0.,1))
 end
 
-save("analysis/figures/suppfigure_diffs.jpeg", s1_scene, resolution=res)
+s1_layout[0,:] = LText(f1_scene, "Figure S1", textsize = 40, halign=:left)
+
+save("analysis/figures/suppfigure_diffs.pdf", s1_scene, resolution=res)
 s1_scene
 
 ##
@@ -230,10 +234,11 @@ legend_all_mds = s2_layout[3,1:end] = LLegend(s2_scene,
 
 s2_layout[1, 1, TopLeft()] = LText(s2_scene, "a", textsize = 40, padding = (0, 0, 10, 0))
 s2_layout[1, 3, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
-s2_layout[2, 1, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
-s2_layout[2, 3, TopLeft()] = LText(s2_scene, "b", textsize = 40, padding = (0, 0, 10, 0))
+s2_layout[2, 1, TopLeft()] = LText(s2_scene, "c", textsize = 40, padding = (0, 0, 10, 0))
+s2_layout[2, 3, TopLeft()] = LText(s2_scene, "d", textsize = 40, padding = (0, 0, 10, 0))
 
-save("analysis/figures/suppfigure_all_mds.jpeg", s2_scene, resolution=res)
+s2_layout[0,:] = LText(f2_scene, "Figure S2", textsize = 40, halign=:left)
+save("analysis/figures/suppfigure_all_mds.pdf", s2_scene, resolution=res)
 s2_scene
 
 ##
@@ -278,7 +283,8 @@ marker_legend_pcopri = s3_layout[2,1] = LLegend(s3_scene,
     ],
     "Subject Age", height=Auto(), tellheight=true, tellwidth=false, orientation=:horizontal)
 ##
-save("analysis/figures/suppfigure_pcopri.jpeg", s3_scene, resolution=res)
+s3_layout[0,:] = LText(f3_scene, "Figure S3", textsize = 40, halign=:left)
+save("analysis/figures/suppfigure_pcopri.pdf", s3_scene, resolution=res)
 s3_scene
 
 ##
@@ -317,7 +323,8 @@ foreach(LAxis, s4_layout) do obj
     obj.xlabel = "Pearson correlation"
 end
 
-save("analysis/figures/suppfigure_fsea_hist.jpeg", s4_scene, resolution=res)
+s4_layout[0,:] = LText(f4_scene, "Figure S4", textsize = 40, halign=:left)
+save("analysis/figures/suppfigure_fsea_hist.pdf", s4_scene, resolution=res)
 s4_scene
 
 ##

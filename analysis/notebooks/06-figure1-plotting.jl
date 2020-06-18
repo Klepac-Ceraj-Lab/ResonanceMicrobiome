@@ -5,10 +5,13 @@ using MakieLayout
 using AbstractPlotting
 using StatsMakie
 using Makie
+using CairoMakie
 using ColorSchemes
 using FileIO
 using StatsBase: midpoints
+using GLMakie
 
+CairoMakie.activate!(type="pdf")
 AbstractPlotting.inline!(false)
 
 @load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta oldkidsmeta allmoms allkids umoms ukids oldkids uboth
@@ -88,9 +91,21 @@ phmysrt = reverse(invperm(sortperm(phmyorder)))
 vals = disallowmissing(transpose(r2m))[:, phmysrt]
 xrange = 0:size(vals,1)
 yrange = 0:size(vals,2)
-phm_plot = heatmap!(phm, xrange, yrange, vals, colorrange=(0,0.21), colormap=:PuBu)
+phm_plot = heatmap!(phm, xrange, yrange, vals, colorrange=(0,0.21), colormap=:PuBu, interpolate=false)
+
+
 phm.xticklabelsize = 25
 phm.yticklabelsize = 25
+
+f1_scene
+
+# ann_scene = Scene(phm.scene; show_axis = false) 
+# hm_layout = GridLayout()
+# for x in 1:4, y in 1:15
+#     ax = hm_layout[y,x] = LText(ann_scene, string(round(vals[x,y], digits=4)), tellwidth=false)
+# end
+
+# f1_scene
 
 pixelcentervalues = [Point2f0(x, y)
     for x in midpoints(LinRange(xrange.start, xrange.stop, size(vals, 1) + 1)),
@@ -103,6 +118,8 @@ pixelvals = lift(phm.limits, phm.scene.px_area) do lims, pxa
     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues))
 end
 phm_labels = vec([string(v)[1:5] for v in vals])
+f1_scene
+
 annotations!(f1_scene, phm_labels, pixelvals,
     align = (:center, :center),
     color = ifelse.(vals .< 0.14, :black, :white),
@@ -113,14 +130,6 @@ annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
     align = (:center, :center),
     color = ifelse.(vals .< 0.14, :black, :white),
     textsize = 20)
-
-# sigpixelvals = lift(axes_1E.limits, axes_1E.f1_scene.px_area) do lims, pxa
-#     vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues .+ Ref(Point2f0(0.2, 0))))
-# end
-# annotations!(f1_scene, vec([v for v in sig]), sigpixelvals,
-#     align = (:center, :center),
-#     color = ifelse.(vals .< 0.14, :black, :white),
-#     textsize = 16)
 
 tightlimits!(phm)
 
@@ -206,6 +215,7 @@ funcpcoa_plot_layout[1, 2, Left()] = LText(f1_scene, "Number of UniRef90s", text
 f1_layout[1, 1, TopLeft()] = LText(f1_scene, "a", textsize = 40, halign=:left)
 pcoas_layout[1, 1, TopLeft()] = LText(f1_scene, "b", textsize = 40, halign=:left)
 pcoas_layout[3, 1, TopLeft()] = LText(f1_scene, "c", textsize = 40, halign=:left)
+f1_layout[0, :] = LText(f1_scene, "Figure 1", textsize = 40, halign=:left)
 
 colsize!(f1_layout, 1, Relative(0.6))
 
@@ -213,7 +223,7 @@ foreach(Union{LColorbar, LAxis}, f1_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 
-save("analysis/figures/figure1.jpg", f1_scene, resolution=res);
+save("analysis/figures/figure1.pdf", f1_scene, resolution=res);
 f1_scene
 
 ## ## Figure 2
@@ -390,7 +400,8 @@ quartilescatters[1, 2, TopLeft()] = LText(f2_scene, "c", textsize = 40, padding 
 quartilescatters[2, 1, TopLeft()] = LText(f2_scene, "d", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 quartilescatters[2, 2, TopLeft()] = LText(f2_scene, "e", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
-save("analysis/figures/figure2.jpg", f2_scene, resolution=res);
+f2_layout[0, :] = LText(f2_scene, "Figure 2", textsize = 40, halign=:left)
+save("analysis/figures/figure2.pdf", f2_scene, resolution=res);
 f2_scene
 
 ## ## Figure 3
@@ -705,8 +716,662 @@ gabas_layout[1, 1, TopLeft()] = LText(f3_scene, "b", textsize = 40, padding = (-
 gabad_layout[1, 1, TopLeft()] = LText(f3_scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 gluts_layout[1, 1, TopLeft()] = LText(f3_scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
 glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
-# save("/Users/ksb/Desktop/test.jpg", f3_scene, resolution=res);
-save("analysis/figures/figure3.jpg", f3_scene, resolution=res);
+
+# f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
+
+save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+f3_scene
+
+## ## Scratch
+
+scene, layout = layoutscene()
+plt = layout[1,1] = LAxis(scene)
+scatter!(plt, rand(10), rand(10), markersize=AbstractPlotting.px*10)
+scene
+
+# CairoMakie.activate!(type = "pdf")
+# scene, layout = layoutscene()
+# plt = layout[1,1] = LAxis(scene)
+# scene
+# save("/Users/ksb/Desktop/test.pdf", scene);
+
+res = (Int(7.5*300), 6*300)
+f3_scene, f3_layout = layoutscene(resolution = res)
+
+fsea_layout = GridLayout(alignmode=Outside())
+fsea_axes = fsea_layout[1, 1:5] = [LAxis(f3_scene) for col in 1:5]
+
+cs = copy(ColorSchemes.RdYlBu_9.colors)
+gr = ColorSchemes.grays.colors[5]
+cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
+
+fsea_legend = fsea_layout[2, 1:5] = LLegend(f3_scene,
+    [
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 1:3],
+        [MarkerElement(marker = :rect, color = cs[4], strokecolor = :black)],
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 5:7],
+    ],
+    [
+         ["q < 0.001", "q < 0.01", "q < 0.1"],
+         ["NS"],
+         ["q < 0.1", "q < 0.01", "q < 0.001"],
+     ],
+     ["median < 0", nothing, "median > 0"],
+    titlevisible=false, orientation=:horizontal,
+    patchcolor=:transparent, tellheight=true, height=Auto())
+
+allfsea.color = map(eachrow(allfsea)) do row
+    m = row.median
+    q = row.qvalue
+    c = cs[4]
+    if m > 0
+        if q < 0.001
+            c = cs[end]
+        elseif q < 0.01
+            c = cs[end-1]
+        elseif q < 0.1
+            c = cs[end-2]
+        end
+    elseif m < 0
+        if q < 0.001
+            c = cs[1]
+        elseif q < 0.01
+            c = cs[2]
+        elseif q < 0.1
+            c = cs[3]
+        end
+    end
+    c
+end
+
+filter
+allfsea2 = vcat(
+    (DataFrame((geneset=row.geneset,
+                metadatum=row.metadatum,
+                cor=i,
+                color=row.color,
+                qvalue=row.qvalue
+                ) for i in row.cors)
+    for row in eachrow(allfsea))...
+    )
+
+filter!(row->row.metadatum != "bfnumber", allfsea2)
+
+allfsea2.geneset = map(allfsea2.geneset) do gs
+    gs = replace(gs, r" \(.+\)"=>"")
+    gs = replace(gs, r"^.+Estradiol"=>"Estradiol")
+    gs = replace(gs, "degradation"=>"deg")
+    gs = replace(gs, "synthesis"=>"synth")
+    gs
+end
+
+siggs = filter(row-> row.anysig, by(allfsea2, :geneset) do gs
+                (anysig = any(<(0.1), gs.qvalue),)
+            end).geneset |> Set
+
+filter!(row-> row.geneset in siggs, allfsea2)
+sort!(allfsea2, :geneset, rev=true)
+let genesets = unique(allfsea2.geneset)
+    gmap = Dict(g=>i for (i,g) in enumerate(genesets))
+    allfsea2.gsindex = [gmap[g] for g in allfsea2.geneset]
+end
+
+groups = groupby(allfsea2, :metadatum)
+
+let ugs = unique(allfsea2.geneset)
+    for (i, gr) in enumerate(groups[2:end])
+        md = string(first(gr.metadatum))
+        md == "cogScore" && (md = "Cognitive score")
+        md = replace(md, "_normed"=>" volume")
+        md = uppercasefirst(md)
+
+        by(gr, :gsindex) do gs
+            g = first(gs.geneset)
+            x = gs.gsindex
+            y = gs.cor
+            c = first(gs.color)
+            boxplot!(fsea_axes[i], x, y, color=c, orientation=:horizontal,
+                markersize = 10 * AbstractPlotting.px, outliercolor=c)
+        end
+        fsea_axes[i].title = md
+        fsea_axes[i].xlabel = "Gene correlation"
+        fsea_axes[i].xlabelpadding = 20
+        fsea_axes[i].yticks = (1:length(ugs), ugs)
+
+        i !=1 && (fsea_axes[i].yticklabelsvisible = false; fsea_axes[i].yticksvisible = false)
+    end
+end
+
+extr = extrema(allfsea2.cor)
+for i in 1:5
+    xlims!(fsea_axes[i], extr)
+end
+foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
+    tight_ticklabel_spacing!(obj)
+end
+f3_layout[1,1] = fsea_layout
+f3_scene
+
+## gluts, p1
+stratfunc_layout=GridLayout(alignmode=Outside())
+
+gluts_layout = GridLayout(alignmode=Outside())
+p1ax = gluts_layout[1,1] = LAxis(f3_scene)
+p1ann = gluts_layout[2,1] = LAxis(f3_scene, height=20)
+
+p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p1ax)
+hidexdecorations!(p1ax)
+tight_yticklabel_spacing!(p1ax)
+p1ax.ylabelpadding = 30
+p1ax.title = "Glutamate synthesis"
+p1ax.ylabel = "Relative abundance"
+
+linkxaxes!(p1ax, p1ann)
+tightlimits!(p1ann)
+hidexdecorations!(p1ann)
+hideydecorations!(p1ann)
+
+p1leg_entries = map(uniquesorted(gluts.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p1leg = gluts_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p1leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gluts[gluts.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p1et = p1leg.decorations[:entrytexts][1][1]
+for et in p1leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+## glutd, p2
+
+glutd_layout = GridLayout(alignmode=Outside())
+p2ax = glutd_layout[1,1] = LAxis(f3_scene)
+p2ann = glutd_layout[2,1] = LAxis(f3_scene, height=20)
+
+p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p2ax)
+hidexdecorations!(p2ax)
+tight_yticklabel_spacing!(p2ax)
+p2ax.ylabelpadding = 30
+p2ax.title = "Glutamate degradation"
+p2ax.ylabel = "Relative abundance"
+
+linkxaxes!(p2ax, p2ann)
+tightlimits!(p2ann)
+hidexdecorations!(p2ann)
+hideydecorations!(p2ann)
+
+p2leg_entries = map(uniquesorted(glutd.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p2leg = glutd_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p2leg_entries, "Species", labelfont="DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
+    poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p2et = p2leg.decorations[:entrytexts][1][1]
+for et in p2leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+## gabas, p3
+
+gabas_layout = GridLayout(alignmode=Outside())
+p3ax = gabas_layout[1,1] = LAxis(f3_scene)
+p3ann = gabas_layout[2,1] = LAxis(f3_scene, height=20)
+
+p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p3ax)
+hidexdecorations!(p3ax)
+tight_yticklabel_spacing!(p3ax)
+p3ax.ylabelpadding = 30
+p3ax.title = "GABA synthesis"
+p3ax.ylabel = "Relative abundance"
+
+linkxaxes!(p3ax, p3ann)
+tightlimits!(p3ann)
+hidexdecorations!(p3ann)
+hideydecorations!(p3ann)
+
+p3leg_entries = map(uniquesorted(gabas.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p3leg = gabas_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p3leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
+    poly!(p3ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p3et = p3leg.decorations[:entrytexts][1][1]
+for et in p3leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+
+## gabad, p4
+
+gabad_layout = GridLayout(alignmode=Outside())
+p4ax = gabad_layout[1,1] = LAxis(f3_scene)
+p4ann = gabad_layout[2,1] = LAxis(f3_scene, height=20)
+
+p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p4ax)
+hidexdecorations!(p4ax)
+tight_yticklabel_spacing!(p4ax)
+p4ax.ylabelpadding = 30
+p4ax.title = "GABA degradation"
+p4ax.ylabel = "Relative abundance"
+
+linkxaxes!(p4ax, p4ann)
+tightlimits!(p4ann)
+hidexdecorations!(p4ann)
+hideydecorations!(p4ann)
+
+p4leg_entries = map(uniquesorted(gabad.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p4leg = gabad_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p4leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+
+for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
+    poly!(p4ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+p4et = p4leg.decorations[:entrytexts][1][1]
+for et in p4leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+f3_scene
+##
+stratfunc_layout[1:2, 1:2] = [gabas_layout gabad_layout;
+                              gluts_layout glutd_layout]
+
+f3_layout[2, 1] = stratfunc_layout
+
+agelegend = f3_layout[3,1] = LLegend(f3_scene, orientation=:horizontal,
+                                    [MarkerElement(color=c, marker=:rect, strokecolor=:black) for c in ColorBrewer.palette("Set3", 3)],
+                                    collect(uniquesorted(gabad.agelabel)), patchcolor=:transparent, tellwidth=false, width=Auto(), tellheight=true,
+                                    height=Auto())
+agelegend.attributes.label[] = "Age"
+
+
+fsea_layout[1, 1, TopLeft()] = LText(f3_scene, "a", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabas_layout[1, 1, TopLeft()] = LText(f3_scene, "b", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabad_layout[1, 1, TopLeft()] = LText(f3_scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gluts_layout[1, 1, TopLeft()] = LText(f3_scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+
+fsea_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left, padding = (-150, 0, 0, 0))
+
+save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+f3_scene
+
+## ## Scratch
+
+scene, layout = layoutscene()
+plt = layout[1,1] = LAxis(scene)
+scatter!(plt, rand(10), rand(10), markersize=AbstractPlotting.px*10)
+scene
+
+# CairoMakie.activate!(type = "pdf")
+# scene, layout = layoutscene()
+# plt = layout[1,1] = LAxis(scene)
+# scene
+# save("/Users/ksb/Desktop/test.pdf", scene);
+
+res = (Int(7.5*300), 6*300)
+f3_scene, f3_layout = layoutscene(resolution = res)
+
+fsea_layout = GridLayout(alignmode=Outside())
+fsea_axes = fsea_layout[1, 1:5] = [LAxis(f3_scene) for col in 1:5]
+
+cs = copy(ColorSchemes.RdYlBu_9.colors)
+gr = ColorSchemes.grays.colors[5]
+cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
+
+fsea_legend = fsea_layout[2, 1:5] = LLegend(f3_scene,
+    [
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 1:3],
+        [MarkerElement(marker = :rect, color = cs[4], strokecolor = :black)],
+        [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 5:7],
+    ],
+    [
+         ["q < 0.001", "q < 0.01", "q < 0.1"],
+         ["NS"],
+         ["q < 0.1", "q < 0.01", "q < 0.001"],
+     ],
+     ["median < 0", nothing, "median > 0"],
+    titlevisible=false, orientation=:horizontal,
+    patchcolor=:transparent, tellheight=true, height=Auto())
+
+allfsea.color = map(eachrow(allfsea)) do row
+    m = row.median
+    q = row.qvalue
+    c = cs[4]
+    if m > 0
+        if q < 0.001
+            c = cs[end]
+        elseif q < 0.01
+            c = cs[end-1]
+        elseif q < 0.1
+            c = cs[end-2]
+        end
+    elseif m < 0
+        if q < 0.001
+            c = cs[1]
+        elseif q < 0.01
+            c = cs[2]
+        elseif q < 0.1
+            c = cs[3]
+        end
+    end
+    c
+end
+
+filter
+allfsea2 = vcat(
+    (DataFrame((geneset=row.geneset,
+                metadatum=row.metadatum,
+                cor=i,
+                color=row.color,
+                qvalue=row.qvalue
+                ) for i in row.cors)
+    for row in eachrow(allfsea))...
+    )
+
+filter!(row->row.metadatum != "bfnumber", allfsea2)
+
+allfsea2.geneset = map(allfsea2.geneset) do gs
+    gs = replace(gs, r" \(.+\)"=>"")
+    gs = replace(gs, r"^.+Estradiol"=>"Estradiol")
+    gs = replace(gs, "degradation"=>"deg")
+    gs = replace(gs, "synthesis"=>"synth")
+    gs
+end
+
+siggs = filter(row-> row.anysig, by(allfsea2, :geneset) do gs
+                (anysig = any(<(0.1), gs.qvalue),)
+            end).geneset |> Set
+
+filter!(row-> row.geneset in siggs, allfsea2)
+sort!(allfsea2, :geneset, rev=true)
+let genesets = unique(allfsea2.geneset)
+    gmap = Dict(g=>i for (i,g) in enumerate(genesets))
+    allfsea2.gsindex = [gmap[g] for g in allfsea2.geneset]
+end
+
+groups = groupby(allfsea2, :metadatum)
+
+let ugs = unique(allfsea2.geneset)
+    for (i, gr) in enumerate(groups[2:end])
+        md = string(first(gr.metadatum))
+        md == "cogScore" && (md = "Cognitive score")
+        md = replace(md, "_normed"=>" volume")
+        md = uppercasefirst(md)
+
+        by(gr, :gsindex) do gs
+            g = first(gs.geneset)
+            x = gs.gsindex
+            y = gs.cor
+            c = first(gs.color)
+            boxplot!(fsea_axes[i], x, y, color=c, orientation=:horizontal,
+                markersize = 10 * AbstractPlotting.px, outliercolor=c)
+        end
+        fsea_axes[i].title = md
+        fsea_axes[i].xlabel = "Gene correlation"
+        fsea_axes[i].xlabelpadding = 20
+        fsea_axes[i].yticks = (1:length(ugs), ugs)
+
+        i !=1 && (fsea_axes[i].yticklabelsvisible = false; fsea_axes[i].yticksvisible = false)
+    end
+end
+
+extr = extrema(allfsea2.cor)
+for i in 1:5
+    xlims!(fsea_axes[i], extr)
+end
+foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
+    tight_ticklabel_spacing!(obj)
+end
+f3_layout[1,1] = fsea_layout
+f3_scene
+
+## gluts, p1
+stratfunc_layout=GridLayout(alignmode=Outside())
+
+gluts_layout = GridLayout(alignmode=Outside())
+p1ax = gluts_layout[1,1] = LAxis(f3_scene)
+p1ann = gluts_layout[2,1] = LAxis(f3_scene, height=20)
+
+p1 = barplot!(p1ax, Position.stack, Data(gluts), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p1ax)
+hidexdecorations!(p1ax)
+tight_yticklabel_spacing!(p1ax)
+p1ax.ylabelpadding = 30
+p1ax.title = "Glutamate synthesis"
+p1ax.ylabel = "Relative abundance"
+
+linkxaxes!(p1ax, p1ann)
+tightlimits!(p1ann)
+hidexdecorations!(p1ann)
+hideydecorations!(p1ann)
+
+p1leg_entries = map(uniquesorted(gluts.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p1leg = gluts_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p1leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(gluts.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gluts[gluts.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p1et = p1leg.decorations[:entrytexts][1][1]
+for et in p1leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+## glutd, p2
+
+glutd_layout = GridLayout(alignmode=Outside())
+p2ax = glutd_layout[1,1] = LAxis(f3_scene)
+p2ann = glutd_layout[2,1] = LAxis(f3_scene, height=20)
+
+p2 = barplot!(p2ax, Position.stack, Data(glutd), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p2ax)
+hidexdecorations!(p2ax)
+tight_yticklabel_spacing!(p2ax)
+p2ax.ylabelpadding = 30
+p2ax.title = "Glutamate degradation"
+p2ax.ylabel = "Relative abundance"
+
+linkxaxes!(p2ax, p2ann)
+tightlimits!(p2ann)
+hidexdecorations!(p2ann)
+hideydecorations!(p2ann)
+
+p2leg_entries = map(uniquesorted(glutd.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p2leg = glutd_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p2leg_entries, "Species", labelfont="DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(glutd.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(glutd[glutd.agelabel .== l, :x])
+    poly!(p2ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p2et = p2leg.decorations[:entrytexts][1][1]
+for et in p2leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+## gabas, p3
+
+gabas_layout = GridLayout(alignmode=Outside())
+p3ax = gabas_layout[1,1] = LAxis(f3_scene)
+p3ann = gabas_layout[2,1] = LAxis(f3_scene, height=20)
+
+p3 = barplot!(p3ax, Position.stack, Data(gabas), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p3ax)
+hidexdecorations!(p3ax)
+tight_yticklabel_spacing!(p3ax)
+p3ax.ylabelpadding = 30
+p3ax.title = "GABA synthesis"
+p3ax.ylabel = "Relative abundance"
+
+linkxaxes!(p3ax, p3ann)
+tightlimits!(p3ann)
+hidexdecorations!(p3ann)
+hideydecorations!(p3ann)
+
+p3leg_entries = map(uniquesorted(gabas.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p3leg = gabas_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p3leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+
+for (l, c) in zip(unique(gabas.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabas[gabas.agelabel .== l, :x])
+    poly!(p3ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+p3et = p3leg.decorations[:entrytexts][1][1]
+for et in p3leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+
+
+## gabad, p4
+
+gabad_layout = GridLayout(alignmode=Outside())
+p4ax = gabad_layout[1,1] = LAxis(f3_scene)
+p4ann = gabad_layout[2,1] = LAxis(f3_scene, height=20)
+
+p4 = barplot!(p4ax, Position.stack, Data(gabad), Group(:taxon), :x, :total, width=1, color=ColorBrewer.palette("Set1",8))
+tightlimits!(p4ax)
+hidexdecorations!(p4ax)
+tight_yticklabel_spacing!(p4ax)
+p4ax.ylabelpadding = 30
+p4ax.title = "GABA degradation"
+p4ax.ylabel = "Relative abundance"
+
+linkxaxes!(p4ax, p4ann)
+tightlimits!(p4ann)
+hidexdecorations!(p4ann)
+hideydecorations!(p4ann)
+
+p4leg_entries = map(uniquesorted(gabad.taxon)) do t
+    t = lstrip(t)
+    t = split(t, "_")
+    length(t) == 2 ? t = "$(first(t[1])). $(t[2])" : t = String(t[1])
+end
+
+p4leg = gabad_layout[1,2] = LLegend(f3_scene,
+    [MarkerElement(color = p.attributes.color[], marker = :rect, strokecolor = :black) for p in p1.plots],
+    p4leg_entries, "Species", labelfont= "DejaVu Sans Oblique",
+    patchcolor=:transparent)
+for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
+    poly!(p1ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+
+for (l, c) in zip(unique(gabad.agelabel), ColorBrewer.palette("Set3", 3))
+    (start, stop) = extrema(gabad[gabad.agelabel .== l, :x])
+    poly!(p4ann, Point2f0[(start-0.5,0), (stop+0.5, 0), (stop+0.5, 1), (start-0.5, 1)], color = c)
+end
+
+p4et = p4leg.decorations[:entrytexts][1][1]
+for et in p4leg.decorations[:entrytexts][1]
+    if et.text[] in ("other", "unclassified")
+        et.font = "DejaVu Sans"
+    end
+end
+f3_scene
+##
+stratfunc_layout[1:2, 1:2] = [gabas_layout gabad_layout;
+                              gluts_layout glutd_layout]
+
+f3_layout[2, 1] = stratfunc_layout
+
+agelegend = f3_layout[3,1] = LLegend(f3_scene, orientation=:horizontal,
+                                    [MarkerElement(color=c, marker=:rect, strokecolor=:black) for c in ColorBrewer.palette("Set3", 3)],
+                                    collect(uniquesorted(gabad.agelabel)), patchcolor=:transparent, tellwidth=false, width=Auto(), tellheight=true,
+                                    height=Auto())
+agelegend.attributes.label[] = "Age"
+
+
+fsea_layout[1, 1, TopLeft()] = LText(f3_scene, "a", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabas_layout[1, 1, TopLeft()] = LText(f3_scene, "b", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gabad_layout[1, 1, TopLeft()] = LText(f3_scene, "c", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+gluts_layout[1, 1, TopLeft()] = LText(f3_scene, "d", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-20, 0, 20, 0), halign=:left)
+
+f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
+
+save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
