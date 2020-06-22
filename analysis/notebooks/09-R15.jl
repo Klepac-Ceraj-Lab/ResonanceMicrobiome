@@ -22,6 +22,8 @@ allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
 @load "analysis/figures/assets/stratkos.jld2" stratkos
 @load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
 
+##
+
 allfsea.median = map(median, allfsea.cors)
 oldkidsfsea.median = map(median, oldkidsfsea.cors)
 allmeta.cogAssessment = [(ismissing(x) || x == "None") ? missing : x for x in allmeta.cogAssessment]
@@ -30,6 +32,8 @@ set_theme!(
     LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
     LLegend = (labelsize=25, markersize=20, patchlabelgap=20)
 )
+
+##
 
 ebf = findall(x-> !ismissing(x) && x == "exclussive breast", allkidsmeta.breastfeeding)
 eff = findall(x-> !ismissing(x) && x == "exclussive formula", allkidsmeta.breastfeeding)
@@ -61,7 +65,7 @@ CSV.write("analysis/bftests.csv", bftests)
 
 ##
 
-youngkidsmeta = filter(row-> row.correctedAgeDays < 365, allkidsmeta)
+youngkidsmeta = filter(row-> row.correctedAgeDays < (365 / 2), allkidsmeta)
 
 ebf = findall(x-> !ismissing(x) && x == "exclussive breast", youngkidsmeta.breastfeeding)
 eff = findall(x-> !ismissing(x) && x == "exclussive formula", youngkidsmeta.breastfeeding)
@@ -90,6 +94,13 @@ end
 youngbftests[!,:qvalue] = adjust(youngbftests.pvalue, BenjaminiHochberg())
 sort!(youngbftests, :qvalue)
 CSV.write("analysis/youngbftests.csv", youngbftests)
+
+using BiobakeryUtils
+using Distances
+
+youngkidsspeciesdm = pairwise(BrayCurtis(), youngkidsspecies)
+youngbfperm = permanova(youngkidsspeciesdm, [ismissing(x) ? missing : string(x) for x in youngkidsmeta.breastfeeding], label="species")
+
 
 ## 
 
@@ -247,8 +258,11 @@ scene
 ##
 
 ## < 6 mo
+using StatsBase
+using Distances
+using MultivariateStats
 
-under6mometa = filter(row-> !ismissing(row.correctedAgeDays) && row.correctedAgeDays < (365/2), allkidsmeta)
+under6mometa = filter(row-> !ismissing(row.correctedAgeDays) && row.correctedAgeDays < (365/2) && !ismissing(row.breastfeeding), allkidsmeta)
 under6mometa.bf = categorical(map(x -> ismissing(x) ? "unknown" :
                             x == "mixed" ? "mixed" :
                             x == "exclussive formula" ? "formula" :
@@ -256,13 +270,13 @@ under6mometa.bf = categorical(map(x -> ismissing(x) ? "unknown" :
                             error("unknown value $x"),
                         under6mometa.breastfeeding))
 
-bftypes = ["unknown", "mixed", "formula", "breast"]
+bftypes = ["mixed", "formula", "breast"]
 levels!(under6mometa.bf, bftypes)
 under6mons = countmap(under6mometa.bf)
 
 under6mospecies = view(species, sites=under6mometa.sample)
 under6moecs = view(ecs, sites=under6mometa.sample)
-bfcolors = ColorSchemes.Set3_6.colors[3:end]
+bfcolors = ColorSchemes.Set3_6.colors[4:end]
 under6mometa.bif = vec(sum(occurrences(view(under6mospecies, species=map(x-> occursin("Bifidobacterium",x), speciesnames(under6mospecies)))), dims=1))
 under6mometa.glyc = vec(sum(occurrences(view(under6moecs, species=map(x-> occursin(r"3\.2\.1\.",x), speciesnames(under6moecs)))), dims=1))
 
@@ -277,35 +291,53 @@ scene, layout = layoutscene(resolution=(1200,900))
 
 bifido = layout[1,1] = LAxis(scene)
 boxplot!(bifido, Data(under6mometa), levelcode.(under6mometa.bf), :bif, markersize = 15 * AbstractPlotting.px, color=bfcolors)
-bifido.xticks = (1:4, ["$t\n(n=$(under6mons[t]))" for t in bftypes])
+bifido.xticks = (1:3, ["$t\n(n=$(under6mons[t]))" for t in bftypes])
 bifido.ylabel = "Relative abundance of Bifidobacterium"
 
 save("/Users/ksb/Desktop/plotting.pdf", scene)
 
-
+##
 under6mopcoa_ax = layout[1,2] = LAxis(scene)
 groupunder6mopcoa = scatter!(under6mopcoa_ax, Group(under6mometa.bf), projection(under6mopco)[:,1:2], 
                 markersize = 15 * AbstractPlotting.px,
-                color=ColorSchemes.Set3_6.colors[[3,4,5,6]])
+                color=ColorSchemes.Set3_6.colors[[4,5,6]])
 
 under6mopcoa_ax.xlabel = "MDS1 ($(round(under6mopcoax[1]*100, digits=2)) %)"
 under6mopcoa_ax.ylabel = "MDS2 ($(round(under6mopcoax[2]*100, digits=2)) %)"
 
-bfmarkers = [MarkerElement(marker = :circle, color=bfcolors[i], strokecolor=:black) for i in 1:4]
+bfmarkers = [MarkerElement(marker = :circle, color=bfcolors[i], strokecolor=:black) for i in 1:3]
 pcoa_leg = layout[1,3] = LLegend(scene, bfmarkers, bftypes)
 
-glyc = layout[2,1] = LAxis(scene)
-boxplot!(glyc, Data(under6mometa), levelcode.(under6mometa.bf), :glyc, markersize = 15 * AbstractPlotting.px, color=bfcolors)
-glyc.xticks = (1:4, ["$t\n(n=$(under6mons[t]))" for t in bftypes])
-glyc.ylabel = "Relative abundance of Glycosidase"
+##
+# glyc = layout[2,1] = LAxis(scene)
+# boxplot!(glyc, Data(under6mometa), levelcode.(under6mometa.bf), :glyc, markersize = 15 * AbstractPlotting.px, color=bfcolors)
+# glyc.xticks = (1:3, ["$t\n(n=$(under6mons[t]))" for t in bftypes])
+# glyc.ylabel = "Relative abundance of Glycosidase"
 
+##
+bcd = layout[2,1] = LAxis(scene)
 
+under6mobfidx = findall(f-> f == "breast", under6mometa.bf)
+under6moffidx = findall(f-> f == "formula", under6mometa.bf)
 
+u6mobfdist = filter(!=(0.), vec(under6modm[under6mobfidx,under6mobfidx]))
+u6moffdist = vec(under6modm[under6moffidx,under6moffidx])
+u6mobfffdist = vec(under6modm[under6mobfidx,under6moffidx])
+
+plotxvals = [fill(1, length(u6mobfdist)); fill(2, length(u6moffdist)); fill(3, length(u6mobfffdist))]
+plotyvals = [u6mobfdist; u6moffdist; u6mobfffdist]
+
+boxplot!(bcd, plotxvals, plotyvals, markersize = 15 * AbstractPlotting.px, color=ColorSchemes.seaborn_bright6[1:3])
+bcd.xticks = (1:3, ["BF:BF", "FF:FF", "BF:FF"])
+bcd.ylabel = "Bray Curtis Dissimilarity"
+
+##
+bfcolors
 under6moagepco_ax = layout[2,2] = LAxis(scene)
-under6moagepcoa = scatter!(under6moagepco_ax, Style(color=Float64.(under6mometa.correctedAgeDays)), projection(pco)[:,1:2], 
+under6moagepcoa = scatter!(under6moagepco_ax, Style(color=Float64.(under6mometa.correctedAgeDays)), projection(under6mopco)[:,1:2], 
                 markersize = 15 * AbstractPlotting.px)
-under6moagepco_ax.xlabel = "MDS1 ($(round(pcoax[1]*100, digits=2)) %)"
-under6moagepco_ax.ylabel = "MDS2 ($(round(pcoax[2]*100, digits=2)) %)"
+under6moagepco_ax.xlabel = "MDS1 ($(round(under6mopcoax[1]*100, digits=2)) %)"
+under6moagepco_ax.ylabel = "MDS2 ($(round(under6mopcoax[2]*100, digits=2)) %)"
 under6moagepco_legend = layout[2,3] = LColorbar(scene, under6moagepcoa, width=30)
 layout[2, 3, Left()] = LText(scene, "Age (days)", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
@@ -352,7 +384,7 @@ scene
 
 ##
 
-top = filterabund(under6mospecies, 10)
+top = filterabund(under6mospecies, 15)
 topspec = featurenames(top)
 
 for sp in topspec
@@ -360,28 +392,127 @@ for sp in topspec
 end
 
 under6mohcl = hclust(under6modm, linkage=:average, branchorder=:optimal)
-long = stack(under6mometa, Symbol.(topspec), [:sample, :bf])
-long.sample = categorical(long.sample)
-levels!(long.sample, String.(under6mometa.sample)[under6mohcl.order])
+long = stack(under6mometa, Symbol.(topspec), [:sample, :bf, :correctedAgeDays])
+levels(long.bf)
+sort!(long, [:bf, :correctedAgeDays, :sample])
+unique(long.sample)
 
+long.sample = categorical(long.sample)
+levels!(long.sample, unique(long.sample))
+levelcode.(long.sample)
+under6mometa.sample = categorical(under6mometa.sample)
+levels!(under6mometa.sample, unique(long.sample))
+
+srt = sortperm(under6mometa.sample)
 ##
 
 scene, layout = layoutscene()
 topab = layout[1,1] = LAxis(scene)
+
 unique(long.variable) |> length
-barplot!(topab, Position.stack, Data(long), Group(color=:variable), :sample, :value, 
-    color=ColorSchemes.Set3_11.colors)
+barplot!(topab, Position.stack, Data(long), Group(color=:variable), :sample, :value,
+    color=ColorSchemes.tab20.colors[1:16])
 tightlimits!(topab)
 
-spmarkers = [MarkerElement(marker = :rect, color=ColorSchemes.Set3_11.colors[i], strokecolor=:black) for i in 1:11]
+spmarkers = [MarkerElement(marker = :rect, color=ColorSchemes.tab20.colors[i], strokecolor=:black) for i in 1:16]
 leg = layout[1,2] = LLegend(scene, spmarkers, topspec)
 
-hm = layout[2,1] = LAxis(scene, height=40)
-hmplot = heatmap!(hm, hcat([under6mometa.correctedAgeDays[i] for i in under6mohcl.order]), interpolate=false)
-tightlimits!(hm)
-hidedecorations!(hm)
+agehm = layout[2,1] = LAxis(scene, height=40)
+
+hmplot = heatmap!(agehm, reshape(under6mometa[srt,:correctedAgeDays], length(srt), 1), interpolate=false)
+tightlimits!(agehm)
+hidedecorations!(agehm)
+
+bfann = layout[3,1] = LAxis(scene, height=40)
+for (x, i) in enumerate(srt)
+    c = under6mometa.bf[i] == "breast" ? bfcolors[3] :
+        under6mometa.bf[i] == "formula" ? bfcolors[2] :
+        bfcolors[1]
+
+    (start, stop) = (x, x+1)
+    poly!(bfann, Point2f0[(start,0), (stop, 0), (stop, 1), (start, 1)], color = c)
+end
+
+tightlimits!(bfann)
+hidedecorations!(bfann)
+
+bfleg = layout[3,2] = LLegend(scene, bfmarkers, bftypes, orientation=:horizontal)
 
 cb = layout[2,2] = LColorbar(scene, hmplot, vertical=false, label="Age (days)")
-layout[0,1:2] = LText(scene, "Kids < 1yo, n=$(nrow(under6mometa))", textsize=30)
+layout[0,1:2] = LText(scene, "Kids < 6mo, n=$(nrow(under6mometa))", textsize=30)
 save("/Users/ksb/Desktop/under6motopspec.pdf", scene)
 scene
+
+
+## Demographics
+levels(under6mometa.simple_race)
+n = nrow(under6mometa)
+mixedrace = occursin.(r"[Mm]ixed", under6mometa.simple_race) |> sum
+whiterace = occursin.(r"[Ww]hite", under6mometa.simple_race) |> sum
+africanrace = occursin.(r"African", under6mometa.simple_race) |> sum
+unknownrace = occursin.(r"(Unknown|Decline)", under6mometa.simple_race) |> sum
+
+println("Percent non-white: ", round((n - whiterace) / (n - unknownrace) * 100, digits=1))
+println("Percent mixed: ", round(mixedrace / (n - unknownrace) * 100, digits=1))
+println("Percent African American: ", round(africanrace / (n - unknownrace) * 100, digits=1))
+describe(under6mometa.correctedAgeDays)
+describe(under6mometa.mother_HHS)
+describe(under6mometa.simple_race)
+
+usixallmeta = filter(row-> !ismissing(row.correctedAgeDays) && row.correctedAgeDays < (365/2), allkidsmeta)
+
+n = nrow(usixallmeta)
+mixedrace = occursin.(r"[Mm]ixed", usixallmeta.simple_race) |> sum
+whiterace = occursin.(r"[Ww]hite", usixallmeta.simple_race) |> sum
+africanrace = occursin.(r"African", usixallmeta.simple_race) |> sum
+unknownrace = occursin.(r"(Unknown|Decline)", usixallmeta.simple_race) |> sum
+
+println("Percent non-white: ", round((n - whiterace) / (n - unknownrace) * 100, digits=1))
+println("Percent mixed: ", round(mixedrace / (n - unknownrace) * 100, digits=1))
+println("Percent African American: ", round(africanrace / (n - unknownrace) * 100, digits=1))
+print("correctedAgeDays "); describe(usixallmeta.correctedAgeDays)
+print("mother_HHS "); describe(usixallmeta.mother_HHS)
+describe(usixallmeta.simple_race)
+
+## HMO taxa
+
+usixallspecies = view(species, sites=usixallmeta.sample) |> copy
+
+bugs = [
+    "Bifidobacterium_bifidum",
+    "Bifidobacterium_breve",
+    "Bifidobacterium_longum",
+    "Bifidobacterium_kashiwanohense",
+    "Bifidobacterium_pseudocatenulatum"
+]
+
+open("hmobugs.csv","w")  do io 
+    specs = speciesnames(usixallspecies)
+    println(io, "bug,min,max,mean,nonzero-min,nonzero-max,nonzero-mean")
+
+    for bug in bugs
+        if !in(bug, specs)
+            @warn "$bug not found in samples"
+            continue
+        end
+        abs = vec(occurrences(view(usixallspecies, species=[bug])))
+        nz = filter(!=(0), abs)
+        println(io, join([bug,minimum(abs),maximum(abs),mean(abs),minimum(nz),maximum(nz),mean(nz)], ","))
+    end
+end
+
+lacto = view(usixallspecies, species=map(s-> occursin("Lacto", s), speciesnames(usixallspecies)))
+sum(occurrences(lacto))
+for bug in speciesnames(lacto)
+    ab = collect(vec(occurrences(view(lacto, species=[bug]))))
+    sum(ab) > 0 || continue
+    usixallmeta[!, Symbol(bug)] = ab
+end
+lactometa = select(usixallmeta, [:subject, :timepoint, :sample, names(usixallmeta)[end-nspecies(lacto):end]...])
+
+for n in names(lactometa)[4:end]
+    print(n, " ")
+    describe(lactometa[!, n])
+end
+
+sum(occurrences(usixallspecies)[:,1])
