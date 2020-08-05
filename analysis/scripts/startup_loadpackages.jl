@@ -3,7 +3,7 @@
 ENV["GKSwstype"] = "100"
 using BiobakeryUtils
 using Clustering
-using ColorBrewer
+using ColorSchemes
 using Combinatorics
 using CSV
 using DataFrames

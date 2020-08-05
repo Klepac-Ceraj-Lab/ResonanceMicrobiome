@@ -1,7 +1,7 @@
-const color1 = ColorBrewer.palette("Set1", 9)
-const color2 = ColorBrewer.palette("Set2", 8)
-const color3 = ColorBrewer.palette("Set3", 12)
-const color4 = ColorBrewer.palette("Paired", 12)
+const color1 = ColorSchemes.Set1_9.colors
+const color2 = ColorSchemes.Set2_8.colors
+const color3 = ColorSchemes.Set3_12.colors
+const color4 = ColorSchemes.Paired_12.colors
 
 function get_neuroactive_kos(neuroactivepath="data/uniprot/gbm.txt")
     neuroactive = HashDictionary{String, Vector{String}}()

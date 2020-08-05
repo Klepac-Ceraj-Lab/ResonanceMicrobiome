@@ -20,6 +20,7 @@
 using ECHOAnalysis
 using Pkg.TOML: parsefile
 config = parsefile("Data.toml")
+
 for (key, value) in config
     println(key,":")
     println("\t",value)
@@ -30,9 +31,9 @@ end
 using CSV
 using DataFrames
 
-include("airtable.key")
 subjectmeta = CSV.File(config["tables"]["subject_metadata"]) |> DataFrame
 rename!(subjectmeta, :subjectID=> :subject)
+
 # ## Sample metadata
 #
 # In addition to the FilemakerPro database,

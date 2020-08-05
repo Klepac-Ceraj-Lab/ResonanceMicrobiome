@@ -1,17 +1,16 @@
----
-title: "Notebook 3: Metadata Analysis"
-author: "Kevin Bonham, PhD"
-options:
-    line_width : 120
-    wrap : false
----
+# ---
+# title: "Notebook 3: Metadata Analysis"
+# author: "Kevin Bonham, PhD"
+# options:
+#     line_width : 120
+#     wrap : false
+# ---
 
-## Getting Data
+# ## Getting Data
 
-Now that we have the metadata in long form,
-it's a bit easier to query it for the stuff we want.
+# Now that we have the metadata in long form,
+# it's a bit easier to query it for the stuff we want.
 
-```julia; results="hidden"
 using Pkg
 Pkg.activate("analysis/")
 using Revise
@@ -20,7 +19,8 @@ ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
 using SQLite
-using StatsPlots
+using StatsMakie
+using AbstractPlotting.MakieLayout
 using PrettyTables
 using CSV
 using Pkg.TOML: parsefile
@@ -34,50 +34,40 @@ config = parsefile("data/data.toml")
 widemeta = ECHOAnalysis.getmgxmetadata()
 figures = config["output"]["figures"]
 isdir(figures) || mkpath(figures)
-```
 
-As an example, how many unique subjects
-do we have any metadata for?
+# As an example, how many unique subjects
+# do we have any metadata for?
 
-```julia
 # the |> is pipe syntax, the following is the same as
 # `length(unique(widemeta[:subject]))`
+
 unique(widemeta.subject) |> length
-```
 
-(**Note**: We have metadata for more subjects,
-but this table was created
-for only the subjects that have provided fecal samples)
+# (**Note**: We have metadata for more subjects,
+# but this table was created
+# for only the subjects that have provided fecal samples)
 
-How many samples for each subject?
+# How many samples for each subject?
 
-```julia
 sampleinfo = by(widemeta, :subject) do df
     (;nsamples = size(df,1))
 end
-```
 
-```julia
+# TODO: change to Makie
 histogram(sampleinfo.nsamples, legend=false,
     title="Samples per Subject ID",
     xlabel="# of fecal samples", ylabel="# of subjects",
     xticks=1:12)
-```
 
-```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-samples-per-subject.svg"))
-```
 
-Wow - there are a couple of subjects that have a lot of samples.
-
-```julia; results="hidden"
+# Wow - there are a couple of subjects that have a lot of samples.
 # Which subjects are those?
+
 highsamplers = filter(row-> row.nsamples > 4, sampleinfo).subject
-```
 
-To see what samples are from those folks that gave a bunch:
+# To see what samples are from those folks that gave a bunch:
 
-```julia
 highsamplersinfo = filter(widemeta) do row
     # find rows from subjects in the highly sampled pool
     in(row.subject, highsamplers)
@@ -86,31 +76,27 @@ end
 sort!(highsamplersinfo, [:subject, :timepoint])
 
 @pt highsamplersinfo[!, [:sample, :subject, :timepoint]]
-```
 
-So a bunch of these are where
-multiple samples were given for the same timepoint (eg `C0016_3F_1A` and `_2A`)
-and/or both genotek (`F`) and enthanol (`E`) samples.
+# So a bunch of these are where
+# multiple samples were given for the same timepoint (eg `C0016_3F_1A` and `_2A`)
+# and/or both genotek (`F`) and enthanol (`E`) samples.
 
-_Note_: after `batch006`, SOP is to send 1 `ALiquotRep` of 1 `CollectionRep` for
-each `timepoint` (i.e. only send `C0202_4F_1A` for mgx sequencing, not `C0202_4F_2A`
-or `C0202_4F_1B` or `C0202_4E_1A`) unless otherwise noted.
+# _Note_: after `batch006`, SOP is to send 1 `ALiquotRep` of 1 `CollectionRep` for
+# each `timepoint` (i.e. only send `C0202_4F_1A` for mgx sequencing, not `C0202_4F_2A`
+# or `C0202_4F_1B` or `C0202_4E_1A`) unless otherwise noted.
 
-### Unique samples
+# ### Unique samples
 
-Except for later quality control,
-we don't actually want to analyze replicates.
-And we want to focus on only samples collected in genotek tubes,
-not ethanol (so ones with an F in the second ID slot).
+# Except for later quality control,
+# we don't actually want to analyze replicates.
+# And we want to focus on only samples collected in genotek tubes,
+# not ethanol (so ones with an F in the second ID slot).
 
-Using the `stoolsample` function,
-I can get just the relevant info for filtering on the first sample.
+# Using the `stoolsample` function,
+# I can get just the relevant info for filtering on the first sample.
 
-```julia
 samples = stoolsample.(widemeta.sample)
 samples[1:4]
-```
-```julia; results="hidden"
 seen = Timepoint[]
 usamples = StoolSample[]
 
@@ -125,46 +111,36 @@ map(samples) do s
         push!(usamples, s)
     end
 end
-```
 
-The `ECHOAnalysis` module also has [a function](https://klepac-ceraj-lab.github.io/echo_analysis/dev/metadata_handling/#ECHOAnalysis.uniquesamples-Tuple{AbstractArray{#s17,1}%20where%20#s17%3C:NamedTuple})
-that does this, and has a bunch of other options too.
+# The `ECHOAnalysis` module also has [a function](https://klepac-ceraj-lab.github.io/echo_analysis/dev/metadata_handling/#ECHOAnalysis.uniquesamples-Tuple{AbstractArray{#s17,1}%20where%20#s17%3C:NamedTuple})
+# that does this, and has a bunch of other options too.
 
-```julia
 usamples2 = uniquetimepoints(samples)
-# this would throw an error if false
+## this would throw an error if false
 @assert usamples2 == usamples
-```
 
-To get just the metadata for these uniqe samples:
+# To get just the metadata for these uniqe samples:
 
-```julia
 umeta = let us = Set(sampleid.(usamples))
     filter(row-> row.sample in us, widemeta)
 end
 sort!(umeta, :sample)
-```
 
 
-Metadata in this wide form is useful for things like plotting.
-For example, let's look at the age-adjusted cognitive scores.
-First, we'll filter on kids that have cognitive scores and ages:
+# Metadata in this wide form is useful for things like plotting.
+# For example, let's look at the age-adjusted cognitive scores.
+# First, we'll filter on kids that have cognitive scores and ages:
 
-```julia
-using ColorBrewer
-p1 = ColorBrewer.palette("Set1", 8)
+using ColorSchemes
+p1 = ColorSchemes.Set1_8.colors
 
 toplot = filter(row-> !any(ismissing, [row.cogScore, row.correctedAgeDays]), umeta)
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, group=toplot.cogAssessment,
     color=p1[2:end]', xlabel="age (years)", ylabel="Composite Score",
     title="Cognitive Assessments", legend=:topright,
     )
-```
-```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-cogscore_age_scatter.svg"))
-```
 
-```julia
 using Statistics
 m = mean(toplot.cogScore)
 s = std(toplot.cogScore)
@@ -175,20 +151,13 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.zscore,
     group = toplot.cogAssessment, color=p1[2:end]',
     ylabel = "zscore", xlabel = "age", legend=:topright,
     title="Cognitive Assessments")
-```
-```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.svg"))
-```
 
 Checking if any of the outliers are correlated with batch number:
 
-```julia
 toplot = filter(row-> !any(ismissing, [row.Mgx_batch, row.correctedAgeDays, row.cogScore]), umeta)
 toplot.Mgx_batch
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, primary=false,
     zcolor=toplot.Mgx_batch, xlabel="age (years)", ylabel="Composite Score", group=toplot.Mgx_batch,
     title="Cognitive Assessments", legend=:topright)
-```
-```julia; echo=false; results="hidden"
 savefig(joinpath(figures, "03-cogscore_age_scatter_batchnum.svg"))
-```

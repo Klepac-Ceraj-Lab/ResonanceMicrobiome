@@ -18,11 +18,9 @@
 # (those found in the `batchXXX_analysis_noknead.tar.gz` archives)
 # are expected to be placed in `data/engaging/` folders.
 # Paths for other data may be changed in the `data.toml` file
-# found in the `data/` directory.
+# found in the root directory of this repository.
 #
 # Some of these paths also set where files will be created.
-# In particular, you'll likely need to change the paths
-# for the `sqlite` databases.
 
 # ## Metadata
 #
@@ -30,7 +28,7 @@
 # and export by John Rogers.
 #
 # If you have downloaded data from Zenodo,
-# you may skip ahead to [Creating SQLite databases](#creating-sqlite-databases).
+# you may skip ahead to the next notebook.
 # These next sections document how subject metadata
 # is extracted from the internal FilemakerPro database.
 
@@ -53,8 +51,8 @@
 # with the following software versions:
 #
 # - kneaddata v0.7.1
-# - metaphlan2 v2.7.7
-# - humann2 v0.11.1
+# - metaphlan v3.0-beta
+# - humann v3.0.0-beta
 #
 # The following command was run on the `engaging` compute cluster (`eofe7.mit.edu`)
 # from MIT (a Centos7 environment).

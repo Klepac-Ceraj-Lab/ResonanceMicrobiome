@@ -1,5 +1,3 @@
-# NOTE: This can take 30 minutes to a few hours to run
-
 include("startup_loadpackages.jl")
 include("accessories.jl")
 
