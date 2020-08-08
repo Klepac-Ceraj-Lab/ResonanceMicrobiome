@@ -52,8 +52,8 @@ version = "1.0.0"
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[BiobakeryUtils]]
-deps = ["CSV", "DataFrames", "Microbiome", "RCall", "Random", "Statistics", "Test"]
-git-tree-sha1 = "76717526c552f279ab5647bd115e905b88b2fed1"
+deps = ["CSV", "DataFrames", "Microbiome", "RCall", "Statistics"]
+path = "dev/BiobakeryUtils"
 uuid = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
 version = "0.3.3"
 
@@ -258,7 +258,7 @@ version = "0.8.2"
 
 [[ECHOAnalysis]]
 deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "HTTP", "JSON3", "Microbiome", "ProgressMeter", "SparseArrays"]
-path = "/home/bonham/.julia/dev/ECHOAnalysis.jl/"
+path = "dev/ECHOAnalysis"
 uuid = "39b5b81a-5017-403f-bb48-824a42db2b1c"
 version = "0.2.0"
 
@@ -317,9 +317,9 @@ version = "0.7.0"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "be4180bdb27a11188d694ee3773122f4921f1a62"
+git-tree-sha1 = "4863cbb7910079369e258dee4add9d06ead5063a"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.8.13"
+version = "0.8.14"
 
 [[FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
@@ -393,9 +393,9 @@ version = "3.3.2+0"
 
 [[GLM]]
 deps = ["Distributions", "LinearAlgebra", "Printf", "Random", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
-git-tree-sha1 = "db0ace36f9dbe7b6a7a08434c5921377e9df2c72"
+git-tree-sha1 = "11d47ad2699a26d5557e265a2acf3e5c3799e83d"
 uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.3.9"
+version = "1.3.10"
 
 [[GLMakie]]
 deps = ["AbstractPlotting", "ColorTypes", "Colors", "FileIO", "FixedPointNumbers", "FreeTypeAbstraction", "GLFW", "GeometryBasics", "LinearAlgebra", "Markdown", "MeshIO", "ModernGL", "Observables", "Printf", "Serialization", "ShaderAbstractions", "StaticArrays"]

@@ -1,6 +1,6 @@
 @warn "Loading packages"
 
-ENV["GKSwstype"] = "100"
+
 using BiobakeryUtils
 using Clustering
 using ColorSchemes

@@ -8,18 +8,10 @@
 
 # ## Getting Data
 
-# Now that we have the metadata in long form,
-# it's a bit easier to query it for the stuff we want.
-
-using Pkg
-Pkg.activate("analysis/")
-using Revise
-
-ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
-using SQLite
 using StatsMakie
+using AbstractPlotting
 using AbstractPlotting.MakieLayout
 using PrettyTables
 using CSV

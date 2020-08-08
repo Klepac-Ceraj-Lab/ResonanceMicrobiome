@@ -8,6 +8,6 @@ Rplots.pdf
 scratch*
 build/
 analysis/html
-data/biobakery2
+data/biobakery*
 dev
 airtable.key

@@ -13,24 +13,23 @@
 # are not included in the zenodo data repository,
 # but are avaliable on request.
 
-ENV["GKSwstype"] = "100"
 using ECHOAnalysis
 using DataFrames
-using SQLite
 using StatsMakie
+using AbstractPlotting
 using AbstractPlotting.MakieLayout
+using CairoMakie
 using PrettyTables
 using CSV
 using Pkg.TOML: parsefile
 
-rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
+rounder = (v,i,j) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v
 # print ~15 random rows
 randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
-@ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
+@ptconf formatters = (rounder,) nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-config = parsefile("data/data.toml")
-widemeta = ECHOAnalysis.getmgxmetadata()
+config = parsefile("Data.toml")
 figures = config["output"]["figures"]
 tables = config["output"]["tables"]
 isdir(figures) || mkpath(figures)
@@ -41,7 +40,7 @@ isdir(tables) || mkpath(tables)
 # First, I'll look at the QC results from `kneaddata`.
 
 qc_files = let qcfiles=[]
-    for (root, dirs, files) in walkdir(config["files"]["biobakery"]["path"])
+    for (root, dirs, files) in walkdir(config["filepaths"]["biobakery"])
         occursin("kneaddata", root) || continue
         filter!(files) do f
             occursin("read_counts", f)
@@ -51,32 +50,18 @@ qc_files = let qcfiles=[]
     qcfiles
 end
 
-## make a DataFrame of the qc table from the first batch
-qc = CSV.read(qc_files[1])
-## sum paired end reads
-qc[!,:raw] = qc[!,Symbol("raw pair1")] .+ qc[!,Symbol("raw pair2")]
-qc[!,:trimmed] = qc[!,Symbol("trimmed pair1")] .+ qc[!,Symbol("trimmed pair2")]
-qc[!,:final] = qc[!,Symbol("final pair1")] .+ qc[!,Symbol("final pair2")]
-qc[!, :batch] .= "batch001"
-qc = qc[!, [:Sample, :raw, :trimmed, :final, :batch]]
+## make an empty DataFrame
+qc = DataFrame()
 
-## loop through the rest and concatenate to the first one
-for f in qc_files[2:end]
-    df = CSV.read(f)
+## loop through the files and append to DF after summing paired columns
+for f in qc_files
+    df = CSV.File(f) |> DataFrame
     ## get batch name from file
     df[!, :batch] .= match(r"(batch\d+)", f).captures[1]
-    ## column names are different depending on whether reads were concatenated or paired
-    if any(x-> occursin("pair", x), String.(names(df)))
-        df[!,:raw] = df[!,Symbol("raw pair1")] .+ df[!,Symbol("raw pair2")]
-        df[!,:trimmed] = df[!,Symbol("trimmed pair1")] .+ df[!,Symbol("trimmed pair2")]
-        df[!,:final] = df[!,Symbol("final pair1")] .+ df[!,Symbol("final pair2")]
-        df = df[!, [:Sample, :raw, :trimmed, :final, :batch]]
-    else
-        rename!(df, [Symbol("raw single")=>:raw,
-                    Symbol("trimmed single")=>:trimmed,
-                    Symbol("final single")=>:final])
-        df = df[!, [:Sample, :raw, :trimmed, :final, :batch]]
-    end
+    df[!,:raw] = df[!,Symbol("raw pair1")] .+ df[!,Symbol("raw pair2")]
+    df[!,:trimmed] = df[!,Symbol("trimmed pair1")] .+ df[!,Symbol("trimmed pair2")]
+    df[!,:final] = df[!,Symbol("final pair1")] .+ df[!,Symbol("final pair2")]
+    select!(df, [:Sample, :raw, :trimmed, :final, :batch])
     global qc = vcat(qc, df)
 end
 
@@ -99,14 +84,11 @@ end
 ## sort by batch, then by raw read count
 sort!(qc, [:batch, :raw])
 
-# TODO: Switch to Makie
-bar(x=qc.Sample, hcat(qc.raw, qc.final),
-    xaxis="Samples", yaxis= "Count", legend=:topleft,
-    title = "QC from Kneaddata", label=["Raw" "Final"],
-    linecolor=:match)
-
-
-savefig(joinpath(figures, "04-knead-qc.png"))
+scene,layout = layoutscene()
+counts = layout[1,1] = LAxis(scene, xlabel="Samples", ylabel= "Count", title="Counts by Batch")
+barplot!(counts, Data(qc), Group(color=bycolumn), (:raw, :final))
+tightlimits!(counts)
+scene
 
 # These are a little more variable than I'd like.
 # Let's take a look at their properties:

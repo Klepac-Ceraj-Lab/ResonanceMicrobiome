@@ -3,6 +3,7 @@ authors = ["Kevin S. Bonham", "Sophie Rowland", "Vanja Klepac-Ceraj"]
 description = "This file contains machine-readable information about data files used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
 
 [filepaths]
+biobakery = "/lovelace/echo/analysis/biobakery3"
 rawfastq = "/lovelace/echo/sequencing/mgx/rawfastq"
 taxonomic_profiles = "/babbage/echo/profiles/taxonomic"
 functional_profiles = "/babbage/echo/profiles/functional"
