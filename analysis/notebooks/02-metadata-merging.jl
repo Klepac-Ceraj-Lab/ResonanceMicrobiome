@@ -47,7 +47,7 @@ samplemeta = airtable_metadata()
 
 # merge with subject metadata
 
-allmetadata = join(samplemeta, subjectmeta, on=[:subject,:timepoint], kind=:left)
+allmetadata = join(unique(samplemeta), subjectmeta, on=[:subject,:timepoint], kind=:left)
 
 
 # ## Brain Data
@@ -120,3 +120,4 @@ allmetadata = join(allmetadata, hires, on=[:subject,:timepoint], kind=:left)
 
 ## Write for easy referemce
 CSV.write(config["tables"]["joined_metadata"], allmetadata)
+CSV.write("/home/kevin/Desktop/hasstool.csv", unique(samplemeta[map(s-> startswith(s, "C"), samplemeta.sample), [:subject, :timepoint]]))

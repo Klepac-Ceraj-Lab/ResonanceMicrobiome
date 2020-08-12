@@ -3,17 +3,25 @@ include("accessories.jl")
 
 config = parsefile("Data.toml")
 allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
+kidsmeta = filter(row-> !startswith(row.sample, "M") && !ismissing(row.correctedAgeDays), allmeta)
 
 ## Feature tables
 @warn "Loading feature tables"
 
-species = widen2comm(taxonomic_profiles()...)
+species = widen2comm(taxonomic_profiles(filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)...)
 # Total sum scaling - function in Microbiome
 relativeabundance!(species)
 
-# all but unirefs
-include("startup_loadfunctional.jl")
-unirefs = widen2comm(functional_profiles(kind="genefamilies_relab")..., featurecol=:func)
+kos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
+kos = view(kos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(kos)))
+stratkos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample, stratified=true)..., featurecol=:func)
+stratkos = view(stratkos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(stratkos)))
+pfams = widen2comm(functional_profiles(kind="pfams_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
+pfams = view(pfams, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(pfams)))
+ecs = widen2comm(functional_profiles(kind="ecs_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
+ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs)))
+
+unirefs = widen2comm(functional_profiles(kind="genefamilies_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
 
 @warn "Getting metadata and subgroups"
 
