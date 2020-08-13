@@ -12,20 +12,14 @@ speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)
 speciesmdsaxes = [v / sum(eigvals(speciesmds)) for v in eigvals(speciesmds)]
 
-ubothspeciesmds = fit(MDS, speciesdm[uboth,uboth], distances=true)
-ubothspeciesmdsaxes = [v / sum(eigvals(ubothspeciesmds)) for v in eigvals(ubothspeciesmds)]
-
 ukidsspeciesmds = fit(MDS, speciesdm[ukids,ukids], distances=true)
 ukidsspeciesmdsaxes = [v / sum(eigvals(ukidsspeciesmds)) for v in eigvals(ukidsspeciesmds)]
 
 #### Figure 1C
 
 unirefaccessorydm = pairwise(BrayCurtis(), unirefaccessory)
-unirefaccessorymds = fit(MDS, unirefaccessorydm[uboth, uboth], distances=true)
+unirefaccessorymds = fit(MDS, unirefaccessorydm, distances=true)
 unirefaccessorymdsaxes = [v / sum(eigvals(unirefaccessorymds)) for v in eigvals(unirefaccessorymds)]
-
-ubothunirefaccessorymds = fit(MDS, unirefaccessorydm[uboth,uboth], distances=true)
-ubothunirefaccessorymdsaxes = [v / sum(eigvals(ubothunirefaccessorymds)) for v in eigvals(ubothunirefaccessorymds)]
 
 ukidsunirefaccessorymds = fit(MDS, unirefaccessorydm[ukids,ukids], distances=true)
 ukidsunirefaccessorymdsaxes = [v / sum(eigvals(ukidsunirefaccessorymds)) for v in eigvals(ukidsunirefaccessorymds)]
@@ -34,10 +28,6 @@ ukidsunirefaccessorymdsaxes = [v / sum(eigvals(ukidsunirefaccessorymds)) for v i
 
 species_permanovas = vcat(
     permanova(speciesdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
-    permanova(speciesdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
-    permanova(speciesdm[uboth,uboth], ubothmeta,
-        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
-        fields=[:subject_type], label="1+ subject type"),
     permanova(speciesdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(speciesdm[ukids,ukids], ukidsmeta,
         datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
@@ -45,10 +35,10 @@ species_permanovas = vcat(
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(speciesdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
-    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
-    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
-    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
-    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+    permanova(speciesdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
     permanova(speciesdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(speciesdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
@@ -64,10 +54,6 @@ sort!(species_permanovas, :q_value)
 ##
 unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
-    permanova(unirefaccessorydm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
-    permanova(unirefaccessorydm[uboth,uboth], ubothmeta,
-        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
-        fields=[:subject_type], label="1+ subject type"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta,
         datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
@@ -75,10 +61,10 @@ unirefaccessory_permanovas = vcat(
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
-    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+    permanova(unirefaccessorydm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
     permanova(unirefaccessorydm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(unirefaccessorydm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
@@ -98,10 +84,6 @@ kosdm = pairwise(BrayCurtis(), kos)
 ecsdm = pairwise(BrayCurtis(), ecs)
 pfams_permanovas = vcat(
     permanova(pfamsdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
-    permanova(pfamsdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
-    permanova(pfamsdm[uboth,uboth], ubothmeta,
-        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
-        fields=[:subject_type], label="1+ subject type"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta,
         datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
@@ -109,10 +91,10 @@ pfams_permanovas = vcat(
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(pfamsdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
-    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
-    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
-    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
-    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+    permanova(pfamsdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
     permanova(pfamsdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(pfamsdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
@@ -128,10 +110,6 @@ sort!(pfams_permanovas, :q_value)
 ##
 kos_permanovas = vcat(
     permanova(kosdm, [ismissing(x) ? missing : string(x) for x in allmeta.subject], label="subject"),
-    permanova(kosdm[uboth,uboth], ubothmeta.subject_type, label="subject type"),
-    permanova(kosdm[uboth,uboth], ubothmeta,
-        datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
-        fields=[:subject_type], label="1+ subject type"),
     permanova(kosdm[ukids,ukids], ukidsmeta.correctedAgeDays, label="age"),
     permanova(kosdm[ukids,ukids], ukidsmeta,
         datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
@@ -139,10 +117,10 @@ kos_permanovas = vcat(
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.birthType], label="birth type"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
     permanova(kosdm[ukids,ukids], ukidsmeta.mother_HHS, label="mother SES"),
-    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic")[2:2,:],
-    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical")[2:2,:],
-    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical")[2:2,:],
-    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+    permanova(kosdm[ukids,ukids], ukidsmeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
     permanova(kosdm[ukids,ukids], ukidsmeta.cogScore, label="cognitive function"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.breastfeeding], label="breastfeeding"),
     permanova(kosdm[ukids,ukids], [ismissing(x) ? missing : string(x) for x in ukidsmeta.simple_race], label="race"),
@@ -342,10 +320,10 @@ function labeldiff(dm, labels)
 end
 
 
-speciesdiffs = labeldiff(speciesdm[uboth, uboth], allmeta.ageLabel[uboth])
-unirefaccessorydiffs = labeldiff(unirefaccessorydm[uboth,uboth], allmeta.ageLabel[uboth])
-pfamsdiffs = labeldiff(pfamsdm[uboth,uboth], allmeta.ageLabel[uboth])
-kosdiffs = labeldiff(kosdm[uboth,uboth], allmeta.ageLabel[uboth])
+speciesdiffs = labeldiff(speciesdm[ukids, ukids], allmeta.ageLabel[ukids])
+unirefaccessorydiffs = labeldiff(unirefaccessorydm[ukids,ukids], allmeta.ageLabel[ukids])
+pfamsdiffs = labeldiff(pfamsdm[ukids,ukids], allmeta.ageLabel[ukids])
+kosdiffs = labeldiff(kosdm[ukids,ukids], allmeta.ageLabel[ukids])
 
 
 # ## Additional stats
@@ -441,9 +419,9 @@ using JLD2
 @assert sitenames(species) == allmeta.sample
 allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
 
-@save "analysis/figures/assets/metadata.jld2" allmeta ubothmeta oldkidsmeta ukidsmeta allkidsmeta allmoms allkids umoms ukids oldkids uboth
-@save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
-@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@save "analysis/figures/assets/metadata.jld2" allmeta oldkidsmeta ukidsmeta ukids oldkids
+@save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @save "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors

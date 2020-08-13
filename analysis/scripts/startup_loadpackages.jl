@@ -3,6 +3,7 @@
 
 using BiobakeryUtils
 using Clustering
+using CodecZlib
 using ColorSchemes
 using Combinatorics
 using CSV

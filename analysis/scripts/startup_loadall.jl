@@ -28,7 +28,6 @@ unirefs = widen2comm(functional_profiles(kind="genefamilies_relab", filefilter=f
 ### Just get metadata found in tax/func profiles, and in same order
 
 allmeta.ageLabel = map(eachrow(allmeta)) do row
-    startswith(row.sample, "M") && return "mom"
     ismissing(row.correctedAgeDays) && return missing
     row.correctedAgeDays < 365 && return "1 and under"
     row.correctedAgeDays < 365*2 && return "1 to 2"
@@ -37,12 +36,11 @@ end
 dropmissing!(allmeta, :ageLabel)
 
 filter!(allmeta) do row
-    row.ageLabel == "mom" ||
     !ismissing(row.cogScore) ||
     !ismissing(row.hires_total)
 end
 
-
+# make sure all tables have the same samples in the same order
 allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
 filter!(row-> row.sample in allsamples, allmeta)
 
@@ -57,24 +55,10 @@ ecs      = view(ecs, sites=allmeta.sample)      |> copy
 
 ## Subgroup indexes
 
-allmoms = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=ismom)))
-    map(s-> in(s, samples), allmeta.sample)
-end
-
-allkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=false, samplefilter=iskid)))
-    map(s-> in(s, samples), allmeta.sample)
-end
-
-umoms = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=ismom)))
-    map(s-> in(s, samples), allmeta.sample)
-end
-
 ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid)))
     (map(s-> in(s, samples), allmeta.sample),
     map(row-> in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmeta)))
 end
-
-uboth = map(any, zip(umoms, ukids))
 
 @warn "Getting accessory genes"
 
@@ -84,10 +68,9 @@ unirefprevfilt = let c = 0
     filt = map(eachrow(occurrences(unirefs))) do row
         c % 10_000 == 0 && @info "    processed $c genes"
         u1_prev = prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.)
-        o1_prev = prevalence(row[map(x->  x != "mom" && x != "1 and under", allmeta.ageLabel)], 0.)
-        mom_prev = prevalence(row[map(x-> x == "mom", allmeta.ageLabel)], 0.)
+        o1_prev = prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
         c+=1
-        (any(>(0.05), [u1_prev, o1_prev, mom_prev]), all(<(0.9), [u1_prev, o1_prev, mom_prev]) )
+        (any(>(0.05), [u1_prev, o1_prev]), all(<(0.9), [u1_prev, o1_prev]) )
     end
 end
 unirefprevalent = view(unirefs, species=[p[1] for p in unirefprevfilt])
@@ -121,11 +104,7 @@ allmeta.limbic_normed = allmeta.limbic ./ allmeta.hires_total
 
 ### Metadata subgroups
 
-allmomsmeta = view(allmeta, allmoms, :)
-umomsmeta = view(allmeta, umoms, :)
-allkidsmeta = view(allmeta, allkids, :)
 ukidsmeta = view(allmeta, ukids, :)
 oldkidsmeta = view(allmeta, oldkids, :)
-ubothmeta = view(allmeta, uboth, :)
 
 @warn "Done!"

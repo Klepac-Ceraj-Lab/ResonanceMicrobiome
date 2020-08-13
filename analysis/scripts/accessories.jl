@@ -23,16 +23,19 @@ function get_neuroactive_kos(neuroactivepath="data/uniprot/gbm.txt")
    return neuroactive
 end
 
-function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt")
+
+function getneuroactive(features, neuroactivepath="data/uniprot/gbm.txt", mappath="/babbage/echo/profiles/map_ko_uniref90.txt.gz")
     neuroactivekos = get_neuroactive_kos(neuroactivepath)
 
-    kos2uniref = Dict()
-    for line in eachline("data/biobakery2/ko2uniref90.txt")
-        line = split(line, '\t')
-        kos2uniref[line[1]] = map(x-> String(match(r"UniRef90_(\w+)", x).captures[1]), line[2:end])
+    kos2uniref = Dictionary{String, Vector{String}}()
+    open(mappath) do io
+        for line in eachline(GzipDecompressorStream(io))
+            line = split(line, '\t')
+            insert!(kos2uniref, line[1], map(x-> String(match(r"UniRef90_(\w+)", x).captures[1]), line[2:end]))
+        end
     end
 
-    neuroactive_index = HashDictionary{String, Vector{Int}}()
+    neuroactive_index = Dictionary{String, Vector{Int}}()
     for na in keys(neuroactivekos)
         searchfor = Iterators.flatten([kos2uniref[ko] for ko in neuroactivekos[na] if ko in keys(kos2uniref)]) |> Set
         pos = findall(u-> u in searchfor, features)
