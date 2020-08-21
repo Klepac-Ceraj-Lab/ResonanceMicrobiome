@@ -55,69 +55,79 @@ allmetadata = join(unique(samplemeta), subjectmeta, on=[:subject,:timepoint], ki
 # We also have tables of brain volumes for many of our subjects.
 
 brainfiles = config["tables"]["brain_structure"]
-brainvol = CSV.read(brainfiles["lowres"])
 
-# remove spaces from columns names
-rename!(brainvol, map(names(brainvol)) do n
-                        replace(String(n), " "=>"_") |> lowercase |> Symbol
-                    end)
-rename!(brainvol, :study_id => :subject)
+# Freesurfer is another way of segmentation
 
-# We need to fix the subjects - the letters represent timepoints -
-# using the `resolve_letter_timepoint` function.
-
-## convert letter timepoint into number
-brainsid = resolve_letter_timepoint.(brainvol.subject)
-
-brainvol.subject = subject.(brainsid)
-brainvol.timepoint = timepoint.(brainsid)
-
-allmetadata = join(allmetadata, brainvol, on=[:subject,:timepoint], kind=:left)
-
-
-# And now the same thing for the high resolution scan table:
-
-hires = CSV.read(brainfiles["hires"])
-hires2 = CSV.read(brainfiles["hires2"])
-rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
-rename!(hires2, Dict(:ID=>:subject, :Timepoint=>:timepoint))
-
-
-hr2_samples = resolve_letter_timepoint.(string.(hires2.subject))
-hires2.subject = subject.(hr2_samples)
-hires2.timepoint = timepoint.(hr2_samples)
-
-# don't want to replicate :age column
-select!(hires, Not(:Age))
-@assert names(hires) == names(hires2)
-hires = vcat(hires, hires2)
-unique!(hires, [:subject,:timepoint])
-
-# There are a lot of individual brain regions that are separated in this table,
-# and the right and left hemispheres are distinguished.
-# For the most part, we're not going to need this level of specificity,
-# but we can group individual brain regions
-# and combine left / right hemispheres.
-# I'll also make a column with the total brain volume for later normalization.
-
-mapping = CSV.read(brainfiles["hires_key"])
-hires.hires_total = [sum(row[3:end]) for row in eachrow(hires)]
-
-cols_seen = let ns = lowercase.(String.(names(hires)))
-    cols_seen = Int[]
-    by(mapping, :region) do region
-        fs = lowercase.(region.feature)
-        cols = findall(n-> any(f-> occursin(f, n), fs), ns)
-        append!(cols_seen, cols)
-        hires[!, Symbol(first(region.region))] = [sum(row[cols]) for row in eachrow(hires)]
-        true # need something for the `by`
-    end
-    cols_seen
+freesurfer = CSV.File(brainfiles["freesurfer"]) |> DataFrame
+# fix subjectID
+freesurfer.subject = map(freesurfer.ID) do id
+    m = match(r"^sub-BAMBAM(\d+)$", id)
+    isnothing(m) && error(id)
+    parse(Int, m.captures[1])
 end
 
-## join with other metadata
-allmetadata = join(allmetadata, hires, on=[:subject,:timepoint], kind=:left)
+# one subject was not segmented properly for some reason
+filter!(row-> row.subject != 767, freesurfer)
+
+freesurfer.hippocampus = freesurfer."Left-Hippocampus" .+ freesurfer."Right-Hippocampus"
+freesurfer.caudate = freesurfer."Left-Caudate" .+ freesurfer."Right-Caudate"
+freesurfer.putamen = freesurfer."Left-Putamen" .+ freesurfer."Right-Putamen"
+freesurfer.pallidum = freesurfer."Left-Pallidum" .+ freesurfer."Right-Pallidum"
+freesurfer.thalamus = freesurfer."Left-Thalamus-Proper" .+ freesurfer."Right-Thalamus-Proper"
+freesurfer.amygdala = freesurfer."Left-Amygdala" .+ freesurfer."Right-Amygdala"
+freesurfer.corpus_callosum = freesurfer.CC_Posterior .+ freesurfer.CC_Mid_Posterior .+ freesurfer.CC_Central .+ freesurfer.CC_Mid_Anterior .+ freesurfer.CC_Anterior
+# these are the same thing in different versions of freesurfer - should be 0 in one column
+@assert all(row-> xor(row.CerebralWhiteMatterVol == 0, row.CorticalWhiteMatterVol == 0), eachrow(freesurfer))
+freesurfer.white_matter = freesurfer.CerebralWhiteMatterVol .+ freesurfer.CorticalWhiteMatterVol
+
+
+rename!(freesurfer, [
+    "CSF" => "csf",
+    "TotalGrayVol" => "gray_matter",
+    "Brain-Stem" => "brainstem",
+    "BrainSegVol"=> "braintotal"
+    ])
+
+fs_keep = [
+    "subject",
+    "timepoint",
+    "braintotal",
+    "white_matter",
+    "gray_matter",
+    "csf",
+    "brainstem",
+    "hippocampus",
+    "caudate",
+    "putamen",
+    "pallidum",
+    "thalamus",
+    "amygdala",
+    "corpus_callosum"
+]
+
+select!(freesurfer, fs_keep)
+allmetadata = join(allmetadata, freesurfer, on=[:subject,:timepoint], kind=:left)
+
 
 ## Write for easy referemce
 CSV.write(config["tables"]["joined_metadata"], allmetadata)
 CSV.write("/home/kevin/Desktop/hasstool.csv", unique(samplemeta[map(s-> startswith(s, "C"), samplemeta.sample), [:subject, :timepoint]]))
+
+ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmetadata.sample, takefirst=true, samplefilter=iskid)))
+    (map(row-> !ismissing(row.ageLabel) && in(row.sample, samples), eachrow(allmetadata)),
+    map(row-> !ismissing(row.ageLabel) && in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmetadata)))
+end
+
+ukidsmeta = view(allmetadata, ukids, :)
+oldkidsmeta = view(allmetadata, oldkids, :)
+
+println(size(allmetadata, 1))
+println(size(ukidsmeta, 1))
+println(size(oldkidsmeta, 1))
+println(count(row-> !ismissing(row.braintotal), eachrow(allmetadata)))
+println(count(row-> !ismissing(row.braintotal), eachrow(ukidsmeta)))
+println(count(row-> !ismissing(row.braintotal), eachrow(oldkidsmeta)))
+println(count(row-> !ismissing(row.cogScore), eachrow(allmetadata)))
+println(count(row-> !ismissing(row.cogScore), eachrow(ukidsmeta)))
+println(count(row-> !ismissing(row.cogScore), eachrow(oldkidsmeta)))
+

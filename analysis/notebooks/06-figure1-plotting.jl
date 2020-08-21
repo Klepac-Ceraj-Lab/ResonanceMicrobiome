@@ -1,23 +1,20 @@
 # # Figure Plotting
 
 include("../scripts/startup_loadpackages.jl")
-using MakieLayout
+using AbstractPlotting.MakieLayout
 using AbstractPlotting
 using StatsMakie
-using Makie
+using FileIO
 using CairoMakie
 using ColorSchemes
-using FileIO
 using StatsBase: midpoints
-using GLMakie
 
-CairoMakie.activate!(type="pdf")
-AbstractPlotting.inline!(false)
+CairoMakie.activate!(type="svg")
+# AbstractPlotting.inline!(false)
 
-@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta oldkidsmeta allmoms allkids umoms ukids oldkids uboth
-allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
-@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
-@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@load "analysis/figures/assets/metadata.jld2" allmeta ukidsmeta oldkidsmeta ukids oldkids
+@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
 @load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @load "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea
@@ -44,11 +41,9 @@ f1_scene
 phm_layout = GridLayout(alignmode=Outside())
 phm = phm_layout[1,1] = LAxis(f1_scene)
 f1_layout[1,1] = phm_layout
-
+f1_scene
 
 phmyorder = [
-    "subject type",
-    "2+ subject type",
     "age",
     "2+ age",
     "gender",
@@ -287,19 +282,15 @@ f2_scene
 
 ##
 
-sigbugs = ["Ruminococcus_gnavus",
-           "Coprococcus_sp_ART55_1",
-           "Eubacterium_eligens",
-           "Coprobacillus_unclassified",
-           "Roseburia_hominis",
-           "Adlercreutzia_equolifaciens",
-           "Lachnospiraceae_bacterium_2_1_58FAA",
-           "Clostridium_symbiosum",
-           "Bifidobacterium_breve",
-           "Coprococcus_catus",
-           "Ruminococcus_sp_5_1_39BFAA"
-           ]
-
+sigbugs = [
+    "Asaccharobacter_celatus",
+    "Erysipelatoclostridium_ramosum",
+    "Adlercreutzia_equolifaciens",
+    "Dorea_longicatena",
+    "Ruminococcus_gnavus",
+    "Turicimonas_muris"]
+    
+    
 @assert sitenames(quartspecies) == quartmeta.sample
 
 for bug in sigbugs
@@ -313,85 +304,123 @@ f2_layout[1:2,2:3] = quartilescatters
 f2_scene
 ##
 
-gnavus = quartilescatters[1,1] = LAxis(f2_scene, title="Ruminococcus gnavus", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
+bug1 = quartilescatters[1,1] = LAxis(f2_scene, title=replace(sigbugs[1], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug1, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[1]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
+scatter!(bug1, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[1]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
 
 let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
                       row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Ruminococcus_gnavus"])))
-    boxplot!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+                  species=[sigbugs[1]])))
+    boxplot!(bug1, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug1, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
-limits!(gnavus, (-0.5,2.5), (0, maximum(quartmeta.Ruminococcus_gnavus) + 0.01))
-gnavus.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-gnavus.xlabel = "Cognitive score"
-gnavus.ylabel = "Relative abundance"
-f2_scene
+limits!(bug1, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[1])]) + 0.002))
+bug1.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug1.xlabel = "Cognitive score"
+bug1.ylabel = "Relative abundance"
 
-
-eligens = quartilescatters[1,2] = LAxis(f2_scene, title="Eubacterium eligens", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
+bug2 = quartilescatters[1,2] = LAxis(f2_scene, title=replace(sigbugs[2], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug2, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[2]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
+scatter!(bug2, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[2]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+
 let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
                       row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Eubacterium_eligens"])))
-    boxplot!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+                  species=[sigbugs[2]])))
+    boxplot!(bug2, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug2, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
-f2_scene
-limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Eubacterium_eligens) + 0.01))
-eligens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-eligens.xlabel = "Cognitive score"
-eligens.ylabel = "Relative abundance"
+limits!(bug2, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[2])]) + 0.01))
+bug2.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug2.xlabel = "Cognitive score"
+bug2.ylabel = "Relative abundance"
 
-
-hominis = quartilescatters[2,1] = LAxis(f2_scene, title="Roseburia hominis", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
+bug3 = quartilescatters[1,3] = LAxis(f2_scene, title=replace(sigbugs[3], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug3, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[3]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
+scatter!(bug3, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[3]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+
 let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
                       row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Roseburia_hominis"])))
-    boxplot!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+                  species=[sigbugs[3]])))
+    boxplot!(bug3, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug3, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
-limits!(hominis, (-0.5,2.5), (0, maximum(quartmeta.Roseburia_hominis) + 0.001))
-hominis.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-hominis.xlabel = "Cognitive score"
-hominis.ylabel = "Relative abundance"
+limits!(bug3, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[3])]) + 0.01))
+bug3.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug3.xlabel = "Cognitive score"
+bug3.ylabel = "Relative abundance"
 
-
-equolifaciens = quartilescatters[2,2] = LAxis(f2_scene, title="Adlercreutzia equolifaciens", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
+bug4 = quartilescatters[2,1] = LAxis(f2_scene, title=replace(sigbugs[4], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug4, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[4]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
+scatter!(bug4, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[4]),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+
 let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
                 map(row-> !in(row.sample, quartmeta.sample) &&
                       !ismissing(row.correctedAgeDays) &&
                       row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Adlercreutzia_equolifaciens"])))
-    boxplot!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+                  species=[sigbugs[4]])))
+    boxplot!(bug4, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug4, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
 end
-limits!(equolifaciens, (-0.5,2.5), (0, maximum(quartmeta.Adlercreutzia_equolifaciens) + 0.001))
-equolifaciens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-equolifaciens.xlabel = "Cognitive score"
-equolifaciens.ylabel = "Relative abundance"
-equolifaciens.titlefont = "DejaVu Sans Oblique"
-colsize!(f2_layout, 1, Relative(0.4))
+limits!(bug4, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[4])]) + 0.001))
+bug4.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug4.xlabel = "Cognitive score"
+bug4.ylabel = "Relative abundance"
+
+bug5 = quartilescatters[2,2] = LAxis(f2_scene, title=replace(sigbugs[5], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug5, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[5]),
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(bug5, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[5]),
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
+                map(row-> !in(row.sample, quartmeta.sample) &&
+                      !ismissing(row.correctedAgeDays) &&
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
+                  species=[sigbugs[5]])))
+    boxplot!(bug5, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug5, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+end
+limits!(bug5, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[5])]) + 0.01))
+bug5.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug5.xlabel = "Cognitive score"
+bug5.ylabel = "Relative abundance"
+
+bug6 = quartilescatters[2,3] = LAxis(f2_scene, title=replace(sigbugs[6], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+boxplot!(bug6, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[6]),
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
+scatter!(bug6, Data(quartmeta), Group(:quartile), :x, Symbol(sigbugs[6]),
+        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+
+let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
+                map(row-> !in(row.sample, quartmeta.sample) &&
+                      !ismissing(row.correctedAgeDays) &&
+                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
+                  species=[sigbugs[6]])))
+    boxplot!(bug6, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(bug6, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+end
+limits!(bug6, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(sigbugs[6])]) + 0.001))
+bug6.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+bug6.xlabel = "Cognitive score"
+bug6.ylabel = "Relative abundance"
+
+
+
+colsize!(f2_layout, 1, Relative(0.2))
 
 # ### Save figure 2
 f2_layout[1, 1, TopLeft()] = LText(f2_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)

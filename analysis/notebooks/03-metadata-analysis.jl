@@ -13,16 +13,20 @@ using DataFrames
 using StatsMakie
 using AbstractPlotting
 using AbstractPlotting.MakieLayout
+using CairoMakie
 using PrettyTables
 using CSV
 using Pkg.TOML: parsefile
+
+CairoMakie.activate!(type="svg")
+
 rounder = Dict(0 => (v,i) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v)
 
 randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-config = parsefile("data/data.toml")
+config = parsefile("Data.toml")
 widemeta = ECHOAnalysis.getmgxmetadata()
 figures = config["output"]["figures"]
 isdir(figures) || mkpath(figures)

@@ -367,8 +367,9 @@ for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
         pvalue = pvalue(mwu)
     ))
 end
+filter!(row-> row.nsamples > 30, quartiletests)
 quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
-
+sort!(quartiletests, :qvalue)
 CSV.write("analysis/quartiletests.csv", quartiletests)
 
 # ## Older kids
@@ -409,9 +410,22 @@ for (i, row) in enumerate(eachrow(occurrences(quartspecies)))
         pvalue = pvalue(mwu)
     ))
 end
-quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
 
+filter!(row-> row.nsamples > 30, quartiletests)
+quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
+sort!(quartiletests, :qvalue)
 CSV.write("analysis/oldkidsquartiletests.csv", quartiletests)
+
+## write transposed file with significant bugs
+
+sigs = filter(row-> row.qvalue < 0.2, quartiletests).species
+sigsdf = select(ukidsmeta, [:subject, :timepoint, :sample])
+for sp in sigs
+    sigsdf[:, sp] = vec(occurrences(view(species, sites=sigsdf.sample, species=[sp])))
+end
+
+sigsdf
+CSV.write("data/analysis/tables/sigcog_species.csv",sigsdf)
 
 # ## Exports
 
