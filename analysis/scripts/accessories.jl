@@ -64,3 +64,45 @@ function fsea(occ::AbstractMatrix, metadatum::AbstractVector, pos::AbstractVecto
     cors = cor(metadatum, occ, dims=2)'
     return fsea(cors, pos)
 end
+
+
+function accessorygenes(cm, calcs; lower=0., upper=0.95)
+    prev, acc = Bool[], Bool[]
+
+     @showprogress map(eachrow(occurrences(cm))) do row
+        c = [calc(row) for calc in calcs]
+        push!(prev, any(>(lower), c))
+        push!(acc,  all(<(upper), c))
+    end
+    return view(cm, species=prev), view(cm, species=acc)
+end
+
+function runpermanovas(dm, ufilter, md)
+    udm = dm[ufilter, ufilter]
+    umeta = view(md, ufilter, :)
+    perms = vcat(
+        permanova(dm, [ismissing(x) ? missing : string(x) for x in md.subject], label="subject"),
+        permanova(udm, udm.correctedAgeDays, label="age"),
+        permanova(udm, udm,
+            datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
+            fields=[:correctedAgeDays], label="1+ age"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.birthType], label="birth type"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.childGender], datafilter=x-> x != "Don't know", label="gender"),
+        permanova(udm, udm.mother_HHS, label="mother SES"),
+        permanova(udm, udm, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+        permanova(udm, udm, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+        permanova(udm, udm, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+        permanova(udm, udm, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
+        permanova(udm, udm.cogScore, label="cognitive function"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.breastfeeding], label="breastfeeding"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.simple_race], label="race"),
+        permanova(udm, udm.childBMI, label="BMI")
+        )
+
+    filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perms)
+    perms[!, :feature] .= "species"
+    rename!(perms, Symbol("Pr(>F)")=>:p_value)
+    disallowmissing!(perms)
+    perms.q_value = adjust(perms.p_value, BenjaminiHochberg())
+    sort!(perms, :q_value)
+end

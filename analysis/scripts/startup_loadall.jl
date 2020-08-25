@@ -62,19 +62,33 @@ end
 
 @warn "Getting accessory genes"
 
-Microbiome.prevalence(a, minabundance::Float64=0.0001) = mean(x-> present(x, minabundance), (y for y in a))
+unirefprevalent, unirefaccessory = accessorygenes(unirefs, [
+    row-> prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.),
+    row-> prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
+    ],
+    lower=0.1, upper=0.9)
 
-unirefprevfilt = let c = 0
-    filt = map(eachrow(occurrences(unirefs))) do row
-        c % 10_000 == 0 && @info "    processed $c genes"
-        u1_prev = prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.)
-        o1_prev = prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
-        c+=1
-        (any(>(0.05), [u1_prev, o1_prev]), all(<(0.9), [u1_prev, o1_prev]) )
-    end
-end
-unirefprevalent = view(unirefs, species=[p[1] for p in unirefprevfilt])
-unirefaccessory = view(unirefs, species=[p[2] for p in unirefprevfilt])
+pfamprevalent, pfamaccessory = accessorygenes(pfams, [
+    row-> prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.),
+    row-> prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
+    ],
+    lower=0.1, upper=0.9
+)
+
+koprevalent, koaccessory = accessorygenes(kos, [
+    row-> prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.),
+    row-> prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
+    ],
+    lower=0.1, upper=0.9
+)
+
+ecprevalent, ecaccessory = accessorygenes(ecs, [
+    row-> prevalence(row[map(x->  x == "1 and under", allmeta.ageLabel)], 0.),
+    row-> prevalence(row[map(x->  x != "1 and under", allmeta.ageLabel)], 0.)
+    ],
+    lower=0.1, upper=0.9
+)
+
 
 ### Additional info
 @warn "Adding additional info to metadata tables"
