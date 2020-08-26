@@ -360,101 +360,101 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 
 
 
-# # ## Linear Models
-# # None of these find anything significant
-#
-# using GLM
-#
-# function longtaxfromcomm(cm)
-#     features = featurenames(cm)
-#     samples  = samplenames(cm)
-#
-#     occ = occurrences(cm)
-#
-#     df = DataFrame((sample=samples[j], taxon=features[i], abundance=occ[i,j])
-#                         for i in eachindex(features)
-#                         for j in eachindex(samples))
-#     return df
-# end
-#
-# taxlong = longtaxfromcomm(oldkidsspecies)
-# taxlong = join(taxlong, select(oldkidsmeta,
-#                             [:sample, :childGender, :correctedAgeDays,
-#                              :mother_HHS, :cogScore, :limbic_normed,
-#                              :subcortical_normed, :neocortical_normed,
-#                              :cerebellar_normed]),
-#                          on=:sample, kind=:left)
-#
-# taxlong.asq = asin.(sqrt.(taxlong.abundance))
-#
-# glms = DataFrame()
-#
-# for grp in groupby(taxlong, :taxon)
-#     grp = filter(row-> !ismissing(row.cogScore) && row.abundance > 0, grp)
-#     nrow(grp) > 10 || continue
-#     sp = first(grp.taxon)
-#     m = lm(@formula(asq ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp)
-#     tbl = coeftable(m)
-#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
-#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
-#     df[!, :taxon] .= sp
-#     append!(glms, df)
-# end
-#
-# cogs = findall(row->row.variable == "cogScore", eachrow(glms))
-# glms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(glms)]
-# glms.qvalue[cogs] .= adjust(glms[cogs,:pvalue], BenjaminiHochberg())
-#
-# CSV.write("analysis/speciesglms.csv", glms)
-#
-# # ## upper/lower quartile
-#
-# longquartiles = filter(row-> row.sample in oldkids, taxlong)
-# longquartiles = join(longquartiles, quartmeta[!, [:sample, :quartile]], on=:sample, kind=:left)
-# quartglms = DataFrame()
-#
-# for grp in groupby(longquartiles, :taxon)
-#     grp = filter(row-> !ismissing(row.quartile) && row.abundance > 0, grp)
-#     nrow(grp) > 10 || continue
-#     if length(unique(grp.quartile)) == 1
-#         @info "df for $(first(grp.taxon)) only has 1 quartile ($(first(grp.quartile)))"
-#         continue
-#     end
-#
-#     sp = first(grp.taxon)
-#     m = lm(@formula(asq ~ quartile + correctedAgeDays + childGender + mother_HHS), grp)
-#     tbl = coeftable(m)
-#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
-#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
-#     df[!, :taxon] .= sp
-#     append!(quartglms, df)
-# end
-#
-# cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
-# quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
-# quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
-#
-# CSV.write("analysis/quartilespeciesglms.csv", quartglms)
-#
-# # ## Presence/Absence
-#
-# paglms = DataFrame()
-#
-# for grp in groupby(taxlong, :taxon)
-#     grp = filter(row-> !ismissing(row.cogScore), grp)
-#     nrow(grp) > 10 || continue
-#     sp = first(grp.taxon)
-#     grp.present = grp.abundance .> 0.
-#     m = glm(@formula(present ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp, Bernoulli(), LogitLink())
-#     tbl = coeftable(m)
-#     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
-#     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
-#     df[!, :taxon] .= sp
-#     append!(paglms, df)
-# end
-#
-# cogs = findall(row-> startswith(row.variable, "cogScore"), eachrow(paglms))
-# paglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(paglms)]
-# paglms.qvalue[cogs] .= adjust(paglms[cogs,:pvalue], BenjaminiHochberg())
-#
-# CSV.write("analysis/paspeciesglms.csv", paglms)
+# ## Linear Models
+# None of these find anything significant
+
+using GLM
+
+function longtaxfromcomm(cm)
+    features = featurenames(cm)
+    samples  = samplenames(cm)
+
+    occ = occurrences(cm)
+
+    df = DataFrame((sample=samples[j], taxon=features[i], abundance=occ[i,j])
+                        for i in eachindex(features)
+                        for j in eachindex(samples))
+    return df
+end
+
+taxlong = longtaxfromcomm(oldkidsspecies)
+taxlong = join(taxlong, select(oldkidsmeta,
+                            [:sample, :childGender, :correctedAgeDays,
+                             :mother_HHS, :cogScore, :limbic_normed,
+                             :subcortical_normed, :neocortical_normed,
+                             :cerebellar_normed]),
+                         on=:sample, kind=:left)
+
+taxlong.asq = asin.(sqrt.(taxlong.abundance))
+
+glms = DataFrame()
+
+for grp in groupby(taxlong, :taxon)
+    grp = filter(row-> !ismissing(row.cogScore) && row.abundance > 0, grp)
+    nrow(grp) > 10 || continue
+    sp = first(grp.taxon)
+    m = lm(@formula(asq ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp)
+    tbl = coeftable(m)
+    df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+    names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+    df[!, :taxon] .= sp
+    append!(glms, df)
+end
+
+cogs = findall(row->row.variable == "cogScore", eachrow(glms))
+glms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(glms)]
+glms.qvalue[cogs] .= adjust(glms[cogs,:pvalue], BenjaminiHochberg())
+
+CSV.write("analysis/speciesglms.csv", glms)
+
+# ## upper/lower quartile
+
+longquartiles = filter(row-> row.sample in oldkids, taxlong)
+longquartiles = join(longquartiles, quartmeta[!, [:sample, :quartile]], on=:sample, kind=:left)
+quartglms = DataFrame()
+
+for grp in groupby(longquartiles, :taxon)
+    grp = filter(row-> !ismissing(row.quartile) && row.abundance > 0, grp)
+    nrow(grp) > 10 || continue
+    if length(unique(grp.quartile)) == 1
+        @info "df for $(first(grp.taxon)) only has 1 quartile ($(first(grp.quartile)))"
+        continue
+    end
+
+    sp = first(grp.taxon)
+    m = lm(@formula(asq ~ quartile + correctedAgeDays + childGender + mother_HHS), grp)
+    tbl = coeftable(m)
+    df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+    names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+    df[!, :taxon] .= sp
+    append!(quartglms, df)
+end
+
+cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
+quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
+quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
+
+CSV.write("analysis/quartilespeciesglms.csv", quartglms)
+
+# ## Presence/Absence
+
+paglms = DataFrame()
+
+for grp in groupby(taxlong, :taxon)
+    grp = filter(row-> !ismissing(row.cogScore), grp)
+    nrow(grp) > 10 || continue
+    sp = first(grp.taxon)
+    grp.present = grp.abundance .> 0.
+    m = glm(@formula(present ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp, Bernoulli(), LogitLink())
+    tbl = coeftable(m)
+    df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
+    names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
+    df[!, :taxon] .= sp
+    append!(paglms, df)
+end
+
+cogs = findall(row-> startswith(row.variable, "cogScore"), eachrow(paglms))
+paglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(paglms)]
+paglms.qvalue[cogs] .= adjust(paglms[cogs,:pvalue], BenjaminiHochberg())
+
+CSV.write("analysis/paspeciesglms.csv", paglms)
