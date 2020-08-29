@@ -26,22 +26,25 @@ ukidsunirefaccessorymdsaxes = [v / sum(eigvals(ukidsunirefaccessorymds)) for v i
 
 ## ## Figure 1A
 
-species_permanovas = runpermanovas(speciesdm, ukids, allmeta)
+species_permanovas = runpermanovas(speciesdm, ukids, allmeta, "species")
 
 ##
-unirefaccessory_permanovas = runpermanovas(unirefaccessorydm, ukids, allmeta)
+unirefaccessory_permanovas = runpermanovas(unirefaccessorydm, ukids, allmeta, "unirefaccessory")
 
 ##
 pfamsdm = pairwise(BrayCurtis(), pfams)
+pfamsaccessorydm = pairwise(BrayCurtis(), pfamaccessory)
 kosdm = pairwise(BrayCurtis(), kos)
+kosaccessorydm = pairwise(BrayCurtis(), koaccessory)
 ecsdm = pairwise(BrayCurtis(), ecs)
+ecsaccessorydm = pairwise(BrayCurtis(), ecaccessory)
 
-pfams_permanovas = runpermanovas(pfamsdm, ukids, allmeta)
-pfamsaccessory_permanovas = runpermanovas(pfamsdm, ukids, allmeta)
-kos_permanovas = runpermanovas(kosdm, ukids, allmeta)
-kosaccessory_permanovas = runpermanovas(kosdm, ukids, allmeta)
-ecs_permanovas = runpermanovas(ecsdm, ukids, allmeta)
-ecsaccessory_permanovas = runpermanovas(ecsdm, ukids, allmeta)
+pfams_permanovas = runpermanovas(pfamsdm, ukids, allmeta, "pfams")
+pfamsaccessory_permanovas = runpermanovas(pfamsaccessorydm, ukids, allmeta, "pfamsaccessory")
+kos_permanovas = runpermanovas(kosdm, ukids, allmeta, "kos")
+kosaccessory_permanovas = runpermanovas(kosaccessorydm, ukids, allmeta, "kosaccessory")
+ecs_permanovas = runpermanovas(ecsdm, ukids, allmeta, "ecs")
+ecsaccessory_permanovas = runpermanovas(ecsaccessorydm, ukids, allmeta, "ecsaccessory")
 
 
 ##
@@ -58,11 +61,11 @@ allpermanovas = vcat(
 sort!(allpermanovas, [:label, :feature])
 
 r2 = unstack(allpermanovas, :label, :feature, :R2)
-select!(r2, [:label, :species, :accessory, :pfams, :kos])
+select!(r2, ["label", "species", "unirefaccessory", "pfams", "pfamsaccessory", "kos", "kosaccessory", "ecs", "ecsaccessory"])
 r2m = Matrix(r2[!,2:end])
 
 q = unstack(allpermanovas, :label, :feature, :q_value)
-select!(q, [:label, :species, :accessory, :pfams, :kos])
+select!(q, ["label", "species", "unirefaccessory", "pfams", "pfamsaccessory", "kos", "kosaccessory", "ecs", "ecsaccessory"])
 qm = Matrix(q[!,2:end])
 
 qa = let M = fill("", size(qm))
@@ -92,12 +95,15 @@ carbpos = findall(x-> in(x, carbs), unirefnames)
 neuroactive = getneuroactive(unirefnames) # function in accessories.jl
 
 allneuroactive = union([neuroactive[k] for k in keys(neuroactive)]...)
-metadatums = [:correctedAgeDays,
-              :cogScore,
-              :neocortical_normed,
-              :subcortical_normed,
-              :limbic_normed,
-              :cerebellar_normed]
+metadatums = [:white_matter_normed,
+              :gray_matter_normed,
+              :hippocampus_normed,
+              :caudate_normed,
+              :putamen_normed,
+              :pallidum_normed,
+              :thalamus_normed,
+              :amygdala_normed,
+              :corpus_callosum_normed]
 
 allfsea = DataFrame(
             geneset   = String[],
@@ -157,7 +163,7 @@ let md = :bfnumber
     end
 end
 
-allfsea.qvalue = adjust(allfsea.pvalue, BenjaminiHochberg())
+allfsea = DataFrames.transform(groupby(allfsea, :metadatum), :pvalue => p-> (adjust(collect(p), BenjaminiHochberg())) => :qvalue)
 
 ## older kids
 
@@ -217,7 +223,8 @@ let md = :bfnumber
     end
 end
 
-oldkidsfsea.qvalue = adjust(oldkidsfsea.pvalue, BenjaminiHochberg())
+oldkidsfsea = DataFrames.transform(groupby(oldkidsfsea, :metadatum), :pvalue => p-> (adjust(collect(p), BenjaminiHochberg())) => :qvalue)
+
 # ## Supplementary Figure 1
 
 function labeldiff(dm, labels)
@@ -237,7 +244,12 @@ end
 speciesdiffs = labeldiff(speciesdm[ukids, ukids], allmeta.ageLabel[ukids])
 unirefaccessorydiffs = labeldiff(unirefaccessorydm[ukids,ukids], allmeta.ageLabel[ukids])
 pfamsdiffs = labeldiff(pfamsdm[ukids,ukids], allmeta.ageLabel[ukids])
+pfamsaccessorydiffs = labeldiff(pfamsaccessorydm[ukids,ukids], allmeta.ageLabel[ukids])
 kosdiffs = labeldiff(kosdm[ukids,ukids], allmeta.ageLabel[ukids])
+kosaccessorydiffs = labeldiff(kosaccessorydm[ukids,ukids], allmeta.ageLabel[ukids])
+ecsdiffs = labeldiff(ecsdm[ukids,ukids], allmeta.ageLabel[ukids])
+ecsaccessorydiffs = labeldiff(ecsaccessorydm[ukids,ukids], allmeta.ageLabel[ukids])
+
 
 
 # ## Additional stats
@@ -333,7 +345,7 @@ CSV.write("analysis/oldkidsquartiletests.csv", quartiletests)
 ## write transposed file with significant bugs
 
 sigs = filter(row-> row.qvalue < 0.2, quartiletests).species
-sigsdf = select(ukidsmeta, [:subject, :timepoint, :sample])
+sigsdf = select(allmeta, [:subject, :timepoint, :sample])
 for sp in sigs
     sigsdf[:, sp] = vec(occurrences(view(species, sites=sigsdf.sample, species=[sp])))
 end
@@ -350,13 +362,12 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/metadata.jld2" allmeta oldkidsmeta ukidsmeta ukids oldkids
 @save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
 @save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
-@save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
+@save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm ecsdiffs pfams pfamsdiffs pfamsdm koaccessory kosaccessorydiffs kosaccessorydm ecaccessory ecsaccessorydiffs ecsaccessorydm pfamaccessory pfamsaccessorydiffs pfamsaccessorydm
 @save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
 @save "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors
-@save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
+@save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs ecsdiffs  kosaccessorydiffs pfamsaccessorydiffs ecsaccessorydiffs
 @save "analysis/figures/assets/stratkos.jld2" stratkos
 @save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
-
 
 
 
@@ -378,12 +389,10 @@ function longtaxfromcomm(cm)
 end
 
 taxlong = longtaxfromcomm(oldkidsspecies)
-taxlong = join(taxlong, select(oldkidsmeta,
+taxlong = leftjoin(taxlong, select(oldkidsmeta,
                             [:sample, :childGender, :correctedAgeDays,
-                             :mother_HHS, :cogScore, :limbic_normed,
-                             :subcortical_normed, :neocortical_normed,
-                             :cerebellar_normed]),
-                         on=:sample, kind=:left)
+                             :mother_HHS, :cogScore, metadatums...]),
+                         on=:sample)
 
 taxlong.asq = asin.(sqrt.(taxlong.abundance))
 

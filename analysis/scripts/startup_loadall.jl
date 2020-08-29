@@ -3,42 +3,62 @@ include("accessories.jl")
 
 config = parsefile("Data.toml")
 allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
-kidsmeta = filter(row-> !startswith(row.sample, "M") && !ismissing(row.correctedAgeDays), allmeta)
 
-## Feature tables
-@warn "Loading feature tables"
+filter!(:correctedAgeDays=> !ismissing, allmeta)
 
-species = widen2comm(taxonomic_profiles(filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)...)
+let samples = Set(sampleid.(uniquetimepoints(stoolsample.(allmeta.sample), takefirst=false, samplefilter=iskid)))
+    filter!(:sample => s-> s ∈ samples, allmeta)  
+end
+
+allmeta.simple_race = map(allmeta.simple_race) do r
+    (ismissing(r) || occursin("Decline", r) || occursin("Unknown", r)) && return missing
+    occursin("Mixed", r) && return "Mixed"
+    occursin('\n', r) && error(":simple_race has newlines")
+    return r
+end
+
+## Sanity checks
+
+@assert setdiff(allmeta.simple_race, 
+                Set(["Caucasian / White", 
+                     "Mixed", 
+                     "Asian ",
+                     missing,
+                     "African American / Black", 
+                     "Native American / Alaskan Native"])
+                ) |> length == 0
+
+
+                ## Feature tables
+                @warn "Loading feature tables"
+                
+species = widen2comm(taxonomic_profiles(filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)...)
 # Total sum scaling - function in Microbiome
 relativeabundance!(species)
 
-kos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
-kos = view(kos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(kos)))
-stratkos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample, stratified=true)..., featurecol=:func)
-stratkos = view(stratkos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(stratkos)))
-pfams = widen2comm(functional_profiles(kind="pfams_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
-pfams = view(pfams, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(pfams)))
-ecs = widen2comm(functional_profiles(kind="ecs_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
-ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs)))
+kos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)..., featurecol=:func)
+kos = view(kos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(kos))) |> copy
+stratkos = widen2comm(functional_profiles(kind="kos_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample, stratified=true)..., featurecol=:func)
+stratkos = view(stratkos, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(stratkos))) |> copy
+pfams = widen2comm(functional_profiles(kind="pfams_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)..., featurecol=:func)
+pfams = view(pfams, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(pfams))) |> copy
+ecs = widen2comm(functional_profiles(kind="ecs_names_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)..., featurecol=:func)
+ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs))) |> copy
 
-unirefs = widen2comm(functional_profiles(kind="genefamilies_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in kidsmeta.sample)..., featurecol=:func)
+unirefs = widen2comm(functional_profiles(kind="genefamilies_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)..., featurecol=:func)
 
 @warn "Getting metadata and subgroups"
 
 ### Just get metadata found in tax/func profiles, and in same order
 
 allmeta.ageLabel = map(eachrow(allmeta)) do row
-    ismissing(row.correctedAgeDays) && return missing
+    ismissing(row.correctedAgeDays) && error("No age for $(row.sample)")
     row.correctedAgeDays < 365 && return "1 and under"
     row.correctedAgeDays < 365*2 && return "1 to 2"
     return "2 and over"
 end
-dropmissing!(allmeta, :ageLabel)
 
-filter!(allmeta) do row
-    !ismissing(row.cogScore) ||
-    !ismissing(row.hires_total)
-end
+filter!([:cogScore, :braintotal]=> (cs, bt)-> any(!ismissing, (cs, bt)), allmeta)
 
 # make sure all tables have the same samples in the same order
 allsamples = intersect(allmeta.sample, map(sitenames, (species, unirefs, ecs, kos, pfams))...) |> collect |> sort
@@ -59,6 +79,8 @@ ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, ta
     (map(s-> in(s, samples), allmeta.sample),
     map(row-> in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmeta)))
 end
+
+
 
 @warn "Getting accessory genes"
 
@@ -106,16 +128,16 @@ allmeta.subject_type = [ismom(s) ? "Mother" :
                         iskid(s) ? "Child"  :
                         error("Not mom or kid: $s") for s in allmeta.sample]
 
-allmeta.lowres_total = map(row-> sum(row[[:white_matter_volume, :grey_matter_volume, :csf_volume]]), eachrow(allmeta))
-allmeta.white_matter_normed = allmeta.white_matter_volume ./ allmeta.lowres_total
-allmeta.grey_matter_normed = allmeta.grey_matter_volume ./ allmeta.lowres_total
-allmeta.csf_normed = allmeta.csf_volume ./ allmeta.lowres_total
-
-allmeta.cerebellar_normed = allmeta.cerebellar ./ allmeta.hires_total
-allmeta.neocortical_normed = allmeta.neocortical ./ allmeta.hires_total
-allmeta.subcortical_normed = allmeta.subcortical ./ allmeta.hires_total
-allmeta.limbic_normed = allmeta.limbic ./ allmeta.hires_total
-
+allmeta.white_matter_normed    = allmeta.white_matter     ./ allmeta.braintotal
+allmeta.gray_matter_normed     = allmeta.gray_matter      ./ allmeta.braintotal
+allmeta.csf_normed             = allmeta.csf              ./ allmeta.braintotal
+allmeta.hippocampus_normed     = allmeta.hippocampus     ./ allmeta.braintotal
+allmeta.caudate_normed         = allmeta.caudate         ./ allmeta.braintotal
+allmeta.putamen_normed         = allmeta.putamen         ./ allmeta.braintotal
+allmeta.pallidum_normed        = allmeta.pallidum        ./ allmeta.braintotal
+allmeta.thalamus_normed        = allmeta.thalamus        ./ allmeta.braintotal
+allmeta.amygdala_normed        = allmeta.amygdala        ./ allmeta.braintotal
+allmeta.corpus_callosum_normed = allmeta.corpus_callosum ./ allmeta.braintotal
 ### Metadata subgroups
 
 ukidsmeta = view(allmeta, ukids, :)

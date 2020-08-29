@@ -77,35 +77,35 @@ function accessorygenes(cm, calcs; lower=0., upper=0.95)
     return view(cm, species=prev), view(cm, species=acc)
 end
 
-function runpermanovas(dm, ufilter, md)
+function runpermanovas(dm, ufilter, md, kind)
     udm = dm[ufilter, ufilter]
     umeta = view(md, ufilter, :)
     perms = vcat(
         permanova(dm, [ismissing(x) ? missing : string(x) for x in md.subject], label="subject"),
-        permanova(udm, udm.correctedAgeDays, label="age"),
-        permanova(udm, udm,
+        permanova(udm, umeta.correctedAgeDays, label="age"),
+        permanova(udm, umeta,
             datafilter=row-> !ismissing(row.ageLabel) && row.ageLabel != "1 and under",
             fields=[:correctedAgeDays], label="1+ age"),
-        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.birthType], label="birth type"),
-        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.childGender], datafilter=x-> x != "Don't know", label="gender"),
-        permanova(udm, udm.mother_HHS, label="mother SES"),
-        permanova(udm, udm, fields=[:correctedAgeDays,:white_matter_normed], label="white matter volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:gray_matter_normed], label="gray matter volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:hippocampus_normed], label="hippocampus volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:caudate_normed], label="caudate volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:putamen_normed], label="putamen volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:pallidum_normed], label="pallidum volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:thalamus_normed], label="thalamus volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:amygdala_normed], label="amygdala volume")[2:2,:],
-        permanova(udm, udm, fields=[:correctedAgeDays,:corpus_callosum_normed], label="corpus callosum volume")[2:2,:],
-        permanova(udm, udm.cogScore, label="cognitive function"),
-        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.breastfeeding], label="breastfeeding"),
-        permanova(udm, [ismissing(x) ? missing : string(x) for x in udm.simple_race], label="race"),
-        permanova(udm, udm.childBMI, label="BMI")
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.birthType], label="birth type"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
+        permanova(udm, umeta.mother_HHS, label="mother SES"),
+        permanova(udm, umeta, fields=[:correctedAgeDays,:white_matter_normed], label="white matter volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:gray_matter_normed], label="gray matter volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:hippocampus_normed], label="hippocampus volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:caudate_normed], label="caudate volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:putamen_normed], label="putamen volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:pallidum_normed], label="pallidum volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:thalamus_normed], label="thalamus volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:amygdala_normed], label="amygdala volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:corpus_callosum_normed], label="corpus callosum volume")[2:2,:],
+        permanova(udm, umeta.cogScore, label="cognitive function"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.breastfeeding], label="breastfeeding"),
+        permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.simple_race], label="race"),
+        permanova(udm, umeta.childBMI, label="BMI")
         )
 
     filter!(r-> !ismissing(r[Symbol("Pr(>F)")]), perms)
-    perms[!, :feature] .= "species"
+    perms[!, :feature] .= kind
     rename!(perms, Symbol("Pr(>F)")=>:p_value)
     disallowmissing!(perms)
     perms.q_value = adjust(perms.p_value, BenjaminiHochberg())
