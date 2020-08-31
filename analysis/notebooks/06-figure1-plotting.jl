@@ -60,7 +60,7 @@ end
 
 # ## Figure 1
 
-res=(6*300,5*300)
+res=(7*300,5*300)
 f1_scene, f1_layout = layoutscene(resolution=res, alignmode=Outside())
 f1_scene
 # ### Figure 1a - Permanovas
@@ -90,11 +90,13 @@ phmyorder = [
     "corpus callosum"
 ]
 nosubjperm = filter(row-> row.label != "subject", allpermanovas)
-r2 = unstack(nosubjperm, :label, :feature, :R2)
-select!(r2, [:label, :species, :pfams, :pfamsaccessory])
-r2m = Matrix(r2[!,2:end]) |> disallowmissing #|> permutedims
 
-q = unstack(nosubjperm, :label, :feature, :q_value)
+phmysrt = reverse(invperm(sortperm(phmyorder)))
+r2 = unstack(nosubjperm, :label, :feature, :R2)[phmysrt,:]
+select!(r2, [:label, :species, :pfams, :pfamsaccessory])
+r2m = Matrix(r2[!,2:end]) .* 100 |> disallowmissing #|> permutedims
+
+q = unstack(nosubjperm, :label, :feature, :q_value)[phmysrt,:]
 select!(q, [:label, :species, :pfams, :pfamsaccessory])
 qm = Matrix(q[!,2:end]) |> disallowmissing #|> permutedims
 
@@ -111,15 +113,14 @@ qa = let M = fill(" ", size(qm))
     end
     M
 end
-
-phmysrt = reverse(invperm(sortperm(phmyorder)))
+extrema(ukidsmeta.correctedAgeDays)
 
 phm_plot = heatmap!(phm, permutedims(r2m), colormap=:PuBu, interpolate=false)
 tightlimits!(phm)
 textlayer = textlayer!(phm)
 
 heatmapannotations!(textlayer, phm, 
-    string.(round.(r2m .* 100, digits=1)),
+    string.(round.(r2m, digits=1)),
     textsize = 30, 
     color = ifelse.(vec(r2m) .< 7, :black, :white))
 heatmapannotations!(textlayer, phm,
@@ -133,7 +134,7 @@ f1_scene
 phm.xticklabelsize = 25
 phm.yticklabelsize = 25
 
-phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
+phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label)
 tight_yticklabel_spacing!(phm)
 
 phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end]))
@@ -224,7 +225,7 @@ f1_scene
 ## ## Figure 2
 res = (7*300, 3*300)
 f2_scene, f2_layout = layoutscene(resolution=res, alignmode=Outside())
-## ### Cognitive scores by age
+# ### Cognitive scores by age
 
 cogage = f2_layout[1,1] = LAxis(f2_scene)
 

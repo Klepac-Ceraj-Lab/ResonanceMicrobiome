@@ -11,3 +11,5 @@ analysis/html
 data/biobakery*
 dev
 airtable.key
+*.~lock.*
+*.xls*
