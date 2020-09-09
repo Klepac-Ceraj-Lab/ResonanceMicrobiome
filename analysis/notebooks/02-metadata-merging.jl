@@ -47,8 +47,8 @@ samplemeta = airtable_metadata()
 
 # merge with subject metadata
 
-allmetadata = join(unique(samplemeta), subjectmeta, on=[:subject,:timepoint], kind=:left)
-allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
+allmetadata = leftjoin(unique(samplemeta), subjectmeta, on=[:subject,:timepoint])
+allmetadata.cogAssessment = [(ismissing(x) || x == "None") ? missing : x for x in allmetadata.cogAssessment]
 
 # ## Brain Data
 #

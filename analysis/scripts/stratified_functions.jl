@@ -77,7 +77,7 @@ gluts = let geneset = Set(nko["Glutamate synthesis"])
     filter!(row-> !isnothing(row.taxon), samples)
     totals.ord = invperm(sortperm(totals, [:agelabel, :total]))
 
-    spectotals = by(samples, :taxon, spectotal = :total =>sum)
+    spectotals = by(samples, :taxon, spectotal = :total => sum)
     sort!(spectotals, :spectotal)
     topspec = Set(last(spectotals, 5).taxon)
 

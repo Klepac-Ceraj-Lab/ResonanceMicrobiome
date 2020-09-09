@@ -24,7 +24,8 @@ AbstractPlotting.inline!(true)
 
 allfsea.median = map(median, allfsea.cors)
 oldkidsfsea.median = map(median, oldkidsfsea.cors)
-allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
+
+
 
 set_theme!(
     LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
@@ -415,7 +416,6 @@ allfsea.color = map(eachrow(allfsea)) do row
     c
 end
 
-filter
 allfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,

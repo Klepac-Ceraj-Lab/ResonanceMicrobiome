@@ -19,5 +19,5 @@ freesurferv5 = "data/brain/brain_volumes_5-3.csv"
 freesurferv6 = "data/brain/brain_volumes_6-0.csv"
 
 [output]
-figures="data/analysis/figures"
-tables="data/analysis/tables"
+figures="analysis/figures"
+tables="analysis/tables"

@@ -7,18 +7,20 @@ function get_neuroactive_kos(neuroactivepath="data/uniprot/gbm.txt")
     neuroactive = HashDictionary{String, Vector{String}}()
     desc = ""
     for line in eachline(neuroactivepath)
-       line = split(line, r"[\t,]")
-       if startswith(line[1], "MGB")
-           (mgb, desc) = line
-           desc = rstrip(replace(desc, r"\bI+\b.*$"=>""))
-           desc = replace(desc, r" \([\w\s]+\)$"=>"")
-           desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
-           @info "getting unirefs for $desc"
-           !in(desc, keys(neuroactive)) && insert!(neuroactive, desc, String[])
-       else
+        line = split(line, r"[\t,]")
+        if startswith(line[1], "MGB")
+            (mgb, desc) = line
+            desc = rstrip(replace(desc, r"\bI+\b.*$"=>""))
+            desc = replace(desc, r" \([\w\s]+\)$"=>"")
+            desc = replace(desc, r"^.+ \(([\w\-]+)\) (.+)$"=>s"\1 \2")
+            if !in(desc, keys(neuroactive))
+                @info "getting unirefs for $desc"
+                insert!(neuroactive, desc, String[])
+            end
+        else
            filter!(l-> occursin(r"^K\d+$", l), line)
            append!(neuroactive[desc], String.(line))
-       end
+        end
    end
    return neuroactive
 end

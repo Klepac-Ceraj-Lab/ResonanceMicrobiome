@@ -33,10 +33,10 @@ end
 
 ## ## Supplementary Tables
 
-CSV.write("analysis/tables/supptable1_allpermanovas.csv", select(allpermanovas, [:label,:feature, All()])
-CSV.write("analysis/tables/supptable2_quartiletests.csv", quartiletests)
-CSV.write("analysis/tables/supptable3_allfsea.csv", allfsea[!, Not(:cors)])
-CSV.write("analysis/tables/supptable4_allmetadata.csv", 
+CSV.write(joinpath(config["output"]["tables"], "supptable1_allpermanovas.csv"), select(allpermanovas, [:label,:feature, All()])
+CSV.write(joinpath(config["output"]["tables"], "supptable2_quartiletests.csv"), quartiletests)
+CSV.write(joinpath(config["output"]["tables"], "supptable3_allfsea.csv"), allfsea[!, Not(:cors)])
+CSV.write(joinpath(config["output"]["tables"], "supptable4_allmetadata.csv"), 
     select(ubothmeta, [
         :sample,
         :subject,

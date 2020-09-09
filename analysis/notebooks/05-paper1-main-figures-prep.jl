@@ -163,7 +163,8 @@ let md = :bfnumber
     end
 end
 
-allfsea = DataFrames.transform(groupby(allfsea, :metadatum), :pvalue => p-> (adjust(collect(p), BenjaminiHochberg())) => :qvalue)
+allfsea = DataFrames.transform(groupby(allfsea, :metadatum), :pvalue => (p-> (adjust(collect(p), BenjaminiHochberg()))) => :qvalue)
+CSV.write(joinpath(config["output"]["tables"], "allfsea.csv"), allfsea)
 
 ## older kids
 
@@ -223,7 +224,7 @@ let md = :bfnumber
     end
 end
 
-oldkidsfsea = DataFrames.transform(groupby(oldkidsfsea, :metadatum), :pvalue => p-> (adjust(collect(p), BenjaminiHochberg())) => :qvalue)
+oldkidsfsea = DataFrames.transform(groupby(oldkidsfsea, :metadatum), :pvalue => (p-> (adjust(collect(p), BenjaminiHochberg()))) => :qvalue)
 
 # ## Supplementary Figure 1
 
@@ -296,7 +297,7 @@ end
 filter!(row-> row.nsamples > 30, quartiletests)
 quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
 sort!(quartiletests, :qvalue)
-CSV.write("analysis/quartiletests.csv", quartiletests)
+CSV.write(joinpath(config["output"]["tables"], "quartiletests.csv"), quartiletests)
 
 # ## Older kids
 
@@ -340,7 +341,7 @@ end
 filter!(row-> row.nsamples > 30, quartiletests)
 quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
 sort!(quartiletests, :qvalue)
-CSV.write("analysis/oldkidsquartiletests.csv", quartiletests)
+CSV.write(joinpath(config["output"]["tables"], "oldkidsquartiletests.csv"), quartiletests)
 
 ## write transposed file with significant bugs
 
@@ -350,24 +351,7 @@ for sp in sigs
     sigsdf[:, sp] = vec(occurrences(view(species, sites=sigsdf.sample, species=[sp])))
 end
 
-sigsdf
-CSV.write("data/analysis/tables/sigcog_species.csv",sigsdf)
-
-# ## Exports
-
-using JLD2
-@assert sitenames(species) == allmeta.sample
-allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
-
-@save "analysis/figures/assets/metadata.jld2" allmeta oldkidsmeta ukidsmeta ukids oldkids
-@save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
-@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
-@save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm ecsdiffs pfams pfamsdiffs pfamsdm koaccessory kosaccessorydiffs kosaccessorydm ecaccessory ecsaccessorydiffs ecsaccessorydm pfamaccessory pfamsaccessorydiffs pfamsaccessorydm
-@save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@save "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors
-@save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs ecsdiffs  kosaccessorydiffs pfamsaccessorydiffs ecsaccessorydiffs
-@save "analysis/figures/assets/stratkos.jld2" stratkos
-@save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
+CSV.write(joinpath(config["output"]["tables"], "sigcog_species.csv"),sigsdf)
 
 
 
@@ -396,25 +380,36 @@ taxlong = leftjoin(taxlong, select(oldkidsmeta,
 
 taxlong.asq = asin.(sqrt.(taxlong.abundance))
 
-glms = DataFrame()
+taxgroups = groupby(taxlong, :taxon)
 
-for grp in groupby(taxlong, :taxon)
-    grp = filter(row-> !ismissing(row.cogScore) && row.abundance > 0, grp)
-    nrow(grp) > 10 || continue
-    sp = first(grp.taxon)
-    m = lm(@formula(asq ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp)
+function runlm!(resultsdf, group, md)
+    group = filter(row-> !ismissing(row[md]) && row.abundance > 0, group)
+    nrow(group) > 10 || return
+    sp = first(group.taxon)
+    
+    m = @eval lm(@formula(asq ~ $md + correctedAgeDays + childGender + mother_HHS), $group)
     tbl = coeftable(m)
     df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
     names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
     df[!, :taxon] .= sp
-    append!(glms, df)
+    append!(resultsdf, df)
 end
 
-cogs = findall(row->row.variable == "cogScore", eachrow(glms))
-glms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(glms)]
-glms.qvalue[cogs] .= adjust(glms[cogs,:pvalue], BenjaminiHochberg())
+glms = DataFrame()
 
-CSV.write("analysis/speciesglms.csv", glms)
+for md in metadatums
+    @info "GLMs for $md"
+    for grp in taxgroups
+        runlm!(glms, grp, md)
+    end
+end
+
+filter!(row-> Symbol(row.variable) in metadatums, glms)
+
+glms = DataFrames.transform(groupby(glms, :variable), :pvalue => (p-> (adjust(collect(p), BenjaminiHochberg()))) => :qvalue)
+sort!(glms,:qvalue)
+
+CSV.write(joinpath(config["output"]["tables"], "speciesglms.csv"), glms)
 
 # ## upper/lower quartile
 
@@ -443,7 +438,7 @@ cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
 quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
 quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
 
-CSV.write("analysis/quartilespeciesglms.csv", quartglms)
+CSV.write(joinpath(config["output"]["tables"], "quartilespeciesglms.csv"), quartglms)
 
 # ## Presence/Absence
 
@@ -466,4 +461,22 @@ cogs = findall(row-> startswith(row.variable, "cogScore"), eachrow(paglms))
 paglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(paglms)]
 paglms.qvalue[cogs] .= adjust(paglms[cogs,:pvalue], BenjaminiHochberg())
 
-CSV.write("analysis/paspeciesglms.csv", paglms)
+CSV.write(joinpath(config["output"]["tables"], "paspeciesglms.csv"), paglms)
+
+
+# ## Exports
+
+using JLD2
+@assert sitenames(species) == allmeta.sample
+allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copri"]))))
+
+@save "analysis/figures/assets/metadata.jld2" allmeta oldkidsmeta ukidsmeta ukids oldkids
+@save "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@save "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@save "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm ecsdiffs pfams pfamsdiffs pfamsdm koaccessory kosaccessorydiffs kosaccessorydm ecaccessory ecsaccessorydiffs ecsaccessorydm pfamaccessory pfamsaccessorydiffs pfamsaccessorydm
+@save "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
+@save "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors
+@save "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs ecsdiffs  kosaccessorydiffs pfamsaccessorydiffs ecsaccessorydiffs
+@save "analysis/figures/assets/stratkos.jld2" stratkos
+@save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
+
