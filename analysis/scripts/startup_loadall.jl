@@ -29,10 +29,12 @@ end
                 ) |> length == 0
 
 
-                ## Feature tables
-                @warn "Loading feature tables"
-                
+## Feature tables
+@warn "Loading feature tables"
 species = widen2comm(taxonomic_profiles(filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)...)
+
+missingsp = setdiff(allmeta.sample, samplenames(species))
+
 # Total sum scaling - function in Microbiome
 relativeabundance!(species)
 
@@ -46,6 +48,17 @@ ecs = widen2comm(functional_profiles(kind="ecs_names_relab", filefilter=f-> samp
 ecs = view(ecs, species=map(x-> !in(x, ("UNMAPPED", "UNGROUPED")), featurenames(ecs))) |> copy
 
 unirefs = widen2comm(functional_profiles(kind="genefamilies_relab", filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)..., featurecol=:func)
+
+
+missingko = setdiff(allmeta.sample, samplenames(kos))
+missingpfam = setdiff(allmeta.sample, samplenames(pfams))
+missingec = setdiff(allmeta.sample, samplenames(ecs))
+missingur = setdiff(allmeta.sample, samplenames(unirefs))
+@assert missingko == missingpfam == missingec == missingur
+@assert length(setdiff(missingsp, missingko)) == 0
+open("/lovelace/echo/analysis/bb3_missing.txt", "w") do io
+    println.(Ref(io), missingko)
+end
 
 @warn "Getting metadata and subgroups"
 

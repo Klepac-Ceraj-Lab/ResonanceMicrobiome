@@ -377,7 +377,7 @@ taxlong = leftjoin(taxlong, select(oldkidsmeta,
                             [:sample, :childGender, :correctedAgeDays,
                              :mother_HHS, :cogScore, metadatums...]),
                          on=:sample)
-
+taxlong = leftjoin(taxlong, select(quartmeta, :sample, :quartile), on=:sample)
 taxlong.asq = asin.(sqrt.(taxlong.abundance))
 
 taxgroups = groupby(taxlong, :taxon)
@@ -413,11 +413,9 @@ CSV.write(joinpath(config["output"]["tables"], "speciesglms.csv"), glms)
 
 # ## upper/lower quartile
 
-longquartiles = filter(row-> row.sample in oldkids, taxlong)
-longquartiles = join(longquartiles, quartmeta[!, [:sample, :quartile]], on=:sample, kind=:left)
 quartglms = DataFrame()
 
-for grp in groupby(longquartiles, :taxon)
+for grp in taxgroups
     grp = filter(row-> !ismissing(row.quartile) && row.abundance > 0, grp)
     nrow(grp) > 10 || continue
     if length(unique(grp.quartile)) == 1
@@ -437,33 +435,14 @@ end
 cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
 quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
 quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
-
+sort!(quartglms, :qvalue)
 CSV.write(joinpath(config["output"]["tables"], "quartilespeciesglms.csv"), quartglms)
 
-# ## Presence/Absence
-
-paglms = DataFrame()
-
-for grp in groupby(taxlong, :taxon)
-    grp = filter(row-> !ismissing(row.cogScore), grp)
-    nrow(grp) > 10 || continue
-    sp = first(grp.taxon)
-    grp.present = grp.abundance .> 0.
-    m = glm(@formula(present ~ cogScore + correctedAgeDays + childGender + mother_HHS), grp, Bernoulli(), LogitLink())
-    tbl = coeftable(m)
-    df = DataFrame([tbl.rownms, tbl.cols...], [:variable, Symbol.(tbl.colnms)...])
-    names!(df, [:variable, :estimate, :stderror, :tvalue, :pvalue, :confint5, :confint95])
-    df[!, :taxon] .= sp
-    append!(paglms, df)
+open(joinpath(config["output"]["other"], "echo_taxa.txt", "w")) do io
+    for s in speciesnames(species)
+        println(io, s)
+    end
 end
-
-cogs = findall(row-> startswith(row.variable, "cogScore"), eachrow(paglms))
-paglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(paglms)]
-paglms.qvalue[cogs] .= adjust(paglms[cogs,:pvalue], BenjaminiHochberg())
-
-CSV.write(joinpath(config["output"]["tables"], "paspeciesglms.csv"), paglms)
-
-
 # ## Exports
 
 using JLD2

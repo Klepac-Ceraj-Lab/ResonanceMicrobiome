@@ -15,9 +15,11 @@ joined_metadata="data/metadata/joined.csv"
 kos2uniref="/babbage/echo/profiles/map_ko_uniref90.txt.gz" # from /pool001/vklepacc/humann_databases_v3/utility_mapping/
 
 [tables.brain_structure]
+brainvolumes = "data/brain/brain_volumes.csv"
 freesurferv5 = "data/brain/brain_volumes_5-3.csv"
 freesurferv6 = "data/brain/brain_volumes_6-0.csv"
 
 [output]
 figures="analysis/figures"
 tables="analysis/tables"
+other="analysis/other_output"
