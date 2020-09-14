@@ -82,13 +82,14 @@ phmyorder = [
     "cognitive function",
     "white matter",
     "gray matter",
+    "csf",
+    "neocortex",
+    "subcortex",
+    "cerebellum",
+    "limbic",
     "hippocampus",
-    "caudate",
-    "putamen",
-    "pallidum",
     "thalamus",
-    "amygdala",
-    "corpus callosum"
+    "corpus callosum",
 ]
 nosubjperm = filter(row-> row.label != "subject", allpermanovas)
 
@@ -283,25 +284,8 @@ rowsize!(f2_layout, 2, Relative(0.25))
 f2_scene
 
 ##
-
-sigbugs = [
-    "Asaccharobacter_celatus",
-    "Erysipelatoclostridium_ramosum",
-    "Dorea_longicatena",
-    "Adlercreutzia_equolifaciens",
-    "Turicimonas_muris",
-    "Ruminococcus_gnavus",
-    "Roseburia_hominis",
-    "Anaerostipes_hadrus",
-    "Faecalibacterium_prausnitzii",
-    "Ruminococcus_bicirculans",
-    "Alistipes_finegoldii",
-    "Clostridium_symbiosum",
-    "Eubacterium_eligens",
-    "Eubacterium_ramulus",
-    "Roseburia_faecis",
-    "Agathobaculum_butyriciproducens",
-    "Fusicatenibacter_saccharivorans"]
+sigbugs = CSV.File(joinpath(config["output"]["tables"], "oldkidsquartiletests.csv")) |> DataFrame
+sigbugs = sigbugs[sigbugs.qvalue .< 0.2, :species]
 
     
 @assert sitenames(quartspecies) == quartmeta.sample
@@ -346,8 +330,8 @@ plotsigbug!(bug2, sigbugs[6])
 bug3 = quartilescatters[2,1] = LAxis(f2_scene, title=replace(sigbugs[7], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
 plotsigbug!(bug3, sigbugs[7])
 
-bug4 = quartilescatters[2,2] = LAxis(f2_scene, title=replace(sigbugs[9], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
-plotsigbug!(bug4, sigbugs[9])
+bug4 = quartilescatters[2,2] = LAxis(f2_scene, title=replace(sigbugs[10], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+plotsigbug!(bug4, sigbugs[10])
 
 colsize!(f2_layout, 1, Relative(0.3))
 

@@ -78,7 +78,16 @@ function accessorygenes(cm, calcs; lower=0., upper=0.95)
     end
     return view(cm, species=prev), view(cm, species=acc)
 end
-
+metadatums = [:white_matter_normed,
+              :gray_matter_normed,
+              :csf_normed,
+              :hippocampus_normed,
+              :thalamus_normed,
+              :corpus_callosum_normed,
+              :limbic_normed,
+              :subcortex_normed,
+              :neocortex_normed,
+              :cerebellum_normed]
 function runpermanovas(dm, ufilter, md, kind)
     udm = dm[ufilter, ufilter]
     umeta = view(md, ufilter, :)
@@ -94,11 +103,12 @@ function runpermanovas(dm, ufilter, md, kind)
         permanova(udm, umeta, fields=[:correctedAgeDays,:white_matter_normed], label="white matter volume")[2:2,:],
         permanova(udm, umeta, fields=[:correctedAgeDays,:gray_matter_normed], label="gray matter volume")[2:2,:],
         permanova(udm, umeta, fields=[:correctedAgeDays,:hippocampus_normed], label="hippocampus volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:caudate_normed], label="caudate volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:putamen_normed], label="putamen volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:pallidum_normed], label="pallidum volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:csf_normed], label="csf volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:neocortex_normed], label="neocortical volume")[2:2,:],
         permanova(udm, umeta, fields=[:correctedAgeDays,:thalamus_normed], label="thalamus volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:amygdala_normed], label="amygdala volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:subcortex_normed], label="subcortical volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:cerebellum_normed], label="cerebellum volume")[2:2,:],
         permanova(udm, umeta, fields=[:correctedAgeDays,:corpus_callosum_normed], label="corpus callosum volume")[2:2,:],
         permanova(udm, umeta.cogScore, label="cognitive function"),
         permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.breastfeeding], label="breastfeeding"),

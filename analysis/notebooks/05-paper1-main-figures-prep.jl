@@ -48,6 +48,8 @@ ecsaccessory_permanovas = runpermanovas(ecsaccessorydm, ukids, allmeta, "ecsacce
 
 
 ##
+
+
 allpermanovas = vcat(
     species_permanovas,
     unirefaccessory_permanovas,
@@ -95,6 +97,7 @@ carbpos = findall(x-> in(x, carbs), unirefnames)
 neuroactive = getneuroactive(unirefnames) # function in accessories.jl
 
 allneuroactive = union([neuroactive[k] for k in keys(neuroactive)]...)
+
 metadatums = [:white_matter_normed,
               :gray_matter_normed,
               :csf_normed,
@@ -105,7 +108,6 @@ metadatums = [:white_matter_normed,
               :subcortex_normed,
               :neocortex_normed,
               :cerebellum_normed]
-
 
 allfsea = DataFrame(
             geneset   = String[],
@@ -440,7 +442,7 @@ quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
 sort!(quartglms, :qvalue)
 CSV.write(joinpath(config["output"]["tables"], "quartilespeciesglms.csv"), quartglms)
 
-open(joinpath(config["output"]["other"], "echo_taxa.txt", "w")) do io
+open(joinpath(config["output"]["other"], "echo_taxa.txt"), "w") do io
     for s in speciesnames(species)
         println(io, s)
     end
