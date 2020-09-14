@@ -141,16 +141,18 @@ allmeta.subject_type = [ismom(s) ? "Mother" :
                         iskid(s) ? "Child"  :
                         error("Not mom or kid: $s") for s in allmeta.sample]
 
-allmeta.white_matter_normed    = allmeta.white_matter     ./ allmeta.braintotal
-allmeta.gray_matter_normed     = allmeta.gray_matter      ./ allmeta.braintotal
-allmeta.csf_normed             = allmeta.csf              ./ allmeta.braintotal
+
+allmeta.white_matter_normed    = allmeta.white_matter    ./ allmeta.braintotal
+allmeta.gray_matter_normed     = allmeta.gray_matter     ./ allmeta.braintotal
+allmeta.csf_normed             = allmeta.csf             ./ allmeta.braintotal
 allmeta.hippocampus_normed     = allmeta.hippocampus     ./ allmeta.braintotal
-allmeta.caudate_normed         = allmeta.caudate         ./ allmeta.braintotal
-allmeta.putamen_normed         = allmeta.putamen         ./ allmeta.braintotal
-allmeta.pallidum_normed        = allmeta.pallidum        ./ allmeta.braintotal
 allmeta.thalamus_normed        = allmeta.thalamus        ./ allmeta.braintotal
-allmeta.amygdala_normed        = allmeta.amygdala        ./ allmeta.braintotal
 allmeta.corpus_callosum_normed = allmeta.corpus_callosum ./ allmeta.braintotal
+allmeta.limbic_normed          = allmeta.limbic          ./ allmeta.braintotal
+allmeta.subcortex_normed       = allmeta.subcortex       ./ allmeta.braintotal
+allmeta.neocortex_normed       = allmeta.neocortex       ./ allmeta.braintotal
+allmeta.cerebellum_normed      = allmeta.cerebellum      ./ allmeta.braintotal
+
 ### Metadata subgroups
 
 ukidsmeta = view(allmeta, ukids, :)

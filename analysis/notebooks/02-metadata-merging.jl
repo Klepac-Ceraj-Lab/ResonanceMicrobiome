@@ -56,20 +56,8 @@ allmetadata.cogAssessment = [(ismissing(x) || x == "None") ? missing : x for x i
 
 brainfiles = config["tables"]["brain_structure"]
 
-# Freesurfer is another way of doing segmentation
-# We have 2 different versions of freesurfer tables to merge
-
-
-freesurfer5 = CSV.File(brainfiles["freesurferv5"]) |> DataFrame
-freesurfer6 = CSV.File(brainfiles["freesurferv6"]) |> DataFrame
-
-# Some sanity checks
-@warn "Checking freesurfer tables"
-
-@info "v5 - v6 cols" setdiff(names(freesurfer5), names(freesurfer6))
-@info "v6 - v5 cols" setdiff(names(freesurfer6), names(freesurfer5))
-
-@assert names(freesurfer5) == names(freesurfer6)
+# Freesurfer is a way of doing segmentation
+freesurfer = CSV.File(brainfiles["brainvolumes"]) |> DataFrame
 
 # fix subjectID
 function fixfreesurfersubject!(table)
@@ -78,57 +66,35 @@ function fixfreesurfersubject!(table)
         isnothing(m) && error(id)
         parse(Int, m.captures[1])
     end
+    select!(table, Not(:ID))
     return table
 end
 
-fixfreesurfersubject!(freesurfer5)
-fixfreesurfersubject!(freesurfer6)
+fixfreesurfersubject!(freesurfer)
 
-let ns = names(freesurfer5)
-    idx_all = findall(n-> eltype(freesurfer5[!,n]) <: Real && all(==(0.), freesurfer5[!,n]), ns)
-    idx_any = findall(n-> eltype(freesurfer5[!,n]) <: Real && any(==(0.), freesurfer5[!,n]), ns)
-    @info "v5 all zeros" ns[idx_all]
-    @info "v5 any zeros" setdiff(ns[idx_any], ns[idx_all])
-end
-
-let ns = names(freesurfer6)
-    idx_all = findall(n-> eltype(freesurfer6[!,n]) <: Real && all(==(0.), freesurfer6[!,n]), ns)
-    idx_any = findall(n-> eltype(freesurfer6[!,n]) <: Real && any(==(0.), freesurfer6[!,n]), ns)
-    @info "v6 all zeros" ns[idx_all]
-    @info "v6 any zeros" setdiff(ns[idx_any], ns[idx_all])
-end
-
-let dupes = intersect(collect(zip(freesurfer5.subject, freesurfer5.timepoint)),collect(zip(freesurfer6.subject, freesurfer6.timepoint)))
-    fs5 = filter([:subject, :timepoint] => (s,t) -> (s,t) ∈ dupes, freesurfer5)
-    fs6 = filter([:subject, :timepoint] => (s,t) -> (s,t) ∈ dupes, freesurfer6)
-
-    ns = names(fs5)
-    @assert ns == names(fs6)
-    @assert size(fs5) == size(fs6)
-    for (r5, r6) in zip(eachrow(fs5), eachrow(fs6))
-        @info "version mismatches"   ns[findall(n-> r5[n] != r6[n], ns)]
+for (n, col) in pairs(eachcol(freesurfer))
+    eltype(col) <: Number && continue
+    newcol = Union{Float64, Missing}[]
+    for e in col
+        if ismissing(e) || e == "#REF!"
+            push!(newcol, missing)
+        else
+            push!(newcol, parse(Float64, e))
+        end
     end
-    fs5, fs6
+    freesurfer[!,n] = newcol
 end
 
-freesurfer = vcat(freesurfer5, freesurfer6)
-unique!(freesurfer, [:subject, :timepoint])
-
-freesurfer.hippocampus = freesurfer."Left-Hippocampus" .+ freesurfer."Right-Hippocampus"
-freesurfer.caudate = freesurfer."Left-Caudate" .+ freesurfer."Right-Caudate"
-freesurfer.putamen = freesurfer."Left-Putamen" .+ freesurfer."Right-Putamen"
-freesurfer.pallidum = freesurfer."Left-Pallidum" .+ freesurfer."Right-Pallidum"
-freesurfer.thalamus = freesurfer."Left-Thalamus-Proper" .+ freesurfer."Right-Thalamus-Proper"
-freesurfer.amygdala = freesurfer."Left-Amygdala" .+ freesurfer."Right-Amygdala"
-freesurfer.corpus_callosum = freesurfer.CC_Posterior .+ freesurfer.CC_Mid_Posterior .+ freesurfer.CC_Central .+ freesurfer.CC_Mid_Anterior .+ freesurfer.CC_Anterior
-
-rename!(freesurfer, [
-    "CSF" => "csf",
-    "TotalGrayVol" => "gray_matter",
+rename!(freesurfer, [   
+    "Cerebral Spinal Fluid" => "csf",
+    "Total Grey Matter Volume" => "gray_matter",
+    "Cortical White Matter Volume" => "white_matter",
     "Brain-Stem" => "brainstem",
-    "BrainSegVol"=> "braintotal",
-    "CorticalWhiteMatterVol" => "white_matter"
+    "Total Intracranial Volume"=> "braintotal",
+    "corpus callosum" => "corpus_callosum",
     ])
+
+rename!(lowercase, freesurfer)
 
 fs_keep = [
     "subject",
@@ -139,12 +105,12 @@ fs_keep = [
     "csf",
     "brainstem",
     "hippocampus",
-    "caudate",
-    "putamen",
-    "pallidum",
     "thalamus",
-    "amygdala",
-    "corpus_callosum"
+    "corpus_callosum",
+    "limbic",
+    "subcortex",
+    "neocortex",
+    "cerebellum"
 ]
 
 select!(freesurfer, fs_keep)

@@ -97,13 +97,15 @@ neuroactive = getneuroactive(unirefnames) # function in accessories.jl
 allneuroactive = union([neuroactive[k] for k in keys(neuroactive)]...)
 metadatums = [:white_matter_normed,
               :gray_matter_normed,
+              :csf_normed,
               :hippocampus_normed,
-              :caudate_normed,
-              :putamen_normed,
-              :pallidum_normed,
               :thalamus_normed,
-              :amygdala_normed,
-              :corpus_callosum_normed]
+              :corpus_callosum_normed,
+              :limbic_normed,
+              :subcortex_normed,
+              :neocortex_normed,
+              :cerebellum_normed]
+
 
 allfsea = DataFrame(
             geneset   = String[],
