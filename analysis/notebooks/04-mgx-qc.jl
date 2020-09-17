@@ -21,7 +21,7 @@ using AbstractPlotting.MakieLayout
 using CairoMakie
 using PrettyTables
 using CSV
-using Pkg.TOML: parsefile
+using TOML: parsefile
 
 rounder = (v,i,j) -> typeof(v) <: AbstractFloat ? round(v,digits=3) : v
 # print ~15 random rows

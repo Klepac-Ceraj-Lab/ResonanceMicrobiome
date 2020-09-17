@@ -1,7 +1,7 @@
 using ECHOAnalysis
 using DataFrames
 using CSV
-import Pkg.TOML: parsefile 
+import TOML: parsefile 
 
 config = parsefile("Data.toml")
 allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame

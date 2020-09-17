@@ -16,7 +16,7 @@ using AbstractPlotting.MakieLayout
 using CairoMakie
 using PrettyTables
 using CSV
-using Pkg.TOML: parsefile
+using TOML: parsefile
 
 CairoMakie.activate!(type="svg")
 

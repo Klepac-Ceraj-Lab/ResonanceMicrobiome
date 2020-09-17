@@ -17,6 +17,6 @@ using JLD2
 using Microbiome
 using MultipleTesting
 using MultivariateStats
-using Pkg.TOML: parsefile
+using TOML: parsefile
 using ProgressMeter
 using Statistics

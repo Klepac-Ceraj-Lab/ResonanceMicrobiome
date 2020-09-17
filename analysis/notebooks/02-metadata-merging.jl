@@ -18,7 +18,7 @@
 # The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
 using ECHOAnalysis
-using Pkg.TOML: parsefile
+using TOML: parsefile
 config = parsefile("Data.toml")
 
 for (key, value) in config
