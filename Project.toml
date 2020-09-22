@@ -1,9 +1,6 @@
 authors = ["kescobo <kbonham@wellesley.edu>"]
 version = "0.1.0-pre"
 
-[compat]
-julia = "1.6"
-
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
 BiobakeryUtils = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
@@ -16,6 +13,7 @@ Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DecisionTree = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -28,6 +26,8 @@ HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 InvertedIndices = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJModels = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 Microbiome = "3bd8f0ae-a0f2-5238-a5af-e1b399a4940c"
 MultipleTesting = "f8716d33-7c4a-5097-896f-ce0ecbd3ef6b"
 MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
@@ -38,3 +38,6 @@ RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 SpatialEcology = "348f2d5d-71a3-5ad4-b565-8af070f99681"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsMakie = "65254759-4cff-5aa5-8326-61ce017a8c70"
+
+[compat]
+julia = "1.6"

@@ -352,7 +352,9 @@ CSV.write(joinpath(config["output"]["tables"], "oldkidsquartiletests.csv"), quar
 sigs = filter(row-> row.qvalue < 0.2, quartiletests).species
 sigsdf = select(allmeta, [:subject, :timepoint, :sample])
 for sp in sigs
-    sigsdf[:, sp] = vec(occurrences(view(species, sites=sigsdf.sample, species=[sp])))
+    v = vec(occurrences(view(species, sites=sigsdf.sample, species=[sp])))
+    sigsdf[:, sp] = v
+    allmeta[:, sp] = v
 end
 
 CSV.write(joinpath(config["output"]["tables"], "sigcog_species.csv"),sigsdf)
