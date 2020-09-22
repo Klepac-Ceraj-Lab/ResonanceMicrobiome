@@ -72,13 +72,17 @@ function kneaddata(sample, filelist, outpath)
     return
 end
 
+function metaphlan(sample, outpath)
+    
+    
+end
+
 for row in eachrow(redo[2:end, :])
     s = row.sample
-    isfile(joinpath(kneaddir, "$(s)_kneaddata.fastq")) && continue
-    
-    @info "running kneaddata on $s"
     raw = filter(f-> occursin(replace(s, "_"=> "-"), f), rawfastq_files)
-    try 
+    try
+        isfile(joinpath(kneaddir, "$(s)_kneaddata.fastq")) && continue
+        @info "running kneaddata on $s"
         kneaddata(s, raw, kneaddir)
     catch e
         @warn "$s threw error" e

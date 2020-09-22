@@ -12,4 +12,5 @@ data/biobakery*
 dev
 airtable.key
 *.~lock.*
-*.xls*
+*.xls
+*.envrc
