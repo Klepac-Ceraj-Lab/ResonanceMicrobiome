@@ -465,3 +465,5 @@ allmeta.pcopri = collect(vec(occurrences(view(species, species=["Prevotella_copr
 @save "analysis/figures/assets/stratkos.jld2" stratkos
 @save "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
 
+
+## Candace output

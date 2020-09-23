@@ -17,6 +17,9 @@
 # Extra code for much of this analysis is found in the `ECHOAnalysis` julia package.
 # The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
+using DrWatson
+@quickactivate "ResonancePaper"
+
 using ECHOAnalysis
 using TOML: parsefile
 config = parsefile("Data.toml")
@@ -42,7 +45,7 @@ rename!(subjectmeta, :subjectID=> :subject)
 # if you have the API key.
 # If you dowloaded this table from Zenodo, skip this step
 
-include("airtable.key"); # ENV["AIRTABLE_KEY"] = <key>
+# needs to have ENV["AIRTABLE_KEY"] = <key>
 samplemeta = airtable_metadata()
 
 # merge with subject metadata

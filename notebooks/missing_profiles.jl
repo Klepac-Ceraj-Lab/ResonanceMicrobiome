@@ -62,29 +62,72 @@ metaphlandir = joinpath(outpath, "metaphlan"); isdir(metaphlandir) || mkdir(meta
 humanndir = joinpath(outpath, "humann"); isdir(humanndir) || mkdir(humanndir)kneaddir
 
 rawfastq_files = readdir(outfastq, join=true)
+redo_sample = unique(sampleid.(stoolsample.(basename.(rawfastq_files))))
+filter!(row-> row.sample in redo_sample, redo)
 
 function kneaddata(sample, filelist, outpath)
     path, io = mktemp()
+    @info "concatenating"
     catfile = path * ".fastq.gz"
     run(pipeline(`cat $filelist`, stdout=catfile))
+    @info "kneading"
     cmd = `kneaddata --input $catfile --reference-db /babbage/biobakery_databases/kneaddata/hg37 --reference-db /babbage/biobakery_databases/kneaddata/silva --output $outpath --output-prefix $(sample)_kneaddata --trimmomatic /opt/miniconda3/envs/bb3/share/trimmomatic-0.39-1/ --threads 8`
     run(cmd)
     return
 end
 
 function metaphlan(sample, outpath)
-    
-    
+    kneadin = joinpath(kneaddir, "$(sample)_kneaddata.fastq")
+    profile_out = joinpath(outpath, sample*"_profile.tsv")
+    bowtie_out = joinpath(outpath, sample*"_bowtie2.tsv")
+    sam_out = joinpath(outpath, sample*".sam")
+    db = "/babbage/biobakery_databases/metaphlan"
+
+    cmd = `metaphlan $kneadin $profile_out --bowtie2out $bowtie_out --samout $sam_out --input_type fastq --nproc 8 --bowtie2db $db --index mpa_v30_CHOCOPhlAn_201901`
+    run(cmd)
+    return
 end
 
-for row in eachrow(redo[2:end, :])
+function humann(sample, outpath)
+    kneadin = joinpath(kneaddir, "$(sample)_kneaddata.fastq")
+    taxin = joinpath(metaphlandir, "$(sample)_profile.tsv")
+    profile_out = joinpath(humanndir, "main")
+    db = "/babbage/biobakery_databases/metaphlan"
+    cmd = `humann --input $kneadin --taxonomic-profile $taxin --output $profile_out --threads 8 --remove-temp-output --search-mode uniref90 --output-basename $sample --metaphlan-options '--bowtie2db $db --index mpa_v30_CHOCOPhlAn_201901'`
+    run(cmd)
+end
+
+for row in eachrow(redo)
     s = row.sample
     raw = filter(f-> occursin(replace(s, "_"=> "-"), f), rawfastq_files)
+    s == "M0753_1F_1A" && continue
     try
-        isfile(joinpath(kneaddir, "$(s)_kneaddata.fastq")) && continue
-        @info "running kneaddata on $s"
-        kneaddata(s, raw, kneaddir)
+        if !isfile(joinpath(kneaddir, "$(s)_kneaddata.fastq"))
+            @info "running kneaddata on $s"
+            kneaddata(s, raw, kneaddir)
+        end
     catch e
         @warn "$s threw error" e
+        continue
+    end
+
+    try
+        if !isfile(joinpath(metaphlandir, "$(s)_profile.tsv"))
+            @info "running metaphlan on $s"
+            metaphlan(s, metaphlandir)
+        end
+    catch e
+        @warn "$s threw error" e
+        continue
+    end
+
+    try
+        if !isfile(joinpath(humanndir, "$(s)_genefamilies.tsv"))
+            @info "running humann on $s"
+            humann(s, humanndir)
+        end
+    catch e
+        @warn "$s threw error" e
+        break
     end
 end

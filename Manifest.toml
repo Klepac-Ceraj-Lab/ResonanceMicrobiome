@@ -286,6 +286,12 @@ git-tree-sha1 = "50ddf44c53698f5e784bbebb3f4b21c5807401b1"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.3"
 
+[[DrWatson]]
+deps = ["Dates", "FileIO", "LibGit2", "Pkg", "Random", "Requires", "UnPack"]
+git-tree-sha1 = "2a022d640d242c7f54e1cf5f8f126604e02ae452"
+uuid = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
+version = "1.16.0"
+
 [[ECHOAnalysis]]
 deps = ["BiobakeryUtils", "CSV", "Colors", "DataFrames", "Dictionaries", "HTTP", "JSON3", "Microbiome", "ProgressMeter", "SparseArrays"]
 path = "dev/ECHOAnalysis"
