@@ -17,8 +17,7 @@
 # Extra code for much of this analysis is found in the `ECHOAnalysis` julia package.
 # The docs can be [found here](https://klepac-ceraj-lab.github.io/echo_analysis/dev/).
 
-using DrWatson
-@quickactivate "ResonancePaper"
+using DrWatson; @quickactivate "ResonancePaper"
 
 using ECHOAnalysis
 using TOML: parsefile
@@ -34,7 +33,7 @@ end
 using CSV
 using DataFrames
 
-subjectmeta = CSV.File(config["tables"]["subject_metadata"]) |> DataFrame
+subjectmeta = CSV.File(datadir("metadata", config["tables"]["subject_metadata"])) |> DataFrame
 rename!(subjectmeta, :subjectID=> :subject)
 
 # ## Sample metadata
@@ -50,17 +49,14 @@ samplemeta = airtable_metadata()
 
 # merge with subject metadata
 
-allmetadata = leftjoin(unique(samplemeta), subjectmeta, on=[:subject,:timepoint])
-allmetadata.cogAssessment = [(ismissing(x) || x == "None") ? missing : x for x in allmetadata.cogAssessment]
+allmeta = leftjoin(unique(samplemeta), subjectmeta, on=[:subject,:timepoint])
+allmeta.cogAssessment = [(ismissing(x) || x == "None") ? missing : x for x in allmeta.cogAssessment]
 
 # ## Brain Data
 #
-# We also have tables of brain volumes for many of our subjects.
-
-brainfiles = config["tables"]["brain_structure"]
-
 # Freesurfer is a way of doing segmentation
-freesurfer = CSV.File(brainfiles["brainvolumes"]) |> DataFrame
+
+freesurfer = CSV.File(datadir("brain", "brain_volumes.csv")) |> DataFrame
 
 # fix subjectID
 function fixfreesurfersubject!(table)
@@ -117,25 +113,25 @@ fs_keep = [
 ]
 
 select!(freesurfer, fs_keep)
-allmetadata = join(allmetadata, freesurfer, on=[:subject,:timepoint], kind=:left)
+allmeta = join(allmeta, freesurfer, on=[:subject,:timepoint], kind=:left)
 
 
 ## Write for easy referemce
-CSV.write(config["tables"]["joined_metadata"], allmetadata)
-CSV.write("/home/kevin/Desktop/hasstool.csv", unique(samplemeta[map(s-> startswith(s, "C"), samplemeta.sample), [:subject, :timepoint]]))
+CSV.write(datadir("metadata", "joined.csv"), allmeta)
+CSV.write(datadir("output", "tables", "hasstool.csv"), unique(samplemeta[map(s-> startswith(s, "C"), samplemeta.sample), [:subject, :timepoint]]))
 
-ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmetadata.sample, takefirst=true, samplefilter=iskid)))
-    (map(row-> !ismissing(row.ageLabel) && in(row.sample, samples), eachrow(allmetadata)),
-    map(row-> !ismissing(row.ageLabel) && in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmetadata)))
+ukids, oldkids = let samples = Set(sampleid.(uniquetimepoints(allmeta.sample, takefirst=true, samplefilter=iskid)))
+    (map(row-> !ismissing(row.ageLabel) && in(row.sample, samples), eachrow(allmeta)),
+    map(row-> !ismissing(row.ageLabel) && in(row.sample, samples) && row.ageLabel != "1 and under", eachrow(allmeta)))
 end
 
-noreps = let samples = Set(sampleid.(uniquetimepoints(stoolsample.(allmetadata.sample), takefirst=false, samplefilter=iskid)))
-    map(row-> !ismissing(row.ageLabel) && in(row.sample, samples), eachrow(allmetadata))
+noreps = let samples = Set(sampleid.(uniquetimepoints(stoolsample.(allmeta.sample), takefirst=false, samplefilter=iskid)))
+    map(row-> !ismissing(row.ageLabel) && in(row.sample, samples), eachrow(allmeta))
 end
 
-norepsmeta = view(allmetadata, noreps, :)
-ukidsmeta = view(allmetadata, ukids, :)
-oldkidsmeta = view(allmetadata, oldkids, :)
+norepsmeta = view(allmeta, noreps, :)
+ukidsmeta = view(allmeta, ukids, :)
+oldkidsmeta = view(allmeta, oldkids, :)
 
 print("All: ","\n\t",
     "N samples: ", size(norepsmeta, 1), "\n\t",

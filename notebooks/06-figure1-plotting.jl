@@ -145,7 +145,7 @@ phm_legend = LColorbar(f1_scene, phm_plot, width=30)
 phm_layout[1, 2] = phm_legend
 phm_layout[1, 2, Left()] = LText(f1_scene, "% Variance", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-save("analysis/figures/figure1.pdf", f1_scene, resolution=res)
+save(plotsdir("figure1.pdf", f1_scene, resolution=res)
 
 ## ### Figure 1bc
 
@@ -221,7 +221,7 @@ foreach(Union{LColorbar, LAxis}, f1_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 
-save("analysis/figures/figure1.pdf", f1_scene, resolution=res);
+save(plotsdir("figure1.pdf", f1_scene, resolution=res);
 f1_scene
 
 ## ## Figure 2
@@ -343,7 +343,7 @@ quartilescatters[2, 1, TopLeft()] = LText(f2_scene, "d", textsize = 40, padding 
 quartilescatters[2, 2, TopLeft()] = LText(f2_scene, "e", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 f2_layout[0, :] = LText(f2_scene, "Figure 2", textsize = 40, halign=:left)
-save("analysis/figures/figure2.pdf", f2_scene, resolution=res);
+save(plotsdir("figure2.pdf", f2_scene, resolution=res);
 f2_scene
 
 ## ## Figure 3
@@ -465,7 +465,7 @@ foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 f3_layout[1,1] = fsea_layout
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## gluts, p1
@@ -661,7 +661,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 # f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
@@ -987,7 +987,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 fsea_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left, padding = (-150, 0, 0, 0))
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
@@ -1313,7 +1313,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch

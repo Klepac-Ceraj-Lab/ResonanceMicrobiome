@@ -5,8 +5,6 @@
 | **Authors** | [![Kevin Bonham][kevin-badge]][kevin-url] [![Vanja Klepac-Ceraj][vanja-badge]][vanja-url] |
 | **DOIs**    | Repo: [![repo][repo-badge]][repo-url] Data: [![data][data-badge]][data-url] |
 
-
-
 [kevin-badge]: https://img.shields.io/badge/Author-Kevin%20Bonham%2C%20PhD-blueviolet
 [kevin-url]: http://nequals.me
 [vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
@@ -35,16 +33,17 @@ Once completed,
 you should be able to execute `julia` from the command prompt
 to open the julia REPL.
 
-```
+```raw
 $ julia
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.5.1-pre.0 (2020-08-02)
- _/ |\__'_|_|_|\__'_|  |  release-1.5/f0b8c76f6f (fork: 98 commits, 89 days)
+  | | |_| | | | (_| |  |  Version 1.6.0-DEV.917 (2020-09-14)
+ _/ |\__'_|_|_|\__'_|  |  Commit a0a68a54d6 (8 days old master)
 |__/                   |
+
 
 julia>
 ```
@@ -83,7 +82,8 @@ can be downloaded from the [releases page][4].
 Simply download and unpack the archive file.
 
 TODO: add correct link once release is made
-```
+
+```sh
 $ curl -o repo.tar.gz
 #...
 $ cd resonance_paper1
@@ -97,15 +97,15 @@ of the julia project environment and its dependencies,
 To use them, start a julia REPL,
 activate the environment, and `instantiate`:
 
-```
+```raw
 $ julia
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.3.0 (2019-11-26)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
+  | | |_| | | | (_| |  |  Version 1.6.0-DEV.917 (2020-09-14)
+ _/ |\__'_|_|_|\__'_|  |  Commit a0a68a54d6 (8 days old master)
 |__/                   |
 
 [ Info: No project file, using default
@@ -119,14 +119,12 @@ Activating environment at `~/repos/lab/testing/resonance_paper1/Project.toml`
 julia> Pkg.instantiate()
 ```
 
-Then, take a look at the files in the `analysis/notebooks/` folder
+Then, take a look at the files in the `notebooks/` folder
 to get started.
 The `.jl` files are julia files, written in [Literate.jl][5] style.
 are meant to be viewed in order.
 All code is executed with the working directory set
 to the root of this repository.
-
-
 
 [1]: http://julialang.org
 [2]: https://julialang.org/downloads/

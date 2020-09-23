@@ -5,8 +5,9 @@
 # ## Setup
 #
 # This step takes about 20 min
+using DrWatson; @quickactivate "ResonancePaper"
 
-include("../scripts/startup_loadall.jl")
+include(scriptsdir("startup_loadall.jl")
 ## Figure 1B
 speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)
@@ -168,7 +169,7 @@ let md = :bfnumber
 end
 
 allfsea = DataFrames.transform(groupby(allfsea, :metadatum), :pvalue => (p-> (adjust(collect(p), BenjaminiHochberg()))) => :qvalue)
-CSV.write(joinpath(config["output"]["tables"], "allfsea.csv"), allfsea)
+CSV.write(datadir("tables", "allfsea.csv"), allfsea)
 
 ## older kids
 
@@ -301,7 +302,7 @@ end
 filter!(row-> row.nsamples > 30, quartiletests)
 quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
 sort!(quartiletests, :qvalue)
-CSV.write(joinpath(config["output"]["tables"], "quartiletests.csv"), quartiletests)
+CSV.write(datadir("tables", "quartiletests.csv"), quartiletests)
 
 # ## Older kids
 
@@ -345,7 +346,7 @@ end
 filter!(row-> row.nsamples > 30, quartiletests)
 quartiletests[!,:qvalue] = adjust(quartiletests.pvalue, BenjaminiHochberg())
 sort!(quartiletests, :qvalue)
-CSV.write(joinpath(config["output"]["tables"], "oldkidsquartiletests.csv"), quartiletests)
+CSV.write(datadir("tables", "oldkidsquartiletests.csv"), quartiletests)
 
 ## write transposed file with significant bugs
 
@@ -357,7 +358,7 @@ for sp in sigs
     allmeta[:, sp] = v
 end
 
-CSV.write(joinpath(config["output"]["tables"], "sigcog_species.csv"),sigsdf)
+CSV.write(datadir("tables", "sigcog_species.csv"),sigsdf)
 
 
 
@@ -415,7 +416,7 @@ filter!(row-> Symbol(row.variable) in metadatums, glms)
 glms = DataFrames.transform(groupby(glms, :variable), :pvalue => (p-> (adjust(collect(p), BenjaminiHochberg()))) => :qvalue)
 sort!(glms,:qvalue)
 
-CSV.write(joinpath(config["output"]["tables"], "speciesglms.csv"), glms)
+CSV.write(datadir("tables", "speciesglms.csv"), glms)
 
 # ## upper/lower quartile
 
@@ -442,7 +443,7 @@ cogs = findall(row-> startswith(row.variable, "quartile"), eachrow(quartglms))
 quartglms.qvalue = Union{Missing,Float64}[missing for _ in 1:nrow(quartglms)]
 quartglms.qvalue[cogs] .= adjust(quartglms[cogs,:pvalue], BenjaminiHochberg())
 sort!(quartglms, :qvalue)
-CSV.write(joinpath(config["output"]["tables"], "quartilespeciesglms.csv"), quartglms)
+CSV.write(datadir("tables", "quartilespeciesglms.csv"), quartglms)
 
 open(joinpath(config["output"]["other"], "echo_taxa.txt"), "w") do io
     for s in speciesnames(species)

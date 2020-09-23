@@ -12,6 +12,7 @@
 # Note - these files needed for this analysis
 # are not included in the zenodo data repository,
 # but are avaliable on request.
+using DrWatson; @quickactivate "ResonancePaper"
 
 using ECHOAnalysis
 using DataFrames
@@ -30,10 +31,6 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconf formatters = (rounder,) nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
 config = parsefile("Data.toml")
-figures = config["output"]["figures"]
-tables = config["output"]["tables"]
-isdir(figures) || mkpath(figures)
-isdir(tables) || mkpath(tables)
 
 # ## Quality control
 
@@ -103,7 +100,7 @@ qc_stats = by(qc, :batch) do df
                   min  = round(minimum(df.final) / 1e6, digits=2),
                   )
 end
-CSV.write(joinpath(tables, "qc_stats.csv"), qc_stats)
+CSV.write(datadir("tables", "qc_stats.csv"), qc_stats)
 @pt qc_stats
 
 # According to Andre Comeau of [Integrated Microbiome Research](http://www.imr.bio)

@@ -8,6 +8,8 @@
 
 # ## Getting Data
 
+using DrWatson; @quickactivate "ResonancePaper"
+
 using ECHOAnalysis
 using DataFrames
 using StatsMakie
@@ -26,10 +28,7 @@ randrowfilter(data, i) = rand() < (1 / size(data, 1)) * 15
 @ptconfclean # clear previous configuration
 @ptconf formatter = rounder nosubheader=true screen_size=(20,120) filters_row=(randrowfilter,)
 
-config = parsefile("Data.toml")
 widemeta = ECHOAnalysis.getmgxmetadata()
-figures = config["output"]["figures"]
-isdir(figures) || mkpath(figures)
 
 # As an example, how many unique subjects
 # do we have any metadata for?
@@ -55,7 +54,7 @@ histogram(sampleinfo.nsamples, legend=false,
     xlabel="# of fecal samples", ylabel="# of subjects",
     xticks=1:12)
 
-savefig(joinpath(figures, "03-samples-per-subject.svg"))
+savefig(plotsdir("03-samples-per-subject.svg"))
 
 # Wow - there are a couple of subjects that have a lot of samples.
 # Which subjects are those?
@@ -135,7 +134,7 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, group=toplot.cogAssessm
     color=p1[2:end]', xlabel="age (years)", ylabel="Composite Score",
     title="Cognitive Assessments", legend=:topright,
     )
-savefig(joinpath(figures, "03-cogscore_age_scatter.svg"))
+savefig(plotsdir("03-cogscore_age_scatter.svg"))
 
 using Statistics
 m = mean(toplot.cogScore)
@@ -147,7 +146,7 @@ scatter(toplot.correctedAgeDays ./ 365, toplot.zscore,
     group = toplot.cogAssessment, color=p1[2:end]',
     ylabel = "zscore", xlabel = "age", legend=:topright,
     title="Cognitive Assessments")
-savefig(joinpath(figures, "03-cogscore_zscore_age_scatter.svg"))
+savefig(plotsdir("03-cogscore_zscore_age_scatter.svg"))
 
 Checking if any of the outliers are correlated with batch number:
 
@@ -156,4 +155,4 @@ toplot.Mgx_batch
 scatter(toplot.correctedAgeDays ./ 365, toplot.cogScore, primary=false,
     zcolor=toplot.Mgx_batch, xlabel="age (years)", ylabel="Composite Score", group=toplot.Mgx_batch,
     title="Cognitive Assessments", legend=:topright)
-savefig(joinpath(figures, "03-cogscore_age_scatter_batchnum.svg"))
+savefig(plotsdir("03-cogscore_age_scatter_batchnum.svg"))
