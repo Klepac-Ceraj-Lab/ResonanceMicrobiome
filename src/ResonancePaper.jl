@@ -1,3 +1,13 @@
+module ResonancePaper
+
+export metadatums,
+       # functions
+       get_neuroactive_kos,
+       getneuroactive,
+       fsea,
+       accessorygenes,
+       runpermanovas
+
 const color1 = ColorSchemes.Set1_9.colors
 const color2 = ColorSchemes.Set2_8.colors
 const color3 = ColorSchemes.Set3_12.colors
@@ -78,16 +88,18 @@ function accessorygenes(cm, calcs; lower=0., upper=0.95)
     end
     return view(cm, species=prev), view(cm, species=acc)
 end
-metadatums = [:white_matter_normed,
-              :gray_matter_normed,
-              :csf_normed,
-              :hippocampus_normed,
-              :thalamus_normed,
-              :corpus_callosum_normed,
-              :limbic_normed,
-              :subcortex_normed,
-              :neocortex_normed,
-              :cerebellum_normed]
+
+const metadatums = [:white_matter_normed,
+                    :gray_matter_normed,
+                    :csf_normed,
+                    :hippocampus_normed,
+                    :thalamus_normed,
+                    :corpus_callosum_normed,
+                    :limbic_normed,
+                    :subcortex_normed,
+                    :neocortex_normed,
+                    :cerebellum_normed]
+
 function runpermanovas(dm, ufilter, md, kind)
     udm = dm[ufilter, ufilter]
     umeta = view(md, ufilter, :)
@@ -123,3 +135,5 @@ function runpermanovas(dm, ufilter, md, kind)
     perms.q_value = adjust(perms.p_value, BenjaminiHochberg())
     sort!(perms, :q_value)
 end
+
+end # module

@@ -1,5 +1,4 @@
 include("startup_loadpackages.jl")
-include("accessories.jl")
 
 config = parsefile("Data.toml")
 allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
