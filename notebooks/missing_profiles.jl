@@ -97,27 +97,16 @@ function humann(sample, outdir)
     run(cmd)
 end
 
-function humann_finalize(sample, outdir)
-end
-
 for row in eachrow(redo)
     s = row.sample
     b = sample2batch[s]
     
-    finaldir = joinpath("/lovelace/echo/analysis/biobakery3/", b, "output")
-    
     raw = filter(f-> occursin(replace(s, "_"=> "-"), f), rawfastq_files)
     s == "M0753_1F_1A" && continue
     try
-        tmppath = joinpath(kneaddir, "$(s)_kneaddata.fastq")
-        finalpath = joinpath(finaldir, "kneaddata", "$(s)_kneaddata.fastq")
-        if !isfile(finalpath)
-            if !isfile(tmppath)
-                @info "running kneaddata on $s"
-                kneaddata(s, raw, kneaddir)
-            end
-            files = filter(f-> occursin(replace(s, "_"=> "-"), f), readdir(kneaddir))
-            mv.(files, Ref(dirname(finalpath)))
+        if !isfile(joinpath(kneaddir, "$(s)_kneaddata.fastq"))
+            @info "running kneaddata on $s"
+            kneaddata(s, raw, kneaddir)
         end
     catch e
         @warn "$s threw error" e
@@ -125,16 +114,9 @@ for row in eachrow(redo)
     end
 
     try
-        tmppath = joinpath(metaphlandir, "$(s)_profile.tsv")
-        finalpath = joinpath(finaldir, "metaphlan", "$(s)_profile.tsv")
-
-        if !isfile(finalpath)
-            if !isfile(tmppath)
-                @info "running metaphlan on $s"
-                metaphlan(s, metaphlandir)
-            end
-            files = filter(f-> occursin(replace(s, "_"=> "-"), f), readdir(metaphlandir))
-            mv.(files, Ref(dirname(finalpath)))
+        if !isfile(joinpath(metaphlandir, "$(s)_profile.tsv"))
+            @info "running metaphlan on $s"
+            metaphlan(s, metaphlandir)
         end
     catch e
         @warn "$s threw error" e
@@ -142,14 +124,9 @@ for row in eachrow(redo)
     end
 
     try
-        tmppath = joinpath(humanndir, "$(s)_genefamilies.tsv")
-        finalpath = joinpath(destdir, "humann", "main", "$(s)_genefamilies.tsv")
-
-        if !isfile(finalpath)
-            if !isfile(tmppath)
-                @info "running humann on $s"
-                humann(s, humanndir)
-            end
+        if !isfile(joinpath(humanndir, "main", "$(s)_genefamilies.tsv"))
+            @info "running humann on $s"
+            humann(s, humanndir)
         end
     catch e
         @warn "$s threw error" e
