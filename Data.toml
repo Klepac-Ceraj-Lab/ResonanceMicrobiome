@@ -3,21 +3,13 @@ authors = ["Kevin S. Bonham", "Sophie Rowland", "Vanja Klepac-Ceraj"]
 description = "This file contains machine-readable information about data files used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
 
 [filepaths]
+biobakery = "/lovelace/echo/analysis/biobakery3"
 rawfastq = "/lovelace/echo/sequencing/mgx/rawfastq"
 taxonomic_profiles = "/babbage/echo/profiles/taxonomic"
 functional_profiles = "/babbage/echo/profiles/functional"
 
 [tables]
-subject_metadata="data/metadata/20200507_metaexport.csv"
-sample_metadata="data/metadata/airtable_export.csv"
-joined_metadata="data/metadata/joined.csv"
-
-[tables.brain_structure]
-lowres = "data/brain/brain_volumes.csv"
-hires = "data/brain/microbiome_corticalVolumes_bambam.csv"
-hires2 = "data/brain/microbiome_corticalVolumes_bambam_sean.csv"
-hires_key = "data/brain/brain_region_key.csv"
-
-[output]
-figures="data/analysis/figures"
-tables="data/analysis/tables"
+subject_metadata="20200816_metaexport.csv"
+sample_metadata="airtable_export.csv"
+joined_metadata="joined.csv"
+kos2uniref="/babbage/echo/profiles/map_ko_uniref90.txt.gz" # from /pool001/vklepacc/humann_databases_v3/utility_mapping/

@@ -1,9 +1,10 @@
 @warn "Loading packages"
 
-ENV["GKSwstype"] = "100"
+using ResonancePaper
 using BiobakeryUtils
 using Clustering
-using ColorBrewer
+using CodecZlib
+using ColorSchemes
 using Combinatorics
 using CSV
 using DataFrames
@@ -16,6 +17,6 @@ using JLD2
 using Microbiome
 using MultipleTesting
 using MultivariateStats
-using Pkg.TOML: parsefile
+using TOML: parsefile
 using ProgressMeter
 using Statistics

@@ -1,54 +1,76 @@
 # # Figure Plotting
 
 include("../scripts/startup_loadpackages.jl")
-using MakieLayout
+using AbstractPlotting.MakieLayout
 using AbstractPlotting
 using StatsMakie
-using Makie
+using FileIO
 using CairoMakie
 using ColorSchemes
-using FileIO
 using StatsBase: midpoints
-using GLMakie
 
-CairoMakie.activate!(type="pdf")
-AbstractPlotting.inline!(false)
+CairoMakie.activate!(type="svg")
+AbstractPlotting.inline!(true)
 
-@load "analysis/figures/assets/metadata.jld2" allmeta ubothmeta allkidsmeta ukidsmeta oldkidsmeta allmoms allkids umoms ukids oldkids uboth
-allkidsmeta.sample = [String(s) for s in allkidsmeta.sample]
-@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ubothspeciesmds ubothspeciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
-@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ubothunirefaccessorymds ubothunirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
-@load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm pfams pfamsdiffs pfamsdm
+@load "analysis/figures/assets/metadata.jld2" allmeta oldkidsmeta ukidsmeta ukids oldkids
+@load "analysis/figures/assets/taxa.jld2" species speciesmds speciesmdsaxes ukidsspeciesmds ukidsspeciesmdsaxes
+@load "analysis/figures/assets/unirefs.jld2" unirefaccessorymds unirefaccessorymdsaxes ukidsunirefaccessorymds ukidsunirefaccessorymdsaxes
+@load "analysis/figures/assets/otherfunctions.jld2" kos kosdiffs kosdm ecs ecsdm ecsdiffs pfams pfamsdiffs pfamsdm koaccessory kosaccessorydiffs kosaccessorydm ecaccessory ecsaccessorydiffs ecsaccessorydm pfamaccessory pfamsaccessorydiffs pfamsaccessorydm
 @load "analysis/figures/assets/permanovas.jld2" r2 r2m qa allpermanovas species_permanovas unirefaccessory_permanovas kos_permanovas pfams_permanovas
-@load "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea
-@load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs
+@load "analysis/figures/assets/fsea.jld2" allfsea oldkidsfsea mdcors oldkidsmdcors
+@load "analysis/figures/assets/difs.jld2" speciesdiffs unirefaccessorydiffs kosdiffs pfamsdiffs ecsdiffs  kosaccessorydiffs pfamsaccessorydiffs ecsaccessorydiffs
 @load "analysis/figures/assets/stratkos.jld2" stratkos
-@load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes #quartiletests
+@load "analysis/figures/assets/cogquartiles.jld2" quartmeta quartspecies quartspeciesdm quartspeciesmds quartspeciesmdsaxes quartiletests
 
 allfsea.median = map(median, allfsea.cors)
 oldkidsfsea.median = map(median, oldkidsfsea.cors)
-allmeta.cogAssessment = [x == "None" ? missing : x for x in allmeta.cogAssessment]
+
+
 
 set_theme!(
     LAxis = (titlesize=30, xlabelsize=20, ylabelsize=20),
     LLegend = (labelsize=25, markersize=20, patchlabelgap=20)
 )
+
+function textlayer!(ax::LAxis)
+    pxa = lift(AbstractPlotting.zero_origin, ax.scene.px_area)
+    Scene(ax.scene, pxa, raw = true, camera = campixel!)
+end
+
+function AbstractPlotting.annotations!(textlayer::Scene, ax::LAxis, texts, positions; kwargs...)
+    positions = positions isa Observable ? positions : Observable(positions)
+
+
+    screenpositions = lift(positions, ax.scene.camera.projectionview, ax.scene.camera.pixel_space) do positions, pv, pspace
+
+        p4s = to_ndim.(Vec4f0, to_ndim.(Vec3f0, positions, 0.0), 1.0)
+        p1m1s = [pv *  p for p in p4s]
+        projected = [inv(pspace) * p1m1 for p1m1 in p1m1s]
+        pdisplay = [Point2(p[1:2]...) for p in projected]
+    end
+
+    annotations!(textlayer, texts, screenpositions; kwargs...)
+end
+
+##
+function heatmapannotations!(layer::Scene, ax::LAxis, ann; xshift=0, yshift=0, kwargs...)
+    points = vec([Point2f0(x - 0.5 + xshift, y - 0.5 + yshift) for (y,x) in Tuple.(CartesianIndices(ann))])
+    annotations!(layer, ax, vec(ann), points; align = (:center, :center), kwargs...)
+end
+
+
 # ## Figure 1
 
-res=(6*300,5*300)
+res=(7*300,5*300)
 f1_scene, f1_layout = layoutscene(resolution=res, alignmode=Outside())
 f1_scene
-
-## ### Figure 1a - Permanovas
+# ### Figure 1a - Permanovas
 
 phm_layout = GridLayout(alignmode=Outside())
 phm = phm_layout[1,1] = LAxis(f1_scene)
 f1_layout[1,1] = phm_layout
 
-
 phmyorder = [
-    "subject type",
-    "2+ subject type",
     "age",
     "2+ age",
     "gender",
@@ -58,21 +80,29 @@ phmyorder = [
     "mother SES",
     "BMI",
     "cognitive function",
-    "neocortical",
-    "subcortical",
+    "white matter",
+    "gray matter",
+    "csf",
+    "neocortex",
+    "subcortex",
+    "cerebellum",
     "limbic",
-    "cerebellar"
+    "hippocampus",
+    "thalamus",
+    "corpus callosum",
 ]
 nosubjperm = filter(row-> row.label != "subject", allpermanovas)
-r2 = unstack(nosubjperm, :label, :feature, :R2)
-select!(r2, [:label, :species, :accessory, :pfams, :kos])
-r2m = Matrix(r2[!,2:end])
 
-q = unstack(nosubjperm, :label, :feature, :q_value)
-select!(q, [:label, :species, :accessory, :pfams, :kos])
-qm = Matrix(q[!,2:end])
+phmysrt = reverse(invperm(sortperm(phmyorder)))
+r2 = unstack(nosubjperm, :label, :feature, :R2)[phmysrt,:]
+select!(r2, [:label, :species, :pfams, :pfamsaccessory])
+r2m = Matrix(r2[!,2:end]) .* 100 |> disallowmissing #|> permutedims
 
-qa = let M = fill("", size(qm))
+q = unstack(nosubjperm, :label, :feature, :q_value)[phmysrt,:]
+select!(q, [:label, :species, :pfams, :pfamsaccessory])
+qm = Matrix(q[!,2:end]) |> disallowmissing #|> permutedims
+
+qa = let M = fill(" ", size(qm))
     for i in eachindex(qm)
         ismissing(qm[i]) && continue
         if qm[i] < 0.005
@@ -85,69 +115,37 @@ qa = let M = fill("", size(qm))
     end
     M
 end
+extrema(ukidsmeta.correctedAgeDays)
 
-phmysrt = reverse(invperm(sortperm(phmyorder)))
+phm_plot = heatmap!(phm, permutedims(r2m), colormap=:PuBu, interpolate=false)
+tightlimits!(phm)
+textlayer = textlayer!(phm)
 
-vals = disallowmissing(transpose(r2m))[:, phmysrt]
-xrange = 0:size(vals,1)
-yrange = 0:size(vals,2)
-phm_plot = heatmap!(phm, xrange, yrange, vals, colorrange=(0,0.21), colormap=:PuBu, interpolate=false)
+heatmapannotations!(textlayer, phm, 
+    string.(round.(r2m, digits=1)),
+    textsize = 30, 
+    color = ifelse.(vec(r2m) .< 7, :black, :white))
+heatmapannotations!(textlayer, phm,
+    qa, yshift=0.25,
+    textsize = 30, 
+    color = ifelse.(vec(r2m) .< 7, :black, :white))
 
+f1_scene
+##
 
 phm.xticklabelsize = 25
 phm.yticklabelsize = 25
 
-f1_scene
-
-# ann_scene = Scene(phm.scene; show_axis = false) 
-# hm_layout = GridLayout()
-# for x in 1:4, y in 1:15
-#     ax = hm_layout[y,x] = LText(ann_scene, string(round(vals[x,y], digits=4)), tellwidth=false)
-# end
-
-# f1_scene
-
-pixelcentervalues = [Point2f0(x, y)
-    for x in midpoints(LinRange(xrange.start, xrange.stop, size(vals, 1) + 1)),
-        y in midpoints(LinRange(yrange.start, yrange.stop, size(vals, 2) + 1)) .- 0.1]
-function rect_to_rect(fromrect, torect, point)
-    pfrac = (point .- fromrect.origin) ./ fromrect.widths
-    pfrac .* torect.widths .+ torect.origin
-end
-pixelvals = lift(phm.limits, phm.scene.px_area) do lims, pxa
-    vec(rect_to_rect.(Ref(lims), Ref(pxa), pixelcentervalues))
-end
-phm_labels = vec([string(v)[1:5] for v in vals])
-f1_scene
-
-annotations!(f1_scene, phm_labels, pixelvals,
-    align = (:center, :center),
-    color = ifelse.(vals .< 0.14, :black, :white),
-    textsize = 20)
-
-sig = vec(permutedims(replace(qa[phmysrt, :], "" => " ")))
-annotations!(f1_scene, sig, @lift($pixelvals .+ Ref(Point2f0(0, 10))),
-    align = (:center, :center),
-    color = ifelse.(vals .< 0.14, :black, :white),
-    textsize = 20)
-
-tightlimits!(phm)
-
-phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label[phmysrt])
+phm.yticks = (0.5:1:size(r2m,1) - 0.5, r2.label)
 tight_yticklabel_spacing!(phm)
 
 phm.xticks = (0.5:1:size(r2,2) - 1.5, string.(names(r2)[2:end]))
 
 phm_legend = LColorbar(f1_scene, phm_plot, width=30)
-phm_legend.ticks = let r = range(0, stop=0.20, length=6)
-    t = string.(r)
-    t[end] = join([">", t[end]])
-    (r,t)
-end
 phm_layout[1, 2] = phm_legend
 phm_layout[1, 2, Left()] = LText(f1_scene, "% Variance", textsize = 25, rotation = pi/2, padding = (0, 5, 0, 0))
 
-f1_scene
+save(plotsdir("figure1.pdf", f1_scene, resolution=res)
 
 ## ### Figure 1bc
 
@@ -223,13 +221,13 @@ foreach(Union{LColorbar, LAxis}, f1_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 
-save("analysis/figures/figure1.pdf", f1_scene, resolution=res);
+save(plotsdir("figure1.pdf", f1_scene, resolution=res);
 f1_scene
 
 ## ## Figure 2
-res = (6*300, 3*300)
+res = (7*300, 3*300)
 f2_scene, f2_layout = layoutscene(resolution=res, alignmode=Outside())
-## ### Cognitive scores by age
+# ### Cognitive scores by age
 
 cogage = f2_layout[1,1] = LAxis(f2_scene)
 
@@ -286,20 +284,10 @@ rowsize!(f2_layout, 2, Relative(0.25))
 f2_scene
 
 ##
+sigbugs = CSV.File(joinpath(config["output"]["tables"], "oldkidsquartiletests.csv")) |> DataFrame
+sigbugs = sigbugs[sigbugs.qvalue .< 0.2, :species]
 
-sigbugs = ["Ruminococcus_gnavus",
-           "Coprococcus_sp_ART55_1",
-           "Eubacterium_eligens",
-           "Coprobacillus_unclassified",
-           "Roseburia_hominis",
-           "Adlercreutzia_equolifaciens",
-           "Lachnospiraceae_bacterium_2_1_58FAA",
-           "Clostridium_symbiosum",
-           "Bifidobacterium_breve",
-           "Coprococcus_catus",
-           "Ruminococcus_sp_5_1_39BFAA"
-           ]
-
+    
 @assert sitenames(quartspecies) == quartmeta.sample
 
 for bug in sigbugs
@@ -313,85 +301,39 @@ f2_layout[1:2,2:3] = quartilescatters
 f2_scene
 ##
 
-gnavus = quartilescatters[1,1] = LAxis(f2_scene, title="Ruminococcus gnavus", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
+function plotsigbug!(ax, bug)
+    boxplot!(ax, Data(quartmeta), Group(:quartile), :x, Symbol(bug),
         markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(gnavus, Data(quartmeta), Group(:quartile), :x, :Ruminococcus_gnavus,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
+    scatter!(ax, Data(quartmeta), Group(:quartile), :x, Symbol(bug),
+            markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
 
-let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
-                map(row-> !in(row.sample, quartmeta.sample) &&
-                      !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Ruminococcus_gnavus"])))
-    boxplot!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(gnavus, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+    plus1 = vec(occurrences(view(species, sites=ukidsmeta[
+                    map(row-> !in(row.sample, quartmeta.sample) &&
+                        !ismissing(row.correctedAgeDays) &&
+                        row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
+                    species=[bug])))
+    boxplot!(ax, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
+    scatter!(ax, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
+
+    limits!(ax, (-0.5,2.5), (0, maximum(quartmeta[!, Symbol(bug)]) + 0.01))
+    ax.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
+    ax.xlabel = "Cognitive score"
+    ax.ylabel = "Relative abundance"
 end
-limits!(gnavus, (-0.5,2.5), (0, maximum(quartmeta.Ruminococcus_gnavus) + 0.01))
-gnavus.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-gnavus.xlabel = "Cognitive score"
-gnavus.ylabel = "Relative abundance"
-f2_scene
 
+bug1 = quartilescatters[1,1] = LAxis(f2_scene, title=replace(sigbugs[1], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+plotsigbug!(bug1, sigbugs[1])
+  
+bug2 = quartilescatters[1,2] = LAxis(f2_scene, title=replace(sigbugs[6], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+plotsigbug!(bug2, sigbugs[6])
 
-eligens = quartilescatters[1,2] = LAxis(f2_scene, title="Eubacterium eligens", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(eligens, Data(quartmeta), Group(:quartile), :x, :Eubacterium_eligens,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
-                map(row-> !in(row.sample, quartmeta.sample) &&
-                      !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Eubacterium_eligens"])))
-    boxplot!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(eligens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
-end
-f2_scene
-limits!(eligens, (-0.5,2.5), (0, maximum(quartmeta.Eubacterium_eligens) + 0.01))
-eligens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-eligens.xlabel = "Cognitive score"
-eligens.ylabel = "Relative abundance"
+bug3 = quartilescatters[2,1] = LAxis(f2_scene, title=replace(sigbugs[7], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+plotsigbug!(bug3, sigbugs[7])
 
+bug4 = quartilescatters[2,2] = LAxis(f2_scene, title=replace(sigbugs[10], "_"=>" "), titlefont="DejaVu Sans Oblique", titlesize=25)
+plotsigbug!(bug4, sigbugs[10])
 
-hominis = quartilescatters[2,1] = LAxis(f2_scene, title="Roseburia hominis", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(hominis, Data(quartmeta), Group(:quartile), :x, :Roseburia_hominis,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
-                map(row-> !in(row.sample, quartmeta.sample) &&
-                      !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Roseburia_hominis"])))
-    boxplot!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(hominis, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
-end
-limits!(hominis, (-0.5,2.5), (0, maximum(quartmeta.Roseburia_hominis) + 0.001))
-hominis.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-hominis.xlabel = "Cognitive score"
-hominis.ylabel = "Relative abundance"
-
-
-equolifaciens = quartilescatters[2,2] = LAxis(f2_scene, title="Adlercreutzia equolifaciens", titlefont="DejaVu Sans Oblique", titlesize=25)
-boxplot!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]])
-scatter!(equolifaciens, Data(quartmeta), Group(:quartile), :x, :Adlercreutzia_equolifaciens,
-        markersize=AbstractPlotting.px *10, color=ColorSchemes.Accent_3.colors[[3,2]], strokewidth=1, strokecolor=:black)
-let plus1 = vec(occurrences(view(species, sites=ukidsmeta[
-                map(row-> !in(row.sample, quartmeta.sample) &&
-                      !ismissing(row.correctedAgeDays) &&
-                      row.correctedAgeDays > 365, eachrow(ukidsmeta)), :sample],
-                  species=["Adlercreutzia_equolifaciens"])))
-    boxplot!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey, outliercolor=:lightgrey)
-    scatter!(equolifaciens, [1 for _ in 1:length(plus1)], plus1, markersize=AbstractPlotting.px *10, color=:lightgrey)
-end
-limits!(equolifaciens, (-0.5,2.5), (0, maximum(quartmeta.Adlercreutzia_equolifaciens) + 0.001))
-equolifaciens.xticks = ([0,1,2], ["bottom 25%", "middle 50%", "top 25%"])
-equolifaciens.xlabel = "Cognitive score"
-equolifaciens.ylabel = "Relative abundance"
-equolifaciens.titlefont = "DejaVu Sans Oblique"
-colsize!(f2_layout, 1, Relative(0.4))
+colsize!(f2_layout, 1, Relative(0.3))
 
 # ### Save figure 2
 f2_layout[1, 1, TopLeft()] = LText(f2_scene, "a", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
@@ -401,7 +343,7 @@ quartilescatters[2, 1, TopLeft()] = LText(f2_scene, "d", textsize = 40, padding 
 quartilescatters[2, 2, TopLeft()] = LText(f2_scene, "e", textsize = 40, padding = (0, 0, 10, 0), halign=:left)
 
 f2_layout[0, :] = LText(f2_scene, "Figure 2", textsize = 40, halign=:left)
-save("analysis/figures/figure2.pdf", f2_scene, resolution=res);
+save(plotsdir("figure2.pdf", f2_scene, resolution=res);
 f2_scene
 
 ## ## Figure 3
@@ -409,17 +351,17 @@ f2_scene
 include("../scripts/stratified_functions.jl")
 
 ##
-res = (Int(7.5*300), 6*300)
+res = (Int(7.5*300), 8*300)
 f3_scene, f3_layout = layoutscene(resolution = res)
 
 fsea_layout = GridLayout(alignmode=Outside())
-fsea_axes = fsea_layout[1, 1:5] = [LAxis(f3_scene) for col in 1:5]
+fsea_axes = fsea_layout[1:2, 1:5] = [LAxis(f3_scene) for row in 1:2 for col in 1:5]
 
 cs = copy(ColorSchemes.RdYlBu_9.colors)
 gr = ColorSchemes.grays.colors[5]
 cs = [cs[[1,2,4]]..., gr,cs[[end-2,end-1,end]]...]
 
-fsea_legend = fsea_layout[2, 1:5] = LLegend(f3_scene,
+fsea_legend = fsea_layout[3, 1:5] = LLegend(f3_scene,
     [
         [MarkerElement(marker = :rect, color = cs[i], strokecolor = :black) for i in 1:3],
         [MarkerElement(marker = :rect, color = cs[4], strokecolor = :black)],
@@ -458,7 +400,6 @@ allfsea.color = map(eachrow(allfsea)) do row
     c
 end
 
-filter
 allfsea2 = vcat(
     (DataFrame((geneset=row.geneset,
                 metadatum=row.metadatum,
@@ -524,6 +465,7 @@ foreach(Union{LColorbar, LAxis}, fsea_layout) do obj
     tight_ticklabel_spacing!(obj)
 end
 f3_layout[1,1] = fsea_layout
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## gluts, p1
@@ -719,7 +661,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 # f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
@@ -1045,7 +987,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 fsea_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left, padding = (-150, 0, 0, 0))
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
@@ -1371,7 +1313,7 @@ glutd_layout[1, 1, TopLeft()] = LText(f3_scene, "e", textsize = 40, padding = (-
 
 f3_layout[0, :] = LText(f3_scene, "Figure 3", textsize = 40, halign=:left)
 
-save("analysis/figures/figure3.pdf", f3_scene, resolution=res);
+save(plotsdir("figure3.pdf", f3_scene, resolution=res);
 f3_scene
 
 ## ## Scratch
