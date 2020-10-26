@@ -7,7 +7,8 @@
 # This step takes about 20 min
 using DrWatson; @quickactivate "ResonancePaper"
 
-include(scriptsdir("startup_loadall.jl")
+include(scriptsdir("startup_loadall.jl"))
+
 ## Figure 1B
 speciesdm = pairwise(BrayCurtis(), species)
 speciesmds = fit(MDS, speciesdm, distances=true)

@@ -1,5 +1,7 @@
 authors = ["kescobo <kbonham@wellesley.edu>"]
 version = "0.1.0-pre"
+name = "ResonancePaper"
+uuid = "c1489293-50a0-4535-b70a-e5b940fc67f9"
 
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"

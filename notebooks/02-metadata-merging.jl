@@ -115,6 +115,48 @@ fs_keep = [
 select!(freesurfer, fs_keep)
 allmeta = join(allmeta, freesurfer, on=[:subject,:timepoint], kind=:left)
 
+## Old brain data
+
+hires = CSV.File(datadir("brain", "microbiome_corticalVolumes_bambam.csv")) |> DataFrame
+hires2 = CSV.File(datadir("brain", "microbiome_corticalVolumes_bambam_sean.csv")) |> DataFrame
+rename!(hires, Dict(:ID=>:subject, :Timepoint=>:timepoint))
+rename!(hires2, Dict(:ID=>:subject, :Timepoint=>:timepoint))
+
+
+hr2_samples = resolve_letter_timepoint.(string.(hires2.subject))
+hires2.subject = subject.(hr2_samples)
+hires2.timepoint = timepoint.(hr2_samples)
+
+# don't want to replicate :age column
+select!(hires, Not(:Age))
+@assert names(hires) == names(hires2)
+hires = vcat(hires, hires2)
+unique!(hires, [:subject,:timepoint])
+
+# There are a lot of individual brain regions that are separated in this table,
+# and the right and left hemispheres are distinguished.
+# For the most part, we're not going to need this level of specificity,
+# but we can group individual brain regions
+# and combine left / right hemispheres.
+# I'll also make a column with the total brain volume for later normalization.
+
+mapping = CSV.File(datadir("brain", "brain_region_key.csv")) |> DataFrame
+hires.hires_total = [sum(row[3:end]) for row in eachrow(hires)]
+
+cols_seen = let ns = lowercase.(String.(names(hires)))
+    cols_seen = Int[]
+    regions = groupby(mapping, :region) 
+    for region in regions
+        fs = lowercase.(region.feature)
+        cols = findall(n-> any(f-> occursin(f, n), fs), ns)
+        append!(cols_seen, cols)
+        hires[!, Symbol(first(region.region))] = [sum(row[cols]) for row in eachrow(hires)]
+    end
+    cols_seen
+end
+
+rename!(allmeta, :limbic=>:limbic_fs)
+allmeta = join(allmeta, hires, on=[:subject,:timepoint], kind=:left)
 
 ## Write for easy referemce
 CSV.write(datadir("metadata", "joined.csv"), allmeta)

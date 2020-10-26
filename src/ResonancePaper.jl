@@ -1,5 +1,12 @@
 module ResonancePaper
 
+using ColorSchemes
+using ProgressMeter
+using SpatialEcology
+using BiobakeryUtils
+using DataFrames
+using MultipleTesting
+
 export metadatums,
        # functions
        get_neuroactive_kos,
@@ -112,16 +119,19 @@ function runpermanovas(dm, ufilter, md, kind)
         permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.birthType], label="birth type"),
         permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.childGender], datafilter=x-> x != "Don't know", label="gender"),
         permanova(udm, umeta.mother_HHS, label="mother SES"),
-        permanova(udm, umeta, fields=[:correctedAgeDays,:white_matter_normed], label="white matter volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:gray_matter_normed], label="gray matter volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:hippocampus_normed], label="hippocampus volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:csf_normed], label="csf volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:white_matter_normed], label="white matter volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:gray_matter_normed], label="gray matter volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:hippocampus_normed], label="hippocampus volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:csf_normed], label="csf volume")[2:2,:],
         permanova(udm, umeta, fields=[:correctedAgeDays,:limbic_normed], label="limbic volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:neocortex_normed], label="neocortical volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:thalamus_normed], label="thalamus volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:subcortex_normed], label="subcortical volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:cerebellum_normed], label="cerebellum volume")[2:2,:],
-        permanova(udm, umeta, fields=[:correctedAgeDays,:corpus_callosum_normed], label="corpus callosum volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:neocortical_normed], label="neocortical volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:subcortical_normed], label="subcortical volume")[2:2,:],
+        permanova(udm, umeta, fields=[:correctedAgeDays,:cerebellar_normed], label="cerebellar volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:neocortex_normed], label="neocortical volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:thalamus_normed], label="thalamus volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:subcortex_normed], label="subcortical volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:cerebellum_normed], label="cerebellum volume")[2:2,:],
+        # permanova(udm, umeta, fields=[:correctedAgeDays,:corpus_callosum_normed], label="corpus callosum volume")[2:2,:],
         permanova(udm, umeta.cogScore, label="cognitive function"),
         permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.breastfeeding], label="breastfeeding"),
         permanova(udm, [ismissing(x) ? missing : string(x) for x in umeta.simple_race], label="race"),

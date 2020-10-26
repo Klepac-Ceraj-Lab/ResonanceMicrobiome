@@ -1,7 +1,7 @@
 include("startup_loadpackages.jl")
 
 config = parsefile("Data.toml")
-allmeta = CSV.File(config["tables"]["joined_metadata"], pool=false) |> DataFrame
+allmeta = CSV.File(datadir("metadata", "joined.csv"), pool=false) |> DataFrame
 
 filter!(:correctedAgeDays=> !ismissing, allmeta)
 
@@ -15,6 +15,24 @@ allmeta.simple_race = map(allmeta.simple_race) do r
     occursin('\n', r) && error(":simple_race has newlines")
     return r
 end
+
+## Remove brain outliers
+# 
+# There's one sample with very large values, and one with very low values.
+# Need to remove to see if they're skewing results
+
+function outliers(arr, z=3)
+    m = mean(skipmissing(arr))
+    s = std(skipmissing(arr))
+
+    findall(arr) do x
+        !ismissing(x) &&
+        (x > m + z*s ||
+        x < m - z*s)
+    end
+end
+
+allmeta = allmeta[Not(outliers(allmeta.neocortical)), :]
 
 ## Sanity checks
 
@@ -55,7 +73,8 @@ missingec = setdiff(allmeta.sample, samplenames(ecs))
 missingur = setdiff(allmeta.sample, samplenames(unirefs))
 @assert missingko == missingpfam == missingec == missingur
 @assert length(setdiff(missingsp, missingko)) == 0
-open("/lovelace/echo/analysis/bb3_missing.txt", "w") do io
+
+open("/media/kevin/lovelace/echo/analysis/bb3_missing.txt", "w") do io
     println.(Ref(io), missingko)
 end
 
@@ -147,10 +166,14 @@ allmeta.csf_normed             = allmeta.csf             ./ allmeta.braintotal
 allmeta.hippocampus_normed     = allmeta.hippocampus     ./ allmeta.braintotal
 allmeta.thalamus_normed        = allmeta.thalamus        ./ allmeta.braintotal
 allmeta.corpus_callosum_normed = allmeta.corpus_callosum ./ allmeta.braintotal
-allmeta.limbic_normed          = allmeta.limbic          ./ allmeta.braintotal
+allmeta.limbic_fs_normed       = allmeta.limbic_fs       ./ allmeta.braintotal
 allmeta.subcortex_normed       = allmeta.subcortex       ./ allmeta.braintotal
 allmeta.neocortex_normed       = allmeta.neocortex       ./ allmeta.braintotal
 allmeta.cerebellum_normed      = allmeta.cerebellum      ./ allmeta.braintotal
+allmeta.limbic_normed          = allmeta.limbic          ./ allmeta.braintotal
+allmeta.subcortical_normed     = allmeta.subcortical     ./ allmeta.braintotal
+allmeta.neocortical_normed     = allmeta.neocortical     ./ allmeta.braintotal
+allmeta.cerebellar_normed      = allmeta.cerebellar      ./ allmeta.braintotal
 
 ### Metadata subgroups
 
