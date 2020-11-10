@@ -1,18 +1,22 @@
-using DrWatson; @quickactivate "ResonancePaper"
-
+using DrWatson
+@quickactivate "ResonancePaper"
 using ECHOAnalysis
 using DataFrames
 using CSV
 using TOML: parsefile
+using AlgebraOfGraphics, AbstractPlotting
 
 srs =  CSV.File(datadir("metadata", "SRS_Data_All.csv")) |> DataFrame
 rename!(srs, :studyID=>:subject)
 # needs to have ENV["AIRTABLE_KEY"] = <key>
 samplemeta = airtable_metadata()
+unique!(samplemeta, [:subject, :timepoint])
+allmeta = CSV.File(datadir("metadata", "joined.csv")) |> DataFrame
 
 # merge with subject metadata
 
-allmeta = leftjoin(unique(samplemeta), srs, on=[:subject,:timepoint])
+allmeta = leftjoin(allmeta, srs, on=[:subject,:timepoint])
+allmeta = leftjoin(allmeta, samplemeta, on=[:subject,:timepoint], makeunique=true)
 
 @info "16S has PreschoolSRS"
 count(row-> !any(ismissing, row[["batch_16S", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
@@ -23,6 +27,11 @@ count(row-> !any(ismissing, row[["batch_16S", "SchoolageSRS::timepoint"]]), each
 count(row-> !any(ismissing, row[["batch", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
 @info "mgx has SchoolageSRS"
 count(row-> !any(ismissing, row[["batch", "SchoolageSRS::timepoint"]]), eachrow(allmeta)) |> println
+
+hassrs = filter(row-> !all(ismissing, row[["PreschoolSRS::timepoint", "SchoolageSRS::timepoint"]]), allmeta)
+hassrs.correctedAgeYears = hassrs.correctedAgeDays ./ 365
+hist = data(hassrs) * mapping(:correctedAgeYears) * AlgebraOfGraphics.histogram |> draw
+
 
 
 ## CBCL
