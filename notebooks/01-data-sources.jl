@@ -64,7 +64,17 @@
 #     --latency-wait 15
 # ```
 
-## Analyzed profiles
+# ## Analyzed profiles
 #
 # All taxonomic and functional profiles are expected to be found
 # in a local directory, and should be specified in the Data.toml file.
+
+# ## Conversion to Arrow format
+
+using DrWatson
+@quickactivate "ResonancePaper"
+
+using CSV
+using DataFrames
+using Arrow
+
