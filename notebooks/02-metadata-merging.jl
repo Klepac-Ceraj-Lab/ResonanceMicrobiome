@@ -33,8 +33,7 @@ end
 using CSV
 using DataFrames
 
-subjectmeta = CSV.File(datadir("metadata", config["tables"]["subject_metadata"])) |> DataFrame
-rename!(subjectmeta, :subjectID=> :subject)
+subjectmeta = CSV.read(datadir("metadata", config["tables"]["subject_metadata"]), DataFrame)
 
 # ## Sample metadata
 #
@@ -116,7 +115,8 @@ select!(freesurfer, fs_keep)
 allmeta = join(allmeta, freesurfer, on=[:subject,:timepoint], kind=:left)
 
 
-## Write for easy referemce
+## Write for easy reference
+isdir(datadir("output", "tables")) || mkpath(datadir("output", "tables"))
 CSV.write(datadir("metadata", "joined.csv"), allmeta)
 CSV.write(datadir("output", "tables", "hasstool.csv"), unique(samplemeta[map(s-> startswith(s, "C"), samplemeta.sample), [:subject, :timepoint]]))
 
