@@ -8,7 +8,9 @@ using AlgebraOfGraphics, AbstractPlotting
 
 srs =  CSV.File(datadir("metadata", "SRS_Data_All.csv")) |> DataFrame
 rename!(srs, :studyID=>:subject)
-# needs to have ENV["AIRTABLE_KEY"] = <key>
+
+# change "" to actual key if environmental variable not set
+ENV["AIRTABLE_KEY"] = get(ENV, "AIRTABLE_KEY", "")
 samplemeta = airtable_metadata()
 unique!(samplemeta, [:subject, :timepoint])
 allmeta = CSV.File(datadir("metadata", "joined.csv")) |> DataFrame
@@ -17,6 +19,8 @@ allmeta = CSV.File(datadir("metadata", "joined.csv")) |> DataFrame
 
 allmeta = leftjoin(allmeta, srs, on=[:subject,:timepoint])
 allmeta = leftjoin(allmeta, samplemeta, on=[:subject,:timepoint], makeunique=true)
+
+names(allmeta)[findall(n-> occursin("16", n), names(allmeta))]
 
 @info "16S has PreschoolSRS"
 count(row-> !any(ismissing, row[["batch_16S", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
@@ -30,6 +34,8 @@ count(row-> !any(ismissing, row[["batch", "SchoolageSRS::timepoint"]]), eachrow(
 
 hassrs = filter(row-> !all(ismissing, row[["PreschoolSRS::timepoint", "SchoolageSRS::timepoint"]]), allmeta)
 hassrs.correctedAgeYears = hassrs.correctedAgeDays ./ 365
+
+
 hist = data(hassrs) * mapping(:correctedAgeYears) * AlgebraOfGraphics.histogram |> draw
 
 
