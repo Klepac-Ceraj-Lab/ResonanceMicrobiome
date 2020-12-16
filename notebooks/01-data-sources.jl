@@ -77,4 +77,39 @@ using DrWatson
 using CSV
 using DataFrames
 using Arrow
+using TOML
+using ProgressMeter
+using ECHOAnalysis
+using BiobakeryUtils
 
+config = TOML.parsefile("Data.toml")
+taxpath = config["filepaths"]["taxonomic_profiles"]
+funcpath = config["filepaths"]["functional_profiles"]
+
+filepaths = filter(isstoolsample∘basename, readdir(taxpath, join = true))
+
+Arrow.write("data/test.arrow", Tables.partitioner(filepaths) do file
+    @info file
+    sample = stoolsample(basename(file))
+    tax = CSV.File(file, header=[:taxon, :taxid, :abundance, :additional_species],
+                    skipto=5) |> DataFrame
+    tax.taxon = map(last ∘ parsetaxa, tax.taxon)
+    tax[!, :sample] .= sampleid(sample)
+    return select(tax, [:sample, :taxon, :taxid, :abundance])
+end)
+
+let file = first(filepaths)
+    sample = stoolsample(basename(file))
+    tax = CSV.File(file, header=[:taxon, :taxid, :abundance, :additional_species],
+                    skipto=5) |> DataFrame
+    @info tax.taxon
+    transform!(tax, :taxon => ByRow(first ∘ parsetaxa) => :taxonlevel)
+
+    tax[!, :sample] .= sampleid(sample)
+    Arrow.write("data/test.arrow", tax)
+
+end
+
+df = DataFrame(a=[("thing", :thing), ("otherthing", :other)])
+
+Arrow.write("data/test.arrow",df)

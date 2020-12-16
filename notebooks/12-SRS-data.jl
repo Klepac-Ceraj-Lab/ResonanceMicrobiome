@@ -15,6 +15,8 @@ samplemeta = airtable_metadata()
 unique!(samplemeta, [:subject, :timepoint])
 allmeta = CSV.File(datadir("metadata", "joined.csv")) |> DataFrame
 
+
+
 # merge with subject metadata
 
 allmeta = leftjoin(allmeta, srs, on=[:subject,:timepoint])
@@ -23,14 +25,14 @@ allmeta = leftjoin(allmeta, samplemeta, on=[:subject,:timepoint], makeunique=tru
 names(allmeta)[findall(n-> occursin("16", n), names(allmeta))]
 
 @info "16S has PreschoolSRS"
-count(row-> !any(ismissing, row[["batch_16S", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
+count(row-> !any(ismissing, row[["16S_batch", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
 @info "16S has SchoolageSRS"
-count(row-> !any(ismissing, row[["batch_16S", "SchoolageSRS::timepoint"]]), eachrow(allmeta)) |> println
+count(row-> !any(ismissing, row[["16S_batch", "SchoolageSRS::timepoint"]]), eachrow(allmeta)) |> println
 
 @info "mgx has PreschoolSRS"
-count(row-> !any(ismissing, row[["batch", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
+count(row-> !any(ismissing, row[["Mgx_batch", "PreschoolSRS::timepoint"]]), eachrow(allmeta)) |> println
 @info "mgx has SchoolageSRS"
-count(row-> !any(ismissing, row[["batch", "SchoolageSRS::timepoint"]]), eachrow(allmeta)) |> println
+count(row-> !any(ismissing, row[["Mgx_batch", "SchoolageSRS::timepoint"]]), eachrow(allmeta)) |> println
 
 hassrs = filter(row-> !all(ismissing, row[["PreschoolSRS::timepoint", "SchoolageSRS::timepoint"]]), allmeta)
 hassrs.correctedAgeYears = hassrs.correctedAgeDays ./ 365
@@ -54,3 +56,7 @@ count(row-> !any(ismissing, row[["batch_16S", "cbclAge"]]) && row["cbclAge"] == 
 count(row-> !any(ismissing, row[["batch", "cbclAge"]]) && row["cbclAge"] == "younger", eachrow(allmeta)) |> println
 @info "mgx has older CBCL"
 count(row-> !any(ismissing, row[["batch", "cbclAge"]]) && row["cbclAge"] == "older", eachrow(allmeta)) |> println
+
+
+species, = taxonomic_profiles(filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)
+genera, = taxonomic_profiles("/babbage/echo/profiles/taxonomic/", :genus, filefilter=f-> sampleid(stoolsample(basename(f))) in allmeta.sample)

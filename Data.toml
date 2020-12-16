@@ -10,6 +10,5 @@ functional_profiles = "/babbage/echo/profiles/functional"
 
 [tables]
 subject_metadata="20200816_metaexport.csv"
-sample_metadata="airtable_export.csv"
 joined_metadata="joined.csv"
 kos2uniref="/babbage/echo/profiles/map_ko_uniref90.txt.gz" # from /pool001/vklepacc/humann_databases_v3/utility_mapping/
