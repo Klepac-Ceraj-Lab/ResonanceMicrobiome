@@ -7,7 +7,7 @@ using Chain
 using CSV
 
 # replace "" with actual key if it's not in ENV
-get(ENV, "AIRTABLE_KEY", "")
+key = Airtable.Credential(get(ENV, "AIRTABLE_KEY", ""))
 
 batch2string(b) = ismissing(b) ? missing : parse(Int, match(r"Batch (\d+)", b).captures[1])
 # this will eventually come from ECHOAnalysis.jl when I work out dep problems
@@ -38,7 +38,7 @@ function airtable_metadata(key=Airtable.Credential())
     return df[!, Not(["SubjectID", "TimePoint", "Mgx_batch", "16S_batch"])]
 end
 
-df = airtable_metadata()
+df = airtable_metadata(key)
 filter!(:Fecal_EtOH=> ==("E"), df)
 
 @chain df begin
@@ -56,4 +56,4 @@ end
 end
 
 
-CSV.write("/home/kevin/Desktop/metabolomics_samples.csv", select!(df, [:sample, :subject, :timepoint, :StorageBox, :EthanolStorage_old, :subjectcount]))
+CSV.write("/home/kevin/Desktop/metabolomics_samples.csv", select!(df, [:sample, :SampleNumber, :DOC, :subject, :timepoint, :StorageBox, :EthanolStorage_old, :subjectcount]))
