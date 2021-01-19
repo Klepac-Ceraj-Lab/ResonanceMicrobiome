@@ -1,15 +1,13 @@
 title = "ECHO RESONANCE Paper 1 - data description"
-authors = ["Kevin S. Bonham", "Sophie Rowland", "Vanja Klepac-Ceraj"]
+authors = ["Kevin S. Bonham", "Vanja Klepac-Ceraj"]
 description = "This file contains machine-readable information about data files used in these notebooks. Wherever possible, these data are in publically accessible locations, though some data are sensitive and are therefore restricted."
 
 [filepaths]
-biobakery = "/lovelace/echo/analysis/biobakery3"
-rawfastq = "/lovelace/echo/sequencing/mgx/rawfastq"
+read_counts = "/babbage/echo/profiles/functional"
 taxonomic_profiles = "/babbage/echo/profiles/taxonomic"
 functional_profiles = "/babbage/echo/profiles/functional"
 
-[tables]
-subject_metadata="20200816_metaexport.csv"
-sample_metadata="airtable_export.csv"
+[tables] # relative to `data/metadata`
+clinical_metadata="clinical.csv"
+sample_metadata="samples.csv"
 joined_metadata="joined.csv"
-kos2uniref="/babbage/echo/profiles/map_ko_uniref90.txt.gz" # from /pool001/vklepacc/humann_databases_v3/utility_mapping/
