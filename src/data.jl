@@ -1,3 +1,47 @@
+"""
+    airtable_metadata(key=ENV["AIRTABLE_KEY"])
+Get fecal sample metadata table from airtable.
+The API `key` comes from https://airtable.com/account.
+
+This is unlikely to work if you're not in the VKC lab,
+but published sample metadata is available from OSF.io
+using `datadep"sample metadata"`.
+"""
+function airtable_metadata(key=Airtable.Credential())
+    records = []
+    req = Airtable.get(key, "/v0/appyRaPsZ5RsY4A1h", "Master"; view="ALL_NO_EDIT", filterByFormula="NOT({Mgx_batch}='')")
+    append!(records, req.records)
+    while haskey(req, :offset) && length(records) < 2200
+        @info "Making another request"
+        req = Airtable.get(key, "/v0/appyRaPsZ5RsY4A1h/", "Master"; view="ALL_NO_EDIT", filterByFormula="NOT({Mgx_batch}='')", offset=req.offset)
+        append!(records, req.records)
+        sleep(0.250)
+    end
+
+    df = DataFrame()
+    for record in records
+        append!(df, filter(p -> !(last(p) isa AbstractArray), record.fields), cols=:union)
+    end
+
+    rename!(df, "SampleID"=>"sample", "TimePoint"=>"timepoint", "SubjectID"=>"subject")
+    
+    transform!(df, "subject"   => ByRow(s-> parse(Int, s)) => "subject",
+                   "timepoint" => ByRow(tp-> parse(Int, tp)) => "timepoint",
+                   "Mgx_batch" => ByRow(b-> !ismissing(b) ? parse(Int, match(r"Batch (\d+)", b).captures[1]) : missing) => "Mgx_batch",
+                   "16S_batch" => ByRow(b-> !ismissing(b) ? parse(Int, match(r"Batch (\d+)", b).captures[1]) : missing) => "16S_batch")
+    return select(df, Cols(:sample, :subject, :timepoint, :))
+end
+
+function resonance_metadata()
+    samples = CSV.read(datadep"sample_metadata/sample_metadata.csv", DataFrame)
+    
+    clinical = CSV.read(datadep"clinical_metadata/clinical_metadata.csv", DataFrame)
+    rename!(clinical, "subjectID"=> "subject")
+    filter!(row-> all(!ismissing, [row.subject, row.timepoint]), clinical)
+    disallowmissing!(clinical, [:subject, :timepoint])
+    return leftjoin(samples, clinical, on=[:subject, :timepoint])
+end
+
 function post_fetch_knead(tarball)
     unpack(tarball)
     allcounts = DataFrame()
@@ -38,6 +82,8 @@ function post_fetch_taxa(tarball)
     rm("download", force=true)  # we don't know where this file comes from but we want it gone
 end
 
+post_fetch_osf(::Any) = rm("download", force=true)
+post_fetch_osf() = rm("download", force=true)
 
 function __init__()
     register(DataDep(
@@ -59,4 +105,22 @@ function __init__()
         post_fetch_method = ResonanceMicrobiome.post_fetch_knead,
         )
     )
+
+    register(DataDep(
+        "clinical_metadata",
+        """,
+        Clinical and subject-specific metadata.
+        """,
+        "https://osf.io/53b6p/download",
+        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
+    ))
+    
+    register(DataDep(
+        "sample_metadata",
+        """,
+        Clinical and subject-specific metadata.
+        """,
+        "https://osf.io/5z8tw/download",
+        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
+    ))
 end

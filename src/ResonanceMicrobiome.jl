@@ -1,15 +1,20 @@
 module ResonanceMicrobiome
 
 export
-    @datadep_str
+    @datadep_str,
+    resonance_metadata
 
-using Microbiome
-using CSV
-using DataFrames
+using Reexport 
+@reexport using Microbiome
+@reexport using DataFrames
+@reexport using CSV
+
 using Arrow
 using DataDeps
 import DataDeps: @datadep_str
 using LoggingExtras
+using CairoMakie
+using Airtable
 
 
 include("data.jl")

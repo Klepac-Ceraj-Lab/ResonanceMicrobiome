@@ -128,6 +128,11 @@ git-tree-sha1 = "5861101791fa76fafe8dddefd70ffbfe4e33ecae"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 version = "0.9.0"
 
+[[Chain]]
+git-tree-sha1 = "2e974a17df41ce264cee7e1f6cf802d2622b1829"
+uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+version = "0.4.3"
+
 [[ChainedFixes]]
 git-tree-sha1 = "da67165b492cc89f119e74f626d795e2e88e90f7"
 uuid = "9706b775-b1f4-4c74-b677-0491368ea71c"
