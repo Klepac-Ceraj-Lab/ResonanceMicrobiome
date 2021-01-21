@@ -87,6 +87,11 @@ function post_fetch_taxa(tarball)
     rm("download", force=true)  # we don't know where this file comes from but we want it gone
 end
 
+function post_fetch_uniprot(tarball)
+    unpack(tarball)
+    rm("download", force=true)
+end
+
 post_fetch_osf(::Any) = rm("download", force=true)
 post_fetch_osf() = rm("download", force=true)
 
@@ -110,6 +115,18 @@ function __init__()
         post_fetch_method = ResonanceMicrobiome.post_fetch_knead,
         )
     )
+
+
+    register(DataDep(
+        "uniprot",
+        """
+        Downloads from uniprot
+        """,
+        "https://osf.io/z6w95/download";
+        post_fetch_method = ResonanceMicrobiome.post_fetch_uniprot,
+        )
+    )
+
 
     register(DataDep(
         "clinical_metadata",
