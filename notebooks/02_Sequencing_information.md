@@ -19,8 +19,7 @@ generating ~400 million raw reads and ~120 Gb of sequence.
 ```julia
 using ResonanceMicrobiome # rexports CSV and DataFrames
 
-reads = CSV.read(datadep"kneaddata_counts/allcounts.csv", DataFrame)
-metadata = resonance_metadata()
+metadata = resonance_metadata() # depends on datadep"clinical_metadata" and datadep"sample_metadata"
 ```
 
 ```julia
@@ -79,8 +78,54 @@ CSV.write("data/biosample_attributes.tsv", sra[!, Not([:file1, :file2])])
 
 ```julia
 using CairoMakie
+using Chain
+
+colormap = ColorSchemes.seaborn_bright6.colors
+reads = CSV.read(datadep"kneaddata_counts/allcounts.csv", DataFrame)
+sort!(reads, ["batch", "raw pair1"])
+
+select!(reads, "Sample"=>"sample", "batch"=>"batch", 
+                names(reads, r"raw") => (+) => "total",
+                names(reads, r"trimmed") => (+) => "trimmed",
+                names(reads, r"decon") => (+) => "human",
+                names(reads, r"final") => (+) => "final",
+                )
+
+# adjust to differences
+reads.human = reads.trimmed .- reads.human
+reads.trimmed = reads.total .- reads.trimmed
+
+# convert to fractions
+reads.human_frac = reads.human ./ reads.total
+reads.trimmed_frac = reads.trimmed ./ reads.total
+reads.final_frac = reads.final ./ reads.total
 
 figure = Figure(resolution = (1200, 800))
 
-f1 = figure[1,1] = Axis(title="Raw vs Final Reads")
+fig_a = figure[1:2,1:2] = Axis(figure, title="Raw vs Final Reads", xlabel="Batch #", ylabel="Reads (n)")
+batch_edges = map(unique(reads.batch)) do b
+    inds = findall(==(b), reads.batch)
+    center = extrema(inds)
+end
+
+
+
+fig_a.xticks = (batch_ticks, string.(1:14))
+tightlimits!(fig_a, Bottom())
+
+bar1 = barplot!(fig_a, 1:nrow(reads), reads."total", color=colormap[1], label="total")
+bar2 = barplot!(fig_a, 1:nrow(reads), reads."final", color=colormap[5], label="final")
+fig_a_leg = figure[1,1] = Legend(figure, fig_a, halign=:right, valign=:top, margin = (10,10,10,10))
+
+fig_b = figure[1,3] = Axis(figure, title="Read Stats", ylabel="Reads (n)", xticks=(1:3, ["Final", "Trimmed", "human"]))
+violin!(fig_b, repeat([1,2,3], inner=nrow(reads)), [reads.final; reads.trimmed; reads.human], color=:gray50)
+fig_c = figure[2,3] = Axis(figure, title="Read Stats", ylabel="Reads (n / total)", xticks=(1:3, ["Final", "Trimmed", "human"]))
+violin!(fig_c, repeat([1,2,3], inner=nrow(reads)), [reads.final_frac; reads.trimmed_frac; reads.human_frac], color=:gray50)
+```
+
+
+
+```julia
+isdir("figures") || mkdir("figures") # make directory if it doesn't exist
+CairoMakie.save("figures/02_read_qc.svg", figure)
 ```

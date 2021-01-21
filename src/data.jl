@@ -34,13 +34,18 @@ end
 
 function resonance_metadata()
     samples = CSV.read(datadep"sample_metadata/sample_metadata.csv", DataFrame)
-    
     clinical = CSV.read(datadep"clinical_metadata/clinical_metadata.csv", DataFrame)
+    return leftjoin(samples, clinical, on=[:subject, :timepoint])
+end
+
+function post_fetch_clinical(csv)
+    clinical = CSV.read(csv, DataFrame)
     rename!(clinical, "subjectID"=> "subject")
     filter!(row-> all(!ismissing, [row.subject, row.timepoint]), clinical)
     disallowmissing!(clinical, [:subject, :timepoint])
-    return leftjoin(samples, clinical, on=[:subject, :timepoint])
+    CSV.write("clinical_metadata.csv", clinical)
 end
+
 
 function post_fetch_knead(tarball)
     unpack(tarball)
@@ -108,17 +113,18 @@ function __init__()
 
     register(DataDep(
         "clinical_metadata",
-        """,
+        """
         Clinical and subject-specific metadata.
         """,
         "https://osf.io/53b6p/download",
-        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
-    ))
+        post_fetch_method = ResonanceMicrobiome.post_fetch_clinical
+        )
+    )
     
     register(DataDep(
         "sample_metadata",
-        """,
-        Clinical and subject-specific metadata.
+        """
+        Sample specific metadata.
         """,
         "https://osf.io/5z8tw/download",
         post_fetch_method = ResonanceMicrobiome.post_fetch_osf
