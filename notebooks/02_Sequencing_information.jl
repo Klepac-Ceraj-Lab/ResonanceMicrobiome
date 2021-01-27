@@ -20,54 +20,88 @@ using ResonanceMicrobiome # rexports CSV and DataFrames
 
 metadata = resonance_metadata() # depends on datadep"clinical_metadata" and datadep"sample_metadata"
 
-samplenames = [replace(s, r"_S\d{1,2}_kneaddata"=>"") for s in reads.Sample]
-sra_files = ["$(sample)_pair1.fastq.gz" for sample in samplenames]
+samples = [replace(s, r"_S\d{1,2}_kneaddata"=>"") for s in metadata.sample]
+## remove ethanol samples
+filter!(s-> !occursin(r"_\d+E_", s), samples)
+## remove replicates
+filter!(s-> !occursin(r"_\d+F_2", s), samples)
+filter!(s-> !occursin(r"_\d+F_\d[^A]", s), samples)
+
+
+sra_files = ["$(sample)_pair1.fastq.gz" for sample in samples]
 
 
 # Global traits for SRA submission
 
-sra = DataFrame(
-    "Sample Name" => samplenames,
+biosample = DataFrame(
+    "Sample Name" => samples,
     "file1"       => sra_files,
     "file2"       => replace.(sra_files, Ref("pair1"=>"pair2")),
 )
 
-sra[!, "organism"]            .= "human gut metagenome" # txid408170
-sra[!, "host"]                .= "Homo sapiens"
-sra[!, "investigation_type"]  .= "metagenome"
-sra[!, "project_name"]        .= "Human gut metagenomes of healthy mothers and their children, Jan 19 '21"
-sra[!, "lat_lon"]             .= "41°48'37\"N, 71°24'24\"W" # location of RI Women and Infants hospital
-sra[!, "geo_loc_name"]        .= "/country=\"USA: Rhode Island\""
-sra[!, "env_package"]         .= "human-gut"
-sra[!, "specific_host"]       .= "human"
-sra[!, "rel_to_oxygen"]       .= "anaerobic"
-sra[!, "samp_collect_device"] .= "Omnigene OMR-200 tube"
-sra[!, "seq_meth"]            .= "illumina NextSeq 550"
-sra[!, "seq_quality_check"]   .= "none"
-sra[!, "host_disease_stat"]   .= "none"
-sra[!, "host_body_product"]   .= "fma64183"
-sra[!, "samp_store_temp"]     .= "-80 degree celcius"
-sra[!, "nucl_acid_ext"]       .= "https://www.qiagen.com/us/resources/resourcedetail?id=84c1f2e7-8db6-4957-a504-92bf9f82dd84"
+biosample[!, "organism"]            .= "human gut metagenome" # txid408170
+biosample[!, "host"]                .= "Homo sapiens"
+biosample[!, "investigation_type"]  .= "metagenome"
+biosample[!, "project_name"]        .= "Human gut metagenomes of healthy mothers and their children, Jan 19 '21"
+biosample[!, "lat_lon"]             .= "41.8786 N 71.3831 W" # location of Pawtucket, RI
+biosample[!, "geo_loc_name"]        .= "USA: Rhode Island"
+biosample[!, "env_biome"]           .= "not aplicable"
+biosample[!, "env_feature"]         .= "not aplicable"
+biosample[!, "env_material"]        .= "not aplicable"
+biosample[!, "env_package"]         .= "human-gut"
+biosample[!, "rel_to_oxygen"]       .= "anaerobe"
+biosample[!, "samp_collect_device"] .= "Omnigene OMR-200 tube"
+biosample[!, "seq_meth"]            .= "illumina NextSeq 550"
+biosample[!, "seq_quality_check"]   .= "none"
+biosample[!, "host_disease_stat"]   .= "none"
+biosample[!, "host_body_product"]   .= "fma64183"
+biosample[!, "samp_store_temp"]     .= "-80 degree celcius"
+biosample[!, "nucl_acid_ext"]       .= "https://www.qiagen.com/us/resources/resourcedetail?id=84c1f2e7-8db6-4957-a504-92bf9f82dd84"
 
 # And now for sample-specific attributes:
 
 ## make DataFrame with same rows as SRA
-samplemeta = DataFrame(sample = replace.(sra."Sample Name", Ref("-"=>"_")))
+samplemeta = DataFrame(sample = replace.(biosample."Sample Name", Ref("-"=>"_")))
 samplemeta = leftjoin(samplemeta, metadata, on=:sample)
 
-## sra[!, "adapters"]           .=
-## sra[!, "mid"]                .= {Multiplex ID}
-sra[!, "collection_date"] = samplemeta.DOC
-sra[!, "host_age"]        = map(a-> ismissing(a) ? missing : string.(a) .* " days", samplemeta.correctedAgeDays)
-sra[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Female" : row.childGender, eachrow(samplemeta))
+## biosample[!, "adapters"]           .=
+## biosample[!, "mid"]                .= {Multiplex ID}
+biosample[!, "subject_id"] = samplemeta.subject
+biosample[!, "timepoint"] = samplemeta.timepoint
+biosample[!, "collection_date"] = samplemeta.DOC
+biosample[!, "host_age"]        = map(a-> ismissing(a) ? missing : string.(a) .* " days", samplemeta.correctedAgeDays)
+biosample[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Female" : row.childGender, eachrow(samplemeta))
 
-# Generate output for BioSample Attributes
+# Generate output for BioSample Attributes.
+CSV.write("output/02_biosample_attributes.tsv", biosample[!, Not([:file1, :file2])], delim='\t')
 
-CSV.write("output/biosample_attributes.tsv", sra[!, Not([:file1, :file2])])
+sra = select(biosample, ["Sample Name", "file1", "file2"])
+sra.title = map(row-> "Shotgun metagenomic sequence of stool sample: subject $(row.subject_id), timepoint $(row.timepoint)", eachrow(biosample))
+sra.library_ID = map(s-> "$s-mgx", sra."Sample Name")
+sra[!, "library_strategy"] .= "WGS"
+sra[!, "library_source"] .= "METAGENOMIC"
+sra[!, "library_selection"] .= "RANDOM"
+sra[!, "library_layout"] .= "paired"
+sra[!, "platform"] .= "ILLUMINA"
+sra[!, "instrument_model"] .= "NextSeq 550"
+sra[!, "design_description"] .= replace("""
+    Libraries were prepared with Illumina Nextera Flex Kit
+    for MiSeq and NextSeq from 1 ng of each sample.
+    Samples were then pooled onto a plate and sequenced
+    on the Illumina NextSeq 550 platform
+    using 150+150 bp paired-end “high output” chemistry""",
+    '\n'=> " ")
+sra[!, "filetype"] .= "fastq"
+rename!(sra, "file1"=> "filename", "file2"=>"filename2", "Sample Name"=>"sample_name")
+
+# Generate output for SRA Attributes.
+CSV.write("output/02_sra_attributes.tsv", sra[!, :], delim='\t')
+
 
 # ## Visualizing read data
 
 using CairoMakie
+using AbstractPlotting.ColorSchemes
 using Chain
 
 colormap = ColorSchemes.seaborn_bright6.colors

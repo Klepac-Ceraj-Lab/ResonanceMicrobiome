@@ -32,11 +32,6 @@ function airtable_metadata(key=Airtable.Credential())
     return select(df, Cols(:sample, :subject, :timepoint, :))
 end
 
-function resonance_metadata()
-    samples = CSV.read(datadep"sample_metadata/sample_metadata.csv", DataFrame)
-    clinical = CSV.read(datadep"clinical_metadata/clinical_metadata.csv", DataFrame)
-    return leftjoin(samples, clinical, on=[:subject, :timepoint])
-end
 
 function post_fetch_clinical(csv)
     clinical = CSV.read(csv, DataFrame)
@@ -75,7 +70,9 @@ function post_fetch_taxa(tarball)
     
     df = DataFrame()
     for profile in profile_paths
-        append!(df, CSV.File(profile, datarow=5, header=["clade", "NCBI_taxid", "abundance", "additional_species"]))
+        pdf = CSV.read(profile, DataFrame, datarow=5, header=["clade", "NCBI_taxid", "abundance", "additional_species"])
+        pdf[!,:sample] .= replace(replace(first(splitext(basename(profile))), r"_S\d{1,2}_profile"=> ""), "-"=> "_")
+        append!(df, pdf)
     end
     Arrow.write("taxonomic_profiles.arrow", df)
 
