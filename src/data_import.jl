@@ -36,3 +36,6 @@ function taxonomic_profiles(level)
     end
     return CommunityProfile(mat, taxa, MicrobiomeSample.(samples))
 end
+
+function functional_profiles(kind)
+end

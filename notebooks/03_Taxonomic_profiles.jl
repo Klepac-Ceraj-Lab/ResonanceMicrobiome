@@ -9,21 +9,6 @@ using Microbiome.MultivariateStats
 using CairoMakie
 using AbstractPlotting.ColorSchemes
 
-function labelage(df)
-    map(eachrow(df)) do row
-        if startswith(row.sample, "M")
-            "mom"
-        elseif ismissing(row.correctedAgeDays)
-            missing
-        elseif row.correctedAgeDays < 365
-            "1 and under"
-        elseif row.correctedAgeDays < 2 * 365
-            "1 to 2"
-        else
-            "over 2"
-        end
-    end
-end
 
 colormap = ColorSchemes.tab20.colors
 
@@ -31,7 +16,6 @@ colormap = ColorSchemes.tab20.colors
 
 all_species = taxonomic_profiles(:species)
 all_metadata = resonance_metadata(name.(samples(all_species)))
-all_metadata.ageLabel = labelage(all_metadata)
 
 all_pco = pcoa(all_species)
 
@@ -41,7 +25,7 @@ figure1 = Figure(resolution=(1200, 800));
 
 fig1a = figure1[1,1] = Axis(figure1, title="All participants", xlabel=mds_format(all_pco, 1), ylabel=mds_format(all_pco, 2))
 scatter!(fig1a, projection(all_pco)[:,1], projection(all_pco)[:,2], 
-        color=categorical_colors(all_metadata.ageLabel, ["mom", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
+        color=categorical_colors(all_metadata.ageLabel, ["prenatal", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
 figure1
 
 #- 
@@ -56,8 +40,7 @@ kids_pco = pcoa(kids_species)
 
 fig1b = figure1[1,2] = Axis(figure1, title="Children", xlabel=mds_format(kids_pco, 1), ylabel=mds_format(kids_pco, 2))
 scatter!(fig1b, projection(kids_pco)[:,1] .* -1, projection(kids_pco)[:,2],
-        color=categorical_colors(kids_metadata.ageLabel, ["mom", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
-figure1
+        color=categorical_colors(kids_metadata.ageLabel, ["prenatal", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
 
 fig1ab_legend = figure1[1,3] = Legend(figure1,
     [
@@ -68,7 +51,6 @@ fig1ab_legend = figure1[1,3] = Legend(figure1,
         MarkerElement(color = colormap[15], marker = :circ, strokecolor = :black)
     ],
     ["mom", "1 and under", "1 to 2", "over 2", "missing"])
-figure1
 
 has_age_species = kids_species[:, map(!ismissing, kids_metadata.correctedAgeDays)]
 has_age_metadata = resonance_metadata(name.(samples(has_age_species)))

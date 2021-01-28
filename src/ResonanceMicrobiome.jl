@@ -3,7 +3,8 @@ module ResonanceMicrobiome
 export
     @datadep_str,
     resonance_metadata,
-    taxonomic_profiles
+    taxonomic_profiles,
+    functional_profiles
 
 export categorical_colors,
        mds_format,
