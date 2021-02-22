@@ -4,7 +4,9 @@ export
     @datadep_str,
     resonance_metadata,
     taxonomic_profiles,
-    functional_profiles
+    functional_profiles,
+    sample_filter,
+    sample_filter!
 
 export categorical_colors,
        mds_format,

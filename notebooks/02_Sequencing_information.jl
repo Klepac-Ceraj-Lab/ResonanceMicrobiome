@@ -27,8 +27,12 @@ filter!(s-> !occursin(r"_\d+E_", s), samples)
 filter!(s-> !occursin(r"_\d+F_2", s), samples)
 filter!(s-> !occursin(r"_\d+F_\d[^A]", s), samples)
 
+# remove samples that failed QC
+filter!(s-> !in(s, ("M1295_3F_1A", "M1322_2F_1A", "C1155_4F_1A", "M1367_2F_1A")), samples)
 
-sra_files = ["$(sample)_pair1.fastq.gz" for sample in samples]
+sra_files = ["$(replace(sample, "_"=>"-"))_pair1.fastq.gz" for sample in samples]
+findall(==("C0016-3F-1A_pair1.fastq.gz"), sra_files)
+biosample[findall(==("C0066_6F_1A"), biosample."Sample Name"), :file1]
 
 
 # Global traits for SRA submission
@@ -76,6 +80,10 @@ biosample[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Femal
 CSV.write("output/02_biosample_attributes.tsv", biosample[!, Not([:file1, :file2])], delim='\t')
 
 sra = select(biosample, ["Sample Name", "file1", "file2"])
+findall(==("C0016-3F-2A_pair1.fastq.gz"), sra."file1")
+findall(==("C0016-3F-2A_pair1.fastq.gz"), biosample."file1")
+
+
 sra.title = map(row-> "Shotgun metagenomic sequence of stool sample: subject $(row.subject_id), timepoint $(row.timepoint)", eachrow(biosample))
 sra.library_ID = map(s-> "$s-mgx", sra."Sample Name")
 sra[!, "library_strategy"] .= "WGS"
@@ -95,6 +103,7 @@ sra[!, "filetype"] .= "fastq"
 rename!(sra, "file1"=> "filename", "file2"=>"filename2", "Sample Name"=>"sample_name")
 
 # Generate output for SRA Attributes.
+
 CSV.write("output/02_sra_attributes.tsv", sra[!, :], delim='\t')
 
 
