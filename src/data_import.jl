@@ -43,7 +43,46 @@ function taxonomic_profiles(level; commonfilter=true)
     return CommunityProfile(mat, taxa, MicrobiomeSample.(samples))
 end
 
-function functional_profiles(kind)
+function functional_profiles(kind; stratify=false, commonfilter=true)
+    stratify && error("Functions with species stratification doesn't work yet")
     df = Arrow.Table(@datadep_str "$kind/$kind.arrow") |> DataFrame
+    !stratify && (df = filter(row-> !occursin("|", row.feature), df))
+    # df[!, :gftemp] = [GeneFunction("") for _ in 1:nrow(df)]
+    # for row in eachrow(df)
+    #     pieces = split(row.feature, "|")
+    #     if length(pieces) == 1
+    #         gf = GeneFunction(first(pieces))
+    #     else
+    #         length(pieces) == 2 || throw(ErrorException("Expected gene funcction, got $pieces"))
+            
+    #         sp = split(pieces[2], ".")
+    #         if first(sp) == "unclassified"
+    #             gf = GeneFunction(first(pieces))
+    #         else            
+    #             length(sp) != 2 && error("something went wrong with $sp")
+    #             sp = replace(sp[2], "s__" => "")
+    #             sp = Taxon(sp, :species)
+    #             gf = GeneFunction(pieces[1], sp)
+    #         end
+    #     end
+    #     row.gftemp = gf
+    # end
+    # select!(df, Not("feature"))
+    # rename!(df, :gftemp=>:feature)
+
+    samples = unique(df.sample)
+    commonfilter && sample_filter!(samples)
+    gfs = GeneFunction.(unique(df.feature))
+
+    gfmap = Dict(t => i for (i, t) in enumerate(gfs))
+    sampmap = Dict(s => i for (i, s) in enumerate(samples))
+    mat = spzeros(length(gfs), length(samples))
     
+    for row in eachrow(df)
+        if commonfilter
+            sample_filter(row.sample) || continue
+        end
+        mat[gfmap[GeneFunction(row.feature)], sampmap[row.sample]] = row.abundance ./ 100
+    end
+    return CommunityProfile(mat, gfs, MicrobiomeSample.(samples))
 end

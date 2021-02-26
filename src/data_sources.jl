@@ -132,7 +132,7 @@ function _process_osf_functional_profiles()
     
     df = DataFrame()
     for profile in profile_paths
-        pdf = CSV.read(profile, DataFrame, header=["feature", "abundance"])
+        pdf = CSV.read(profile, DataFrame, header=["feature", "abundance"], datarow=2)
         pdf[!,:sample] .= replace(replace(first(splitext(basename(profile))), r"_S\d{1,2}_.+"=> ""), "-"=> "_")
         transform(pdf, :feature => ByRow(s-> begin
             things = split(s, "|")
