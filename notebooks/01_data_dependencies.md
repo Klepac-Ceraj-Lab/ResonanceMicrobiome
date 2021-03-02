@@ -27,7 +27,7 @@ Data require for these analyses can be downloaded from [OSF.io](https://doi.org/
 ## Using this repository
 
 Most of the code in this repository is written using the [julia programming language](http://julialang.org).
-It has been tested on julia v1.5.
+It has been tested on julia v1.6.
 
 First, install julia by going to https://julialang.org/downloads/
 and following the instructions for your operating system.

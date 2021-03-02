@@ -25,7 +25,7 @@ figure1 = Figure(resolution=(1200, 800));
 
 fig1a = figure1[1,1] = Axis(figure1, title="All participants", xlabel=mds_format(all_pco, 1), ylabel=mds_format(all_pco, 2))
 scatter!(fig1a, projection(all_pco)[:,1], projection(all_pco)[:,2], 
-        color=categorical_colors(all_metadata.ageLabel, ["prenatal", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
+        color=categorical_colors(all_metadata.ageLabel, ["Prenatal", "1 and under", "1 to 2", "2 and over", missing], colormap[[9, 2, 3, 5, 15]]))
 figure1
 
 #- 
@@ -34,13 +34,14 @@ kids_species = all_species[:, startswith.(samplenames(all_species), 'C')]
 kids_species = kids_species[vec(featuretotals(kids_species) .!= 0), :]
 
 kids_metadata = resonance_metadata(name.(samples(kids_species)))
-kids_metadata.ageLabel = labelage(kids_metadata)
+
+kids_metadata.ageLabel
 
 kids_pco = pcoa(kids_species)
 
 fig1b = figure1[1,2] = Axis(figure1, title="Children", xlabel=mds_format(kids_pco, 1), ylabel=mds_format(kids_pco, 2))
 scatter!(fig1b, projection(kids_pco)[:,1] .* -1, projection(kids_pco)[:,2],
-        color=categorical_colors(kids_metadata.ageLabel, ["prenatal", "1 and under", "1 to 2", "over 2", missing], colormap[[9, 2, 3, 5, 15]]))
+        color=categorical_colors(kids_metadata.ageLabel, ["Prenatal", "1 and under", "1 to 2", "2 and over", missing], colormap[[9, 2, 3, 5, 15]]))
 
 fig1ab_legend = figure1[1,3] = Legend(figure1,
     [
@@ -55,7 +56,6 @@ fig1ab_legend = figure1[1,3] = Legend(figure1,
 has_age_species = kids_species[:, map(!ismissing, kids_metadata.correctedAgeDays)]
 has_age_metadata = resonance_metadata(name.(samples(has_age_species)))
 
-has_age_metadata.ageLabel = labelage(has_age_metadata)
 has_age_metadata.shannon = vec(shannon(has_age_species))
 
 has_age_pco = pcoa(has_age_species)
@@ -66,3 +66,5 @@ scatter!(fig1c, projection(has_age_pco)[:,1] .* -1, has_age_metadata.correctedAg
 
 fig1c_legend = figure1[2,3] = Colorbar(figure1, halign=:left, limits=extrema(has_age_metadata.shannon), width=25, label="Shannon diversity", )
 figure1
+
+CairoMakie.save("figures/03_taxonomic_profiles.svg", figure1)

@@ -1,7 +1,7 @@
 function resonance_metadata(; commonfilter=true)
     samplesdf = CSV.read(datadep"sample_metadata/sample_metadata.csv", DataFrame)
     if commonfilter
-        filter!(row-> sample_filter(row.sample))
+        filter!(row-> sample_filter(row.sample), samplesdf)
     end    
     clinicaldf = CSV.read(datadep"clinical_metadata/clinical_metadata.csv", DataFrame)
 
