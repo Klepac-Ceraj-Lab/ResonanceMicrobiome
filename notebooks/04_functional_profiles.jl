@@ -78,6 +78,7 @@ scatter!(fig1c, projection(kids_pco)[:,1] .* -1, kids_metadata.correctedAgeDays 
 fig1c_legend = figure1[2,3] = Colorbar(figure1, halign=:left, limits=extrema(kids_metadata.frac_unirefs_identified), width=25, label="fraction idendified",
                                         colormap=:heat)
 figure1
+CairoMakie.save("figures/04_genefamilies.svg", figure1)
 
 #-
 
@@ -159,3 +160,4 @@ scatter!(fig2f, projection(kids_pfams_pco)[:,1], projection(kids_pfams_pco)[:,2]
 figure2
 
 
+CairoMakie.save("figures/04_other_functions.svg", figure2)
