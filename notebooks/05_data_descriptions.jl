@@ -1,6 +1,7 @@
 using ResonanceMicrobiome
 using BiobakeryUtils
 using CairoMakie
+using AlgebraOfGraphics
 using AbstractPlotting.ColorSchemes
 
 colormap = ColorSchemes.tab20.colors
@@ -31,13 +32,20 @@ fig1c_leg = Legend(figure1[2,3], [
 fig1e = Axis(figure1[3,1], title = "Race / ethnicity", ylabel = "Count")
 fig1f = Axis(figure1[3,2], title = "SES", ylabel = "Count")
 fig1g = Axis(figure1[4,1], title = "WHO BMI", ylabel = "BMI (z-score)", xlabel="Age (months)")
-fig1h = Axis(figure1[4,2], title = "Cogntive score", ylabel = "Score", xlabel="Age (months)")
+fig1h = Axis(figure1[4,2], title = "Cognitive score", ylabel = "Score", xlabel="Age (months)")
 fig1h_leg = Legend(figure1[4,3], [
     MarkerElement(color = colormap[10], marker = :circle, strokecolor = :black),
     MarkerElement(color = colormap[13], marker = :circle, strokecolor = :black),
     MarkerElement(color = colormap[17], marker = :circle, strokecolor = :black),
     MarkerElement(color = colormap[19], marker = :circle, strokecolor = :black),
     ], ["Mullen", "Bayleys", "WPPSI", "WISC"], "Assessment")
+
+fig1i = Axis(figure1[5,2], ylabel = "Count")
+fig1i_leg = Legend(figure1[5,3], [
+    MarkerElement(color = colormap[9], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[14], marker = :circle, strokecolor = :black),
+    ], ["Cesarean", "Vaginal"], "Delivery method")
+    
 
 barplot!(fig1a, [1,2], [count(x-> x === ("Prenatal"), all_metadata.ageLabel), count(x-> x !==("Prenatal"), all_metadata.ageLabel)], color=:gray)
 fig1a.xticks = ([1,2], ["moms", "kids"])
@@ -77,6 +85,13 @@ hascog = .!ismissing.(kids_metadata.cogScore)
 scatter!(fig1h, collect(skipmissing(kids_metadata[hascog, :correctedAgeMonths])), collect(skipmissing(kids_metadata[hascog, :cogScore])), 
         color=categorical_colors(kids_metadata[hascog, :cogAssessment], ["Mullen", "Bayleys", "WPPSI", "WISC"], colormap[[10,13,17,19]]))
 
+barplot!(fig1i, [1,2], [
+    count(x-> x === ("Cesarean"), unique(all_metadata, :subject).birthType),
+    count(x-> x === ("Vaginal"), unique(all_metadata, :subject).birthType)],
+    color = colormap[[9,14]])
+fig1i.xticks = ([1,2], ["Cesarean", "Vaginal"])
+fig1i.xticklabelsize = 20
+
 figure1
 
 CairoMakie.save("figures/05_data_summaries.svg", figure1)
@@ -94,3 +109,6 @@ describe(has_16S.correctedAgeMonths)
 count(a -> 4 < a < 6, has_16S.correctedAgeMonths)
 count(a -> 11 < a < 13, has_16S.correctedAgeMonths)
 filter(row -> 4 < row.correctedAgeMonths < 6, has_16S).subject ∩ filter(row -> 11 < row.correctedAgeMonths < 13, has_16S).subject
+
+size(all_metadata)
+size(kids_metadata)

@@ -2,6 +2,8 @@ figures/
 output/
 build/
 .envrc
+*.tsv
+*.csv
 
 .DS_Store
-scratch*
+*scratch*

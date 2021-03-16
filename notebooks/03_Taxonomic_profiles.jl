@@ -8,6 +8,7 @@ using ResonanceMicrobiome
 using Microbiome.MultivariateStats
 using CairoMakie
 using AbstractPlotting.ColorSchemes
+using Clustering
 
 
 colormap = ColorSchemes.tab20.colors
@@ -67,4 +68,55 @@ scatter!(fig1c, projection(has_age_pco)[:,1] .* -1, has_age_metadata.correctedAg
 fig1c_legend = figure1[2,3] = Colorbar(figure1, halign=:left, limits=extrema(has_age_metadata.shannon), width=25, label="Shannon diversity", )
 figure1
 
-CairoMakie.save("figures/03_taxonomic_profiles.svg", figure1)
+#- 
+u1_spec = kids_species[:, filter(:correctedAgeDays=> <(365), has_age_metadata).sample]
+mid_spec = kids_species[:, filter(:correctedAgeDays=> a-> (365 <= a < 365 * 2), has_age_metadata).sample]
+o2_spec = kids_species[:, filter(:correctedAgeDays=> >(365*2), has_age_metadata).sample]
+
+u1dm = braycurtis(u1_spec)
+middm = braycurtis(mid_spec)
+o2dm = braycurtis(o2_spec)
+
+u1clust = hclust(u1dm, linkage=:complete, branchorder=:optimal)
+midclust = hclust(middm, linkage=:complete, branchorder=:optimal)
+o2clust = hclust(o2dm, linkage=:complete, branchorder=:optimal)
+
+
+function topx(cp, n=10)
+    totals = vec(featuretotals(cp))
+    rows = partialsortperm(totals, 1:n, rev=true)
+    top = cp[rows, :]
+    other = sum(abundances(cp[collect(1:nfeatures(cp))[Not(rows)], :]), dims=1)
+
+    return (names = vcat(featurenames(top), ["other"]), abundances = vcat(abundances(top), other))
+end
+
+allnames = setdiff(union([topx(cp).names for cp in (u1_spec, mid_spec, o2_spec)]...), Set(["other"]))
+name_dict = Dict(n => colormap[i] for (i, n) in enumerate(allnames))
+name_dict["other"] = ColorSchemes.Greys_3.colors[1]
+
+function plottopn!(fig, axrow, cp, clust, n, title; kwargs...)
+    topnames, topabund = topx(cp, n)
+    topabund = topabund[:, clust.order]
+    ax = Axis(fig[axrow,1], title=title)
+    leg = Legend(fig[axrow, 2],
+        [MarkerElement(color = name_dict[topnames[i]], marker = :circle, strokecolor = :black) for i in 1:n+1],
+        topnames)
+    
+    for i in (n+1):-1:1
+        @info i, topnames[i]
+        v = vec(sum(topabund[1:i, :], dims=1))
+        @warn first(v,3)
+        barplot!(ax, 1:nsamples(cp), v, color=name_dict[topnames[i]])
+    end
+
+    tightlimits!(ax)
+    hidexdecorations!(ax)
+    fig
+end
+
+figure2 = Figure(resolution=(1200,1200));
+plottopn!(figure2, 1, u1_spec, u1clust, 10, "Top 10 species, kids under 1 yo")
+plottopn!(figure2, 2, mid_spec, midclust, 10, "Top 10 species, kids 1-2 yo")
+plottopn!(figure2, 3, o2_spec, o2clust, 10, "Top 10 species, kids over 2 yo")
+
