@@ -3,6 +3,7 @@ using BiobakeryUtils
 using CairoMakie
 using AlgebraOfGraphics
 using AbstractPlotting.ColorSchemes
+using Statistics
 
 colormap = ColorSchemes.tab20.colors
 
@@ -112,3 +113,43 @@ filter(row -> 4 < row.correctedAgeMonths < 6, has_16S).subject ∩ filter(row ->
 
 size(all_metadata)
 size(kids_metadata)
+
+#- 
+
+figure3a = Figure(resolution=(800,600))
+figure3b = Figure(resolution=(800,600))
+
+(lq, uq) = quantile(kids_metadata[hascog, :cogScore], [0.25, 0.75])
+kids_metadata.cogQuant = map(c-> ismissing(c)    ? missing : 
+                                    c < lq       ? 1       :
+                                    lq <= c < uq ? 2 : 3, kids_metadata.cogScore)
+
+fig3a = Axis(figure3a[1,1], title="Cognitive score by test", xlabel="Age (years)")
+leg3a = Legend(figure3a[1,2], [
+    MarkerElement(color = colormap[10], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[13], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[17], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[19], marker = :circle, strokecolor = :black),
+    ], ["Mullen", "Bayleys", "WPPSI", "WISC"], "Assessment", width = 150)
+plot!(fig3a,
+        collect(skipmissing(kids_metadata[hascog, :correctedAgeMonths])) ./ 12,
+        collect(skipmissing(kids_metadata[hascog, :cogScore])), 
+        color=categorical_colors(kids_metadata[hascog, :cogAssessment], ["Mullen", "Bayleys", "WPPSI", "WISC"], colormap[[10,13,17,19]]))
+
+figure3a
+
+fig3b = Axis(figure3b[1,1], title="Cognitive score by quartile", xlabel="Age (years)")
+leg3b = Legend(figure3b[1,2], [
+    MarkerElement(color = colormap[1], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[16], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black),
+    ], ["lower 25%", "middle 50%", "upper 25%"], "Quartile", width = 150)
+plot!(fig3b,
+        collect(skipmissing(kids_metadata[hascog, :correctedAgeMonths])) ./ 12,
+        collect(skipmissing(kids_metadata[hascog, :cogScore])), 
+        color=categorical_colors(kids_metadata[hascog, :cogQuant], 1:3, colormap[[1,16,3]]))
+
+figure3b
+
+CairoMakie.save("figures/05_cogscore_age_test.svg", figure3a)
+CairoMakie.save("figures/05_cogscore_age_quant.svg", figure3b)
