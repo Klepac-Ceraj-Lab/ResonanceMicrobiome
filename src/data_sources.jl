@@ -44,7 +44,7 @@ Normalizes sample names by replacing "-" with "_".
 
 **Currently removes:**
 
-- anything that doesn't match `r"[CM]\\d{4}_\\d+F_1A`.
+- anything that doesn't match `r"C\\d{4}_\\d+F_1A`.
   This incidentally eleminates:
   - ethanol samples (which have `r"_\\d+E_"' in their name)
   - anything that's not the first replicate / aliquot (should have `_1A` at the end)
@@ -53,7 +53,7 @@ Normalizes sample names by replacing "-" with "_".
 """
 function sample_filter(sample::AbstractString)
     sample = replace(sample, "-"=>"_")
-    !occursin(r"[CM]\d{4}_\d+F_1A", sample) && return false
+    !occursin(r"C\d{4}_\d+F_1A", sample) && return false
     in(sample, ("M1295_3F_1A", "M1322_2F_1A", "C1155_4F_1A", "M1367_2F_1A")) && return false
     return true
 end
