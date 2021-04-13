@@ -10,8 +10,8 @@
 # regardless of whether additional functional information is available.
 #
 # Other protein identification schemas,
-# in rough order of number of granularity
-# (and also size):
+# in rough order of descreasing granularity
+# (and increasing size):
 #
 # - Pfam
 # - Kegg Orthology (KO)
@@ -159,5 +159,6 @@ scatter!(fig2f, projection(kids_pfams_pco)[:,1], projection(kids_pfams_pco)[:,2]
     colormap[[9, 2, 3, 5, 15]]))
 figure2
 
+#-
 
 CairoMakie.save("figures/04_other_functions.svg", figure2)

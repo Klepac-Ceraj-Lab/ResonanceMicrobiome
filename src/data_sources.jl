@@ -314,4 +314,15 @@ function __init__()
         post_fetch_method = ResonanceMicrobiome.post_fetch_osf
         )
     )
+
+    register(DataDep(
+        "amplicon_list",
+        """
+        List of file names from V4V5 amplicon sequencing
+        """,
+        "https://osf.io/zca69/download",
+        "27844e4e96325f98ffa583768b256b7baed3d5530d7a8e50e204fdb80e61d50b";
+        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
+
+    ))
 end

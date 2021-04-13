@@ -54,8 +54,8 @@ $ julia
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.6.0-DEV.1722 (2020-12-09)
- _/ |\__'_|_|_|\__'_|  |  Commit 599d3299c9* (41 days old master)
+  | | |_| | | | (_| |  |  Version 1.6.0 (2021-03-24)
+ _/ |\__'_|_|_|\__'_|  |
 |__/                   |
 
 julia> using Pkg; Pkg.activate()

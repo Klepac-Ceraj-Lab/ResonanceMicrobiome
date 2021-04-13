@@ -1,20 +1,20 @@
 # # Sequencing data
-
+#
 # Stool samples were collected by parents in OMR-200 tubes,
 # and DNA extraction was performed at Wellesley College (Wellesley, MA).
-
+#
 # Nucleic acids were extracted from stool samples
 # using the RNeasy PowerMicrobiome kit automated on the QIAcube,
 # excluding the DNA degradation steps.
 # Extracted DNA was sequenced at the Integrated Microbiome Resource (IMR, Dalhousie University, NS, Canada).
-
+#
 # For shotgun metagenomic sequencin, a pooled library (max 96 samples per run)
 # was prepared using the Illumina Nextera Flex Kit for MiSeq and NextSeq from 1 ng of each sample.
 # Samples were then pooled onto a plate and sequenced on the Illumina NextSeq 550 platform
 # using 150+150 bp paired-end “high output” chemistry,
 # generating ~400 million raw reads and ~120 Gb of sequence. 
 
-# ## Sequence Read Archive (SRA) submission
+# ## Sequence Read Archive (SRA) submission for metagenomes
 
 using ResonanceMicrobiome # rexports CSV and DataFrames
 
@@ -27,13 +27,10 @@ filter!(s-> !occursin(r"_\d+E_", s), samples)
 filter!(s-> !occursin(r"_\d+F_2", s), samples)
 filter!(s-> !occursin(r"_\d+F_\d[^A]", s), samples)
 
-# remove samples that failed QC
+## remove samples that failed QC
 filter!(s-> !in(s, ("M1295_3F_1A", "M1322_2F_1A", "C1155_4F_1A", "M1367_2F_1A")), samples)
 
 sra_files = ["$(replace(sample, "_"=>"-"))_pair1.fastq.gz" for sample in samples]
-findall(==("C0016-3F-1A_pair1.fastq.gz"), sra_files)
-biosample[findall(==("C0066_6F_1A"), biosample."Sample Name"), :file1]
-
 
 # Global traits for SRA submission
 
@@ -80,9 +77,6 @@ biosample[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Femal
 CSV.write("output/02_biosample_attributes.tsv", biosample[!, Not([:file1, :file2])], delim='\t')
 
 sra = select(biosample, ["Sample Name", "file1", "file2"])
-findall(==("C0016-3F-2A_pair1.fastq.gz"), sra."file1")
-findall(==("C0016-3F-2A_pair1.fastq.gz"), biosample."file1")
-
 
 sra.title = map(row-> "Shotgun metagenomic sequence of stool sample: subject $(row.subject_id), timepoint $(row.timepoint)", eachrow(biosample))
 sra.library_ID = map(s-> "$s-mgx", sra."Sample Name")
@@ -106,8 +100,55 @@ rename!(sra, "file1"=> "filename", "file2"=>"filename2", "Sample Name"=>"sample_
 
 CSV.write("output/02_sra_attributes.tsv", sra[!, :], delim='\t')
 
+# ## 16S amplicon data
+#
+# After the initial submission to SRA, I downloaded the metadata file
+# which contains all of the biosample accession numbers.
+# That's stored in `data/sra1.tsv`
 
-# ## Visualizing read data
+sra_16s = CSV.read("data/sra1.tsv", delim='\t', DataFrame)
+amplicon_files = filter(f-> endswith(f, "gz"), readlines(datadep"amplicon_list/amplicon_v4v5_files.txt"))
+## remove ethanol samples
+filter!(s-> !occursin(r"-\d+E-", s), amplicon_files)
+## remove replicates
+filter!(s-> !occursin(r"-\d+F-2", s), amplicon_files)
+filter!(s-> !occursin(r"-\d+F-\d[^A]", s), amplicon_files)
+
+
+sampleids = Set(map(f-> replace(match(r"[CM]\d{4}-\d+F-1A", f).match, "-"=>"_"), amplicon_files))
+filter!(:sample_name=> n-> n ∈ sampleids, sra_16s)
+unique!(sra_16s, :sample_name)
+
+rename!(biosample, "Sample Name"=>"sample_name")
+sra_16s = leftjoin(sra_16s, select(biosample, ["sample_name", "subject_id", "timepoint"]), on="sample_name")
+
+sra_16s.library_ID = replace.(sra_16s.library_ID, Ref("mgx"=>"v4v5"))
+sra_16s[!, "design_description"] .= replace("""
+    Amplicon fragments are PCR-amplified from the DNA in duplicate
+    using separate template dilutions using the high-fidelity Phusion polymerase.
+    A single round of PCR was done using "fusion primers" (Illumina adaptors + indices + specific regions)
+    targeting the V4V5 region of the 16S rRNA gene
+    (515FB=GTGYCAGCMGCCGCGGTAA and 926R=CCGYCAATTYMTTTRAGTTT).
+    PCR products were verified visually by running on a high-throughput Hamilton Nimbus Select robot
+    using Coastal Genomics Analytical Gels.
+    The PCR reactions from the same samples are pooled in one plate,
+    then cleaned-up and normalized using the high-throughput
+    Charm Biotech Just-a-Plate 96-well Normalization Kit. Up to 380 samples
+    were then pooled to make one library which was then quantified fluorometrically before sequencing.""",
+    '\n'=> " ")
+sra_16s.title = map(row-> "V4V5 amplicon sequencing of stool sample: subject $(row.subject_id), timepoint $(row.timepoint)", eachrow(sra_16s))
+sra_16s[!, "library_strategy"] .= "AMPLICON"
+sra_16s[!, "library_source"] .= "METAGENOMIC"
+sra_16s[!, "library_selection"] .= "PCR"
+sra_16s[!, "library_layout"] .= "paired"
+sra_16s[!, "platform"] .= "ILLUMINA"
+sra_16s[!, "instrument_model"] .= "Illumina MiSeq"
+
+sra_16s.filename = map(s-> "$(s)_v4v5_pair1.fastq.gz", sra_16s.sample_name)
+sra_16s.filename2 = map(s-> "$(s)_v4v5_pair2.fastq.gz", sra_16s.sample_name)
+
+CSV.write("output/02_sra_amplicon_attributes.tsv", sra_16s[!, Not(["sample_name", "filename1"])], delim='\t')
+# ## Visualizing metagenomics read data
 
 using CairoMakie
 using AbstractPlotting.ColorSchemes
@@ -159,3 +200,6 @@ violin!(fig_c, repeat([1,2,3], inner=nrow(reads)), [reads.final_frac; reads.trim
 
 isdir("figures") || mkdir("figures") # make directory if it doesn't exist
 CairoMakie.save("figures/02_read_qc.svg", figure)
+
+#- 
+

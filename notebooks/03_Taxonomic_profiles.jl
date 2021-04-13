@@ -69,6 +69,7 @@ fig1c_legend = figure1[2,3] = Colorbar(figure1, halign=:left, limits=extrema(has
 figure1
 
 #- 
+
 u1_spec = kids_species[:, filter(:correctedAgeDays=> <(365), has_age_metadata).sample]
 mid_spec = kids_species[:, filter(:correctedAgeDays=> a-> (365 <= a < 365 * 2), has_age_metadata).sample]
 o2_spec = kids_species[:, filter(:correctedAgeDays=> >(365*2), has_age_metadata).sample]
