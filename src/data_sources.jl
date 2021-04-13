@@ -325,4 +325,24 @@ function __init__()
         post_fetch_method = ResonanceMicrobiome.post_fetch_osf
 
     ))
+    register(DataDep(
+        "amplicon_taxonomy",
+        """
+        Table containing predicted taxonomy for idendified ASVs.
+        """,
+        "https://osf.io/xfv68/download",
+        "96a9de6f73c98d7f8f51a8a0fbd0a0a4de1acb93067afa024fccbf74ff96f14d";
+        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
+
+    ))
+    register(DataDep(
+        "amplicon_features",
+        """
+        Table containing ASV abundances for each sample.
+        """,
+        "https://osf.io/ua2fh/download",
+        "c3f743caddc6a3e69c165056e56f4f4d9242756b5fd961bb4c7fa37b107295c0";
+        post_fetch_method = ResonanceMicrobiome.post_fetch_osf
+
+    ))
 end
