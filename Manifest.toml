@@ -8,16 +8,9 @@ version = "0.5.0"
 
 [[AbstractPlotting]]
 deps = ["Animations", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Distributions", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "IntervalSets", "Isoband", "KernelDensity", "LinearAlgebra", "Markdown", "Match", "Observables", "Packing", "PlotUtils", "PolygonOps", "Printf", "Random", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "fb569de02b32df1e52d7bec4cd6e3d3eca4eb6ad"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/AbstractPlotting.jl.git"
+git-tree-sha1 = "d778362f5f5b5a7efe4b2a7e01a34c0e08b94908"
 uuid = "537997a7-5e4e-5d89-9595-2241ea00577e"
-version = "0.15.25"
-
-[[AbstractTrees]]
-git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
-uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.3.4"
+version = "0.15.27"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -30,12 +23,6 @@ deps = ["HTTP", "JSON3"]
 git-tree-sha1 = "606a50776fb659f5f22238bc1983d03a5328193c"
 uuid = "96f7d883-6668-4fbe-bb01-b60427b16035"
 version = "0.1.0"
-
-[[AlgebraOfGraphics]]
-deps = ["AbstractPlotting", "CategoricalArrays", "GLM", "GeometryBasics", "KernelDensity", "Loess", "NamedDims", "Observables", "OnlineStatsBase", "StatsBase", "StructArrays", "Tables"]
-git-tree-sha1 = "66c2891cbd56044b437e2de4e6f46213e6f13113"
-uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
-version = "0.3.1"
 
 [[Animations]]
 deps = ["Colors"]
@@ -655,12 +642,6 @@ version = "2.34.0+7"
 deps = ["Libdl"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
-[[Loess]]
-deps = ["Distances", "LinearAlgebra", "Statistics"]
-git-tree-sha1 = "b5254a86cf65944c68ed938e575f5c81d5dfe4cb"
-uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
-version = "0.5.3"
-
 [[Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
@@ -798,12 +779,6 @@ git-tree-sha1 = "a42c0f138b9ebe8b58eba2271c5053773bde52d0"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.4+2"
 
-[[OnlineStatsBase]]
-deps = ["AbstractTrees", "Dates", "LinearAlgebra", "OrderedCollections", "Statistics", "StatsBase"]
-git-tree-sha1 = "ed076aedbd3cb85731730268d60a7acfa4ac92f3"
-uuid = "925886fa-5bf2-5e8e-b522-a9147a512338"
-version = "1.4.4"
-
 [[OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
@@ -880,7 +855,7 @@ uuid = "30392449-352a-5448-841d-b1acce4e97dc"
 version = "0.40.0+0"
 
 [[Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs"]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [[PkgVersion]]

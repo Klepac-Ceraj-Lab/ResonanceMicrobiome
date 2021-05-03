@@ -6,7 +6,6 @@ version = "0.1.0-pre"
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
 Airtable = "96f7d883-6668-4fbe-bb01-b60427b16035"
-AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 BiobakeryUtils = "fa5322f5-bd84-5069-834a-abf3230fb8f8"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

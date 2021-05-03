@@ -1,7 +1,7 @@
 using ResonanceMicrobiome
 using BiobakeryUtils
 using CairoMakie
-using AlgebraOfGraphics
+# using AlgebraOfGraphics
 using AbstractPlotting.ColorSchemes
 using Statistics
 
@@ -10,10 +10,6 @@ colormap = ColorSchemes.tab20.colors
 #-
 
 all_metadata = resonance_metadata()
-all_metadata.WHO_zbmi = map(all_metadata.WHO_zbmi) do z
-    (ismissing(z) || z == "NA") && return missing
-    parse(Float64, z)
-end
 all_metadata.correctedAgeMonths = all_metadata.correctedAgeDays ./ 365 .* 12
 kids_metadata = filter(row-> !ismissing(row.correctedAgeDays), all_metadata)
 has_bf = filter(row-> !ismissing(row.breastfeeding), all_metadata)
@@ -153,3 +149,23 @@ figure3b
 
 CairoMakie.save("figures/05_cogscore_age_test.svg", figure3a)
 CairoMakie.save("figures/05_cogscore_age_quant.svg", figure3b)
+
+
+#-
+hasmullen = map(x-> x === "Mullen", kids_metadata.cogAssessment)
+hasbayley = map(x-> x === "Bayleys", kids_metadata.cogAssessment)
+haswppsi = map(x-> x === "WPPSI", kids_metadata.cogAssessment)
+
+figure4 = Figure(resolution=(1200,800))
+mullen = Axis(figure4[1,1], title = "age distribution for tests")
+
+hist!(mullen, kids_metadata.correctedAgeDays[hasmullen], color=:blue)
+hist!(mullen, kids_metadata.correctedAgeDays[hasbayley], color=:green)
+hist!(mullen, kids_metadata.correctedAgeDays[haswppsi], color=:red)
+
+extrema(kids_metadata.correctedAgeDays[hasmullen])
+extrema(kids_metadata.correctedAgeDays[hasbayley])
+extrema(kids_metadata.correctedAgeDays[haswppsi])
+filter(row-> row.subject == 390, kids_metadata)
+
+sum(hasbayley)

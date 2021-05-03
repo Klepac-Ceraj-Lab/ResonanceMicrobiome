@@ -6,7 +6,8 @@ export
     taxonomic_profiles,
     functional_profiles,
     sample_filter,
-    sample_filter!
+    sample_filter!,
+    clinical_data_descriptions
 
 export categorical_colors,
        mds_format,

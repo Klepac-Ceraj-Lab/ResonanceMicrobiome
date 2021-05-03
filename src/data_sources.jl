@@ -73,7 +73,6 @@ sample_filter!(samples::AbstractArray) = filter!(sample_filter, samples)
 
 function post_fetch_clinical(csv)
     clinical = CSV.read(csv, DataFrame)
-    rename!(clinical, "subjectID"=> "subject")
     filter!(row-> all(!ismissing, [row.subject, row.timepoint]), clinical)
     disallowmissing!(clinical, [:subject, :timepoint])
     CSV.write("clinical_metadata.csv", clinical)
@@ -299,7 +298,7 @@ function __init__()
         Clinical and subject-specific metadata.
         """,
         "https://osf.io/53b6p/download",
-        "08bb0c77c17e54e08655a3c2c831cd0f1b85a5401624c77cdc75c3a0f64cb930";
+        "eb8158e197ec893e9c6289019bd3ce5436c463c19f5f17e5e43a3f97af41b7d5";
         post_fetch_method = ResonanceMicrobiome.post_fetch_clinical
         )
     )
@@ -346,3 +345,103 @@ function __init__()
 
     ))
 end
+
+const clinical_data_descriptions = (
+    subject            = (description = "Clinical subject identifier", 
+                          type        = Int,
+                          range       = (5,2018)),
+    timepoint          = (description = "Trial timepoint. See also `ECHOTPCoded` for ECHO wide timepoint codes.", 
+                          type        = Int,
+                          range       = (1,10)),
+    ageLabel           = (description = "Used in some plots to cluster by age. Calculated from `correctedAgeDays`",
+                          type        = String,
+                          levels      = ["1 and under", "1 to 2", "2 and over"]),
+    birthType          = (description = "Mode of delivery, if known.",
+                          type        = Union{Missing,String},
+                          levels      = ["Cesarean", "Vaginal", missing]),
+    breastFedPercent   = (description = """Percent of feedings that are breastmilk (expressed or direct from breast).
+                                           Calculated from form responses, ("feeds from breast" + "expressed milk feeds") / ("feeds from breast" + "expressed milk feeds", "formula feedings")
+                                        """,
+                          type        = Union{Missing, Float64},
+                          range       = (0,100)),
+  
+    childBMI           = (description = "Caclulated from ",
+                          type        = Union{Missing, Int},
+                          range       = (11.7,32.23)),
+    childSex           = (description = "Sex assigned at birth",
+                          type        = String,
+                          levels      = ["Male", "Female"]),
+    cogAssessment      = (description = "Test used to assess cognitive ability. See methods for description",
+                          type        = Union{Missing, String},
+                          levels      = ["Mullen", "WISC", "WPPSI", "Bayleys", missing]),
+    cogScore           = (description = "Normalized congnitive assessment score - normalized like IQ (mean = 100, standard deviation = 10)",
+                          type        = Union{Missing, Int},
+                          range       = (51.0, 141.0)),
+    correctedAgeDays   = (description = """Age corrected for gestational age, where 0 is 40 weeks gestation.
+                                           Eg if child was born at 39 weeks and is 2 weeks old, this value is 7.
+                                        """,
+                          type        = Union{Missing, Int},
+                          range       = (28, 5581)),
+    mother_HHS         = (description = "Maternal socioeconimic status using Holingshead Scale, combining education and occupation.",
+                          type        = Union{Missing, Int},
+                          range       = (3,7)),
+    simple_race        = (description = """Self-reported race. Subjects reporting multiple races are combined as "Mixed".
+                                           Subjects that did not fill out form or who declined to answer are labeled "Unknown".
+                                        """,
+                          type        = String,
+                          levels      = []),
+    CDC_BMIpercentile  = (description = "Age-adjusted BMI percentile according to US Centers for Disease Control charts",
+                          type        = Union{Missing, Int},
+                          range       = (0,100)),
+    CDC_BMIz           = (description = "Age-adjusted BMI z-score according to US Centers for Disease Control charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-4.273, 3.121)),
+    CDC_heightz        = (description = "Age-adjusted height z-score according to US Centers for Disease Control charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-3.573, 8.358)),
+    CDC_weightz        = (description = "Age-adjusted weight z-score according to US Centers for Disease Control charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-2.136, 3.126)),
+    flagbmi_CDC        = (description = "BMI Flagged as potential outlier according to US Centers for Disease Control",
+                          type        = Union{Missing, Bool},
+                          levels      = [true, false, missing]),
+    heightcm           = (description = "Child height / length in centimeters",
+                          type        = Union{Missing, Float64},
+                          range       = (50.165, 172.085)),
+    heightm            = (description = "Child height / length in meters",
+                          type        = Union{Missing, Float64},
+                          range       = (0.50165, 1.72085)),
+    weightkg           = (description = "Child weight in kilograms",
+                          type        = Union{Missing, Float64},
+                          range       = (3.453698106, 86.51821971)),
+    WHO_fbmi           = (description = "BMI flagged as potential outlier according to World Health Organization charts",
+                          type        = Union{Missing, Bool},
+                          levels      = [true, false, missing]),
+    WHO_flen           = (description = "Length flagged as potential outlier according to World Health Organization charts",
+                          type        = Union{Missing, Bool},
+                          levels      = [true, false, missing]),
+    WHO_fwei           = (description = "Weight flagged as potential outlier according to World Health Organization charts",
+                          type        = Union{Missing, Bool},
+                          levels      = [true, false, missing]),
+    WHO_fwfl           = (description = "Weight-for-length flagged as potential outlier according to World Health Organization charts",
+                          type        = Union{Missing, Bool},
+                          levels      = [true, false, missing]),
+    WHO_zbmi           = (description = "Age-adjusted BMI z-score according to World Health Organization charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-2.72, 4.19)),
+    WHO_zlen           = (description = "Age-adjusted length z-score according to World Health Organization charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-4.15, 8.72)),
+    WHO_zwei           = (description = "Age-adjusted weight z-score according to World Health Organization charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-2.93, 3.42)),
+    WHO_zwfl           = (description = "Age-adjusted weight-for-length z-score according to World Health Organization charts",
+                          type        = Union{Missing, Float64},
+                          range       = (-3.1, 3.9)),
+    CBCL_T             = (description = "Total T score for child behavioral check-list (CBCL).",
+                          type        = Union{Missing, Int},
+                          range       = (6, 78)),
+    SRS2_T             = (description = "Total T score for social responsiveness scale version 2 (SRS2).",
+                          type        = Union{Missing, Int},
+                          range       = (36, 91))
+)
