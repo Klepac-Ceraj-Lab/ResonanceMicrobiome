@@ -22,6 +22,7 @@ using ResonanceMicrobiome
 using Microbiome.MultivariateStats
 using CairoMakie
 using AbstractPlotting.ColorSchemes
+using SplitApplyPlot
 
 colormap = ColorSchemes.tab20.colors
 
@@ -38,7 +39,7 @@ all_unirefs_pco = fit(MDS, all_unirefs_dm, distances=true)
 
 kids_unirefs = all_unirefs[:, kids_metadata.sample]
 kids_unirefs = kids_unirefs[vec(featuretotals(kids_unirefs) .!= 0), :]
-kids_metadata.frac_unirefs_identified = vec(1 .- sum(abundances(kids_unirefs["UNMAPPED", :]), dims=1))
+kids_metadata.frac_unirefs_identified = vec(1 .- sum(abundances(kids_unirefs["UNMAPPED", :]) .* 100, dims=1))
 
 kids_dm = braycurtis(kids_unirefs)
 kids_pco = fit(MDS, kids_dm, distances=true)
@@ -79,13 +80,16 @@ all_pfams = functional_profiles(:pfams)
 
 kids_ecs = all_ecs[:, kids_metadata.sample]
 kids_ecs = kids_ecs[vec(featuretotals(kids_ecs) .!= 0), :]
-kids_metadata.frac_ecs_identified = vec(1 .- sum(abundances(kids_ecs[["UNMAPPED", "UNGROUPED"], :]), dims=1))
+kids_metadata.frac_ecs_identified = vec(1 .- sum(abundances(kids_ecs[["UNMAPPED", "UNGROUPED"], :]) .* 100, dims=1))
+kids_metadata.n_ecs = map(c-> count(!=(0), c), eachcol(abundances(kids_ecs)))
 kids_kos = all_kos[:, kids_metadata.sample]
 kids_kos = kids_kos[vec(featuretotals(kids_kos) .!= 0), :]
-kids_metadata.frac_kos_identified = vec(1 .- sum(abundances(kids_kos[["UNMAPPED", "UNGROUPED"], :]), dims=1))
+kids_metadata.frac_kos_identified = vec(1 .- sum(abundances(kids_kos[["UNMAPPED", "UNGROUPED"], :]) .* 100, dims=1))
+kids_metadata.n_kos = map(c-> count(!=(0), c), eachcol(abundances(kids_kos)))
 kids_pfams = all_pfams[:, kids_metadata.sample]
 kids_pfams = kids_pfams[vec(featuretotals(kids_pfams) .!= 0), :]
-kids_metadata.frac_pfams_identified = vec(1 .- sum(abundances(kids_pfams[["UNMAPPED", "UNGROUPED"], :]), dims=1))
+kids_metadata.frac_pfams_identified = vec(1 .- sum(abundances(kids_pfams[["UNMAPPED", "UNGROUPED"], :]) .* 100, dims=1))
+kids_metadata.n_pfams = map(c-> count(!=(0), c), eachcol(abundances(kids_pfams)))
 
 kids_ecs_dm = braycurtis(kids_ecs)
 kids_ecs_pco = fit(MDS, kids_ecs_dm, distances=true)
@@ -102,19 +106,17 @@ figure2 = Figure(resolution=(1600, 900));
 fig2a = Axis(figure2[1,1], xlabel = mds_format(kids_ecs_pco, 1),   ylabel = mds_format(kids_ecs_pco, 2))
 fig2b = Axis(figure2[1,2], xlabel = mds_format(kids_kos_pco, 1),   ylabel = mds_format(kids_kos_pco, 2))
 fig2c = Axis(figure2[1,3], xlabel = mds_format(kids_pfams_pco, 1), ylabel = mds_format(kids_pfams_pco, 2))
-fig2d = Axis(figure2[2,1], ylabel = mds_format(kids_ecs_pco, 1),   xlabel = "Age (years)")
-fig2e = Axis(figure2[2,2], ylabel = mds_format(kids_kos_pco, 1),   xlabel = "Age (years)")
-fig2f = Axis(figure2[2,3], ylabel = mds_format(kids_pfams_pco, 1), xlabel = "Age (years)")
+fig2d = Axis(figure2[2,1], xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
+fig2e = Axis(figure2[2,2], xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
+fig2f = Axis(figure2[2,3], xlabel = "Unique genes identified (n)", ylabel = "Fraction of genes identified")
 
 Label(figure2[0, 1], "ECs", textsize=30, tellwidth=false)
 Label(figure2[1, 2], "KOs", textsize=30, tellwidth=false)
 Label(figure2[1, 3], "Pfams", textsize=30, tellwidth=false)
-Label(figure2[2, 0], "PCoA", textsize=30, tellheight=false)
-Label(figure2[3, 1], "Fraction\nIdentified", textsize=30, tellheight=false)
 
 figure2
 
-fig2_legend = Legend(figure2[:, end+1], [
+fig2_legend = Legend(figure2[2, end+1], [
         MarkerElement(color = colormap[2], marker = :circle, strokecolor = :black),
         MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black),
         MarkerElement(color = colormap[5], marker = :circle, strokecolor = :black)
@@ -130,8 +132,27 @@ scatter!(fig2b, projection(kids_kos_pco)[:,1], projection(kids_kos_pco)[:,2],
 scatter!(fig2c, projection(kids_pfams_pco)[:,1], projection(kids_pfams_pco)[:,2], 
     color=categorical_colors(kids_metadata.ageLabel, ["1 and under", "1 to 2", "2 and over"],
     colormap[[2, 3, 5]]))
-figure2
 
+scatter!(fig2d, kids_metadata.n_ecs, kids_metadata.frac_ecs_identified, color=collect(skipmissing(kids_metadata.correctedAgeDays)),
+        colormap=:heat)
+scatter!(fig2e, kids_metadata.n_kos, kids_metadata.frac_kos_identified, color=collect(skipmissing(kids_metadata.correctedAgeDays)),
+        colormap=:heat)
+scatter!(fig2f, kids_metadata.n_pfams, kids_metadata.frac_pfams_identified, color=collect(skipmissing(kids_metadata.correctedAgeDays)),
+        colormap=:heat)
+fig2b_legend = figure2[3,end] = Colorbar(figure2, halign=:left, limits=extrema(skipmissing(kids_metadata.correctedAgeDays)), width=25, label="Age (days)",
+        colormap=:heat)
+        
+figure2
 #-
 
 CairoMakie.save("figures/04_other_functions.svg", figure2)
+figure2
+
+fig = Figure()
+a = fig[1,1] = Axis(fig)
+b = fig[1,2] = Axis(fig)
+x = rand(10); y = rand(10); c = rand(10);
+scatter!(a, x, y, color=c)
+fig
+scatter!(b, x, y, color=Union{Missing,Float64}[c...])
+fig
