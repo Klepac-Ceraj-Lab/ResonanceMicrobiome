@@ -193,11 +193,32 @@ sum(hasbayley)
 @info "Ages min/max (days)" extrema(kids_metadata.correctedAgeDays)
 @info "Ages min/max (years)" extrema(kids_metadata.correctedAgeYears)
 
+#- longitudinal thing
+
+subj = groupby(kids_metadata, :subject)
+counts = DataFrame(first_tp = ["infant", "early", "middle", "adolescent"],
+                    single = zeros(Int, 4),
+                    multiple = zeros(Int, 4),
+                    infant = zeros(Int, 4),
+                    early = zeros(Int, 4),
+                    middle = zeros(Int, 4),
+                    adolescent = zeros(Int, 4))
+for group in subj
+    subdf = sort(group, :correctedAgeDays)
+    started = ceil(Int, subdf[1,:correctedAgeDays] / 365)
+    row = started <= 1  ? 1 : # infant
+          started <= 6  ? 2 : # early childhood
+          started <= 12 ? 3 : # late childhood
+                          4   # adolescent
+    nrow(subdf) > 1 ? counts[row, 3] += 1 : counts[row, 2] += 1
+    for a in subdf.correctedAgeDays
+        years = ceil(Int, a / 365)
+        col = years <= 1  ? 4 : # infant
+              years <= 6  ? 5 : # early childhood
+              years <= 12 ? 6 : # late childhood
+                            7   # adolescent
+        counts[row, col] += 1
+    end
+end
 
 
-fig = Figure(); ax = Axis(fig[1, 1])
-d1 = rand(100); d2 = rand(100) ./ 2;
-d1h = fit(Histogram, d1, 0:0.1:1); d2h = fit(Histogram, d2, 0:0.1:1)
-barplot!(ax, range(1,10, length=10), d2h.weights, color=:gray)
-barplot!(ax, range(1,10, length=10), d1h.weights)
-fig

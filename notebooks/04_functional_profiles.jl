@@ -40,39 +40,10 @@ all_unirefs_pco = fit(MDS, all_unirefs_dm, distances=true)
 kids_unirefs = all_unirefs[:, kids_metadata.sample]
 kids_unirefs = kids_unirefs[vec(featuretotals(kids_unirefs) .!= 0), :]
 kids_metadata.frac_unirefs_identified = vec(1 .- sum(abundances(kids_unirefs["UNMAPPED", :]) .* 100, dims=1))
+kids_metadata.n_unirefs = map(c-> count(!=(0), c), eachcol(abundances(kids_unirefs)))
 
 kids_dm = braycurtis(kids_unirefs)
 kids_pco = fit(MDS, kids_dm, distances=true)
-
-
-#- 
-
-figure1 = Figure(resolution=(800,800));
-
-fig1a = figure1[1,1] = Axis(figure1, title="Children", xlabel=mds_format(kids_pco, 1), ylabel=mds_format(kids_pco, 2))
-scatter!(fig1a, projection(kids_pco)[:,1] .* -1, projection(kids_pco)[:,2],
-        color=categorical_colors(kids_metadata.ageLabel, ["1 and under", "1 to 2", "2 and over"], colormap[[2, 3, 5, 15]]))
-
-fig1a_legend = figure1[1,2] = Legend(figure1,
-    [
-        MarkerElement(color = colormap[2], marker = :circle, strokecolor = :black)
-        MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black)
-        MarkerElement(color = colormap[5], marker = :circle, strokecolor = :black)
-    ],
-    ["1 and under", "1 to 2", "over 2"])
-
-
-fig1c = figure1[2, 1] = Axis(figure1, xlabel=mds_format(kids_pco, 1), ylabel="Age (years)")
-
-scatter!(fig1c, projection(kids_pco)[:,1] .* -1, kids_metadata.correctedAgeDays ./ 365, color=kids_metadata.frac_unirefs_identified,
-        colormap=:heat)
-
-fig1c_legend = figure1[2,2] = Colorbar(figure1, halign=:left, limits=extrema(kids_metadata.frac_unirefs_identified), width=25, label="fraction idendified",
-                                        colormap=:heat)
-figure1
-CairoMakie.save("figures/04_genefamilies.svg", figure1)
-
-#-
 
 all_ecs = functional_profiles(:ecs)
 all_kos = functional_profiles(:kos)
@@ -98,30 +69,50 @@ kids_kos_pco = fit(MDS, kids_kos_dm, distances=true)
 kids_pfams_dm = braycurtis(kids_pfams)
 kids_pfams_pco = fit(MDS, kids_pfams_dm, distances=true)
 
+#- 
 
-#-
+figure1 = Figure(resolution=(2000,800));
 
-figure2 = Figure(resolution=(1600, 900));
+fig1a = figure1[1,1] = Axis(figure1, xlabel=mds_format(kids_pco, 1), ylabel=mds_format(kids_pco, 2))
+scatter!(fig1a, projection(kids_pco)[:,1] .* -1, projection(kids_pco)[:,2],
+        color=categorical_colors(kids_metadata.ageLabel, ["1 and under", "1 to 2", "2 and over"], colormap[[2, 3, 5, 15]]))
 
-fig2a = Axis(figure2[1,1], xlabel = mds_format(kids_ecs_pco, 1),   ylabel = mds_format(kids_ecs_pco, 2))
-fig2b = Axis(figure2[1,2], xlabel = mds_format(kids_kos_pco, 1),   ylabel = mds_format(kids_kos_pco, 2))
-fig2c = Axis(figure2[1,3], xlabel = mds_format(kids_pfams_pco, 1), ylabel = mds_format(kids_pfams_pco, 2))
-fig2d = Axis(figure2[2,1], xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
-fig2e = Axis(figure2[2,2], xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
-fig2f = Axis(figure2[2,3], xlabel = "Unique genes identified (n)", ylabel = "Fraction of genes identified")
-
-Label(figure2[0, 1], "ECs", textsize=30, tellwidth=false)
-Label(figure2[1, 2], "KOs", textsize=30, tellwidth=false)
-Label(figure2[1, 3], "Pfams", textsize=30, tellwidth=false)
-
-figure2
-
-fig2_legend = Legend(figure2[2, end+1], [
-        MarkerElement(color = colormap[2], marker = :circle, strokecolor = :black),
-        MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black),
+fig1a_legend = figure1[1,2] = Legend(figure1,
+    [
+        MarkerElement(color = colormap[2], marker = :circle, strokecolor = :black)
+        MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black)
         MarkerElement(color = colormap[5], marker = :circle, strokecolor = :black)
     ],
     ["1 and under", "1 to 2", "over 2"])
+
+
+fig1b = Axis(figure1[2,1], xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
+
+scatter!(fig1b, kids_metadata.n_unirefs, kids_metadata.frac_unirefs_identified, color=collect(skipmissing(kids_metadata.correctedAgeDays)),
+        colormap=:heat)
+fig1b_legend = figure1[2,2] = Colorbar(figure1, halign=:left, limits=extrema(kids_metadata.correctedAgeDays), width=25, label="Age (days)",
+                                        colormap=:heat)
+figure1
+
+other_func = figure1[1:2, 3:4] = GridLayout()
+
+#-
+
+
+
+#-
+fig2a = other_func[1,1] = Axis(figure1, xlabel = mds_format(kids_ecs_pco, 1),   ylabel = mds_format(kids_ecs_pco, 2))
+fig2b = other_func[1,2] = Axis(figure1, xlabel = mds_format(kids_kos_pco, 1),   ylabel = mds_format(kids_kos_pco, 2))
+fig2c = other_func[1,3] = Axis(figure1, xlabel = mds_format(kids_pfams_pco, 1), ylabel = mds_format(kids_pfams_pco, 2))
+fig2d = other_func[2,1] = Axis(figure1, xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
+fig2e = other_func[2,2] = Axis(figure1, xlabel = "Unique genes identified (n)",   ylabel = "Fraction of genes identified")
+fig2f = other_func[2,3] = Axis(figure1, xlabel = "Unique genes identified (n)", ylabel = "Fraction of genes identified")
+
+figure1
+
+other_func[0, 1] = Label(figure1, "ECs", textsize=30, tellwidth=false)
+other_func[1, 2] = Label(figure1, "KOs", textsize=30, tellwidth=false)
+other_func[1, 3] = Label(figure1, "Pfams", textsize=30, tellwidth=false)
 
 scatter!(fig2a, projection(kids_ecs_pco)[:,1], projection(kids_ecs_pco)[:,2],
     color=categorical_colors(kids_metadata.ageLabel, ["1 and under", "1 to 2", "2 and over"],
@@ -139,20 +130,9 @@ scatter!(fig2e, kids_metadata.n_kos, kids_metadata.frac_kos_identified, color=co
         colormap=:heat)
 scatter!(fig2f, kids_metadata.n_pfams, kids_metadata.frac_pfams_identified, color=collect(skipmissing(kids_metadata.correctedAgeDays)),
         colormap=:heat)
-fig2b_legend = figure2[3,end] = Colorbar(figure2, halign=:left, limits=extrema(skipmissing(kids_metadata.correctedAgeDays)), width=25, label="Age (days)",
-        colormap=:heat)
-        
-figure2
+linkyaxes!(fig2d,fig2e,fig2f)
+figure1
 #-
 
-CairoMakie.save("figures/04_other_functions.svg", figure2)
-figure2
-
-fig = Figure()
-a = fig[1,1] = Axis(fig)
-b = fig[1,2] = Axis(fig)
-x = rand(10); y = rand(10); c = rand(10);
-scatter!(a, x, y, color=c)
-fig
-scatter!(b, x, y, color=Union{Missing,Float64}[c...])
-fig
+CairoMakie.save("figures/04_other_functions.svg", figure1)
+figure1
