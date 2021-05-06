@@ -92,9 +92,10 @@ scatter!(fig1b, kids_metadata.n_unirefs, kids_metadata.frac_unirefs_identified, 
         colormap=:heat)
 fig1b_legend = figure1[2,2] = Colorbar(figure1, halign=:left, limits=extrema(kids_metadata.correctedAgeDays), width=25, label="Age (days)",
                                         colormap=:heat)
+figure1[0,1] = Label(figure1, "UniRef90s", textsize=30, tellwidth=false)
 figure1
 
-other_func = figure1[1:2, 3:4] = GridLayout()
+other_func = figure1[1:3, 3:4] = GridLayout()
 
 #-
 

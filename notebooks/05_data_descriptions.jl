@@ -22,6 +22,35 @@ has_bf = filter(row-> !ismissing(row.breastfeeding), all_metadata)
 
 unique(kids_metadata.subject)
 
+#- longitudinal thing
+
+subj = groupby(kids_metadata, :subject)
+counts = DataFrame(first_tp = ["infant", "early", "middle", "adolescent"],
+                    single = zeros(Int, 4),
+                    multiple = zeros(Int, 4),
+                    infant = zeros(Int, 4),
+                    early = zeros(Int, 4),
+                    middle = zeros(Int, 4),
+                    adolescent = zeros(Int, 4))
+for group in subj
+    subdf = sort(group, :correctedAgeDays)
+    started = ceil(Int, subdf[1,:correctedAgeDays] / 365)
+    row = started <= 1  ? 1 : # infant
+          started <= 6  ? 2 : # early childhood
+          started <= 12 ? 3 : # late childhood
+                          4   # adolescent
+    nrow(subdf) > 1 ? counts[row, 3] += 1 : counts[row, 2] += 1
+    for a in subdf.correctedAgeDays
+        years = ceil(Int, a / 365)
+        col = years <= 1  ? 4 : # infant
+              years <= 6  ? 5 : # early childhood
+              years <= 12 ? 6 : # late childhood
+                            7   # adolescent
+        counts[row, col] += 1
+    end
+end
+
+
 figure1 = Figure(resolution=(1200,1600))
 
 fig1a = Axis(figure1[1,1], title="Child ages", ylabel = "Count", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:5:15, xminorticks=IntervalsBetween(5))
@@ -47,8 +76,8 @@ fig1h_leg = Legend(figure1[4,3], [
 
 fig1j = Axis(figure1[5,2], ylabel = "Count")
 fig1j_leg = Legend(figure1[5,3], [
-    MarkerElement(color = colormap[9], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[14], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[end-2], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[end], marker = :circle, strokecolor = :black),
     ], ["Cesarean", "Vaginal"], "Delivery method")
     
 
@@ -71,7 +100,37 @@ let specs = data(has_bf) *
         histogram(bins=20)
     draw!(figure1[2,2], specs; palettes=(;color=colormap[[1,7,9]]))
 end
-figure1
+
+let fig = figure1[5,1] = GridLayout()
+    ax1 = fig[1,1] = Axis(figure1, ylabel="First timepoint", xlabel="count")
+    stk = stack(counts, [:single,:multiple])
+    stk.order = map(x-> x== "single" ? 1 : 2, stk.variable)
+    barplot!(ax1, stk.first_tp, stk.value, stack=stk.order, color=repeat(colormap[[9,14]], inner=4), direction=:x)
+    ax1.yticks = (1:4, unique(stk.first_tp))
+    leg = fig[2,1] = Legend(figure1, [
+        MarkerElement(color = colormap[9], marker = :rect, strokecolor = :black),
+        MarkerElement(color = colormap[14], marker = :rect, strokecolor = :black),
+        ], ["Single", "Multiple"], "Number of timepoints",
+        orientation=:horizontal, tellwidth=false, tellheight=true)
+        tightlimits!(ax1, Left())
+ 
+    ax2 = fig[1,2] = Axis(figure1, ylabel="First timepoint", xlabel="count")
+    stk = stack(counts, [:infant, :early, :middle, :adolescent])
+    stk.order = map(x-> x == "infant" ? 1 : 
+                        x == "early"  ? 2 :
+                        x == "middle" ? 3 :
+                                        4, stk.variable)
+    barplot!(ax2, stk.first_tp, stk.value, stack=stk.order, color=repeat(colormap[[11,12,15,16]], inner=4), direction=:x)
+    hideydecorations!(ax2)
+    leg = fig[2,2] = Legend(figure1, [
+        MarkerElement(color = colormap[11], marker = :rect, strokecolor = :black),
+        MarkerElement(color = colormap[12], marker = :rect, strokecolor = :black),
+        MarkerElement(color = colormap[15], marker = :rect, strokecolor = :black),
+        MarkerElement(color = colormap[16], marker = :rect, strokecolor = :black),
+        ], ["infant", "early", "middle", "adolescent"], "Last timepoint",
+        orientation=:horizontal, tellwidth=false, tellheight=true, nbanks=2)
+    tightlimits!(ax2, Left())
+end
 
 barplot!(fig1e, 1:6,
     [count(r-> !ismissing(r) && occursin("White", r), kids_metadata.simple_race),
@@ -99,7 +158,7 @@ scatter!(fig1h, collect(skipmissing(kids_metadata[hascog, :correctedAgeYears])),
 barplot!(fig1j, [1,2], [
     count(x-> x === ("Cesarean"), unique(all_metadata, :subject).birthType),
     count(x-> x === ("Vaginal"), unique(all_metadata, :subject).birthType)],
-    color = colormap[[9,14]])
+    color = colormap[[end-2,end]])
 fig1j.xticks = ([1,2], ["Cesarean", "Vaginal"])
 fig1j.xticklabelsize = 20
 
