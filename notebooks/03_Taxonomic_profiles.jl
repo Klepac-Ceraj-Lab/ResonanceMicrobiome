@@ -21,21 +21,21 @@ all_pco = pcoa(all_species)
 
 ##-
 
-figure1 = Figure(resolution=(1600, 1200));
+figure1 = Figure(resolution=(1400, 900));
 
-fig1a = figure1[1,1] = Axis(figure1, title="All participants", xlabel=mds_format(all_pco, 1), ylabel=mds_format(all_pco, 2))
+fig1a = figure1[1,1:2] = Axis(figure1, title="All participants", xlabel=mds_format(all_pco, 1), ylabel=mds_format(all_pco, 2))
 scatter!(fig1a, projection(all_pco)[:,1], projection(all_pco)[:,2], 
         color=categorical_colors(all_metadata.ageLabel, ["1 and under", "1 to 2", "2 and over", missing], colormap[[2, 3, 5, 15]]))
 figure1
 
 #- 
 
-fig1ab_legend = figure1[1,2] = Legend(figure1,
+fig1ab_legend = figure1[1,3] = Legend(figure1,
     [
-        MarkerElement(color = colormap[2], marker = :circ, strokecolor = :black)
-        MarkerElement(color = colormap[3], marker = :circ, strokecolor = :black)
-        MarkerElement(color = colormap[5], marker = :circ, strokecolor = :black)
-        MarkerElement(color = colormap[15], marker = :circ, strokecolor = :black)
+        MarkerElement(color = colormap[2], marker = :circle, strokecolor = :black)
+        MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black)
+        MarkerElement(color = colormap[5], marker = :circle, strokecolor = :black)
+        MarkerElement(color = colormap[15], marker = :circle, strokecolor = :black)
     ],
     ["1 and under", "1 to 2", "over 2", "missing"])
 
@@ -46,11 +46,11 @@ has_age_metadata.shannon = vec(shannon(has_age_species))
 
 has_age_pco = pcoa(has_age_species)
 
-fig1b = figure1[2, 1] = Axis(figure1, xlabel=mds_format(all_pco, 1), ylabel="Age (years)")
+fig1b = figure1[2, 1:2] = Axis(figure1, xlabel=mds_format(all_pco, 1), ylabel="Age (years)")
 
 scatter!(fig1b, projection(has_age_pco)[:,1], has_age_metadata.correctedAgeDays ./ 365, color=has_age_metadata.shannon, label="Shannon diversity")
 
-fig1b_legend = figure1[2,2] = Colorbar(figure1, halign=:left, limits=extrema(has_age_metadata.shannon), width=25, label="Shannon diversity", )
+fig1b_legend = figure1[2,3] = Colorbar(figure1, halign=:left, limits=extrema(has_age_metadata.shannon), width=25, label="Shannon diversity", )
 figure1
 
 #- 
@@ -98,14 +98,13 @@ function plottopn!(fig, layout, axrow, cp, clust, n, title, markerspecies = Stri
 end
 
 sublayout = GridLayout()
-figure1[1:2, 3] = sublayout
+figure1[1:2, 4:6] = sublayout
 (_, markerspecies) = plottopn!(figure1, sublayout, 1, u1_spec, u1clust, 10, "Top 10 species, kids under 1 yo")
 plottopn!(figure1, sublayout, 2, mid_spec, midclust, 10, "Top 10 species, kids 1-2 yo", markerspecies)
 plottopn!(figure1, sublayout, 3, o2_spec, o2clust, 10, "Top 10 species, kids over 2 yo", markerspecies)
 unique!(markerspecies)
 sort!(markerspecies)
 fig1c_leg = sublayout[4, 1] = Legend(figure1, [MarkerElement(color = name_dict[m], marker = :rect, strokecolor = :black) for m in markerspecies], [m for m in markerspecies], tellheight=true, nbanks = 2)
+
+CairoMakie.save("figures/03_taxonomic_profiles.pdf", figure1)
 figure1
-
-
-CairoMakie.save("figures/03_taxonomic_profiles.svg", figure1)

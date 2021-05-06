@@ -15,31 +15,20 @@
 \author[1]{Kevin S Bonham}
 \author[1]{Shelley Hoeft McCann}
 \author[1]{Sophie Rowland}
-\author[2]{Alexandra R.
-Volpe}
+\author[2]{Alexandra R. Volpe}
 \author[2]{Kellyn Dyer}
 \author{RESONANCE Consortium}
 \author[2,3]{Viren D’Sa}
-\author[4]{Curtis Huttenhower}
-\author[2,3,5,6]{Sean C.
-L.
-Deoni}
+\author[2,3,5,6]{Sean C. L. Deoni}
 \author[1,*]{Vanja Klepac-Ceraj}
 
 \affil[1]{Department of Biological Sciences, Wellesley College, Wellesley, MA, 02481, USA}
 \affil[2]{Advanced Baby Imaging Lab, Hasbro Children’s Hospital, Rhode Island Hospital, Providence, RI, 02903, USA}
 \affil[3]{Department of Pediatrics, Warren Alpert Medical School at Brown University, Providence, RI, 02912, USA}
-\affil[4]{Department of Biostatistics, Harvard T.
-H.
-Chan School of Public Health, Boston, MA, USA}
 \affil[5]{Department of Radiology, Warren Alpert Medical School at Brown University, Providence, RI, 02912, USA}
 \affil[6]{Maternal, Newborn, and Child Health Discovery \& Tools, Bill \& Melinda Gates Foundation; Seattle WA, USA}
 
 \affil[*]{corresponding author: Vanja Klepac-Ceraj (vklepacc@wellesley.edu)}
-
-
-\affil[*]{corresponding author: Vanja Klepac-Ceraj (vklepacc@wellesley.edu)}
-
 
 
 \begin{abstract}
@@ -61,8 +50,7 @@ Structure of the main text is provided below
 
 \section*{Background \& Summary}
 
-The first years of life are a unique and dynamic period of neurological and cognitive development
-
+The first years of life are a unique and dynamic period of neurological and cognitive development.
 Throughout childhood, a child’s brain undergoes remarkable anatomical, microstructural, organizational, and functional change.
 By age 5, a child’s brain has reached over 85\% of its adult size,
 has achieved near-adult levels of myelination,
@@ -117,7 +105,7 @@ environmental exposures such as lead, and rich demographic, socioeconomic, famil
 From the RESONANCE cohort, 344 typically-developing children
 between the ages of 28 days and 15 years oldwere selected for analysis in this study. 
 
-General participant demographics are provided in Table 1 and Figure 1.
+General participant demographics are provided in Tables \ref{tab:agestats}, \ref{tab:race}, and \ref{tab:breastfeeding} and Figure \ref{fig:data}.
 Complete metadata are available in Data Records (see below), with children being representative of the RI population.
 As a broad background, children in the RESONANCE cohort were born full-term (>37 weeks gestation)
 with height and weight normal for gestational age, and from uncomplicated singleton pregnancies.
@@ -165,7 +153,7 @@ Just as the WISC, it derives a full scale IQ score, which we used to assess over
 \subsection*{Stool Sample Collection and Sequencing}
 
 Stool samples (n=493) were collected by parents in OMR-200 tubes (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada),.
-immediately stored on ice, and brought within 24 hrs to the lab in RI where they were immediately frozen at -80\deg C.
+immediately stored on ice, and brought within 24 hrs to the lab in RI where they were immediately frozen at -80$^{\circ}$C.
 Stool samples were not collected if the subject had taken antibiotics within the last two weeks.
 DNA extraction was performed at Wellesley College (Wellesley, MA).
 Nucleic acids were extracted from stool samples using the RNeasy PowerMicrobiome kit
@@ -198,7 +186,7 @@ First, \verb|KneadData| (v0.7.7) was used to perform quality control of raw sequ
 such as read trimming and removal of reads matching a human genome reference.
 Next, \verb|MetaPhlAn| (v3.0.7, using database \verb|mpa_v30_CHOCOPhlAn_201901|) was used to generate taxonomic profiles
 by aligning reads to a reference database of marker genes.
-Finally, \verb|HUMAnN| (v3.0.0a4 with databases ) was used to functionally profile the metagenomes.
+Finally, \verb|HUMAnN| (v3.0.0a4) was used to functionally profile the metagenomes.
 
 Raw amplicon sequences were profiled using Quantitative Insights in Microbial Ecology 2 (QIIME2) v2021.2.0 (Bolyen et al. 2019).
 Briefly, primers flanking V4-V5 were removed from fastq reads using the cutadapt (v3.2) QIIME2 plugin (Martin 2011).
@@ -226,10 +214,14 @@ Instructions for using the \verb|ResonanceMicrobiome.jl| package can be found in
 
 \subsection*{Clinical metadata}
 
-Subject-associated and clinical metadata for each sample can be found in the “clinical_metadata.csv” file,
+Subject-associated and clinical metadata for each sample can be found in the \verb|clinical_metadata.csv| file,
 found in the OSF.io repository, or if using the \verb|ResonanceMicrobiome.jl| package in a julia session,
-it can be downloaded and accessed using \verb|datadep”clinical_metadata”|. A convenience function (\verb|resonance_metadata()|) for loading these data as a DataFrame is exported with the \verb|ResonanceMicrobiome.jl| package.
-A complete data dictionary, including descriptions, type information and expected ranges of the data for each column can be found in the “data_dictionary.csv” file, found in the OSF.io repository, or by accessing the \verb|clinical_data_descriptions| variable, exported by ResonanceMicrobiome.jl..
+it can be downloaded and accessed using \verb|datadep”clinical_metadata”|.
+A convenience function (\verb|resonance_metadata()|) for loading these data as a DataFrame
+is exported with the \verb|ResonanceMicrobiome.jl| package.
+A complete data dictionary, including descriptions, type information and expected ranges of the data for each column
+can be found in the \verb|data_dictionary.csv| file, found in the OSF.io repository,
+or by accessing the \verb|clinical_data_descriptions| variable, exported by \verb|ResonanceMicrobiome.jl|.
 Sequencing records
 Raw sequencing files are available through the Sequence Read Archive (SRA) using BioProject PRJNA695570 {{CITE}}.
 
@@ -238,11 +230,11 @@ Raw sequencing files are available through the Sequence Read Archive (SRA) using
 Amplicon sequence variants (ASV) obtained from DADA2 and mapping to SILVA taxonomy are available on OSF.io
 in the “amplicon-feature-table.tsv” and “amplicon-taxonomy.tsv” files respectively,
 and can be accessed in a julia session with \verb|ResonanceMicrobiome.jl| using \verb|datadep”amplicon_features,”|
-and `datadep”amplicon_taxonomy” respectively.
+and \verb|datadep”amplicon_taxonomy”| respectively.
 
 \subsection*{Metagenomic analysis}
 
-Taxonomic profiles obtained from metagenomic sequencing using MetaPhlAn are available on OSF.io (“metaphlan_profiles.tar.gz”).
+Taxonomic profiles obtained from metagenomic sequencing using MetaPhlAn are available on OSF.io (\verb|metaphlan_profiles.tar.gz|).
 A single tab-separated values (tsv) file for each sample is provided,
 with columns corresponding to the taxon name, NCBI Taxonomic ID, relative abundance, and additional species.
 These tables may be merged using the \verb|metaphlan_merge_tables| command line utility provided by the MetaPhlAn package,
@@ -263,7 +255,7 @@ Control communities of microbial cells (ZymoBIOMICS Microbial Community Standard
 or pre-extracted DNA (ZymoBIOMICS Microbial Community DNA Standard, Zymo Research, D6305)
 were treated as fecal samples and sequenced with shotgun metagenomic sequencing in plate 14.
 MetaPhlAn-generated taxonomic profiles and HUMAnN-generated functional profiles
-are available from the OSF.io repository in the “zymo_controls.tar.gz” file.
+are available from the OSF.io repository in the \verb|zymo_controls.tar.gz| file.
 
 \section*{Usage Notes}
 
@@ -295,34 +287,30 @@ are also available on github and archived on Zenodo.
 
 \bibliography{citations}
 
-\noindent LaTeX formats citations and references automatically using the bibliography records in your .bib file, which you can edit via the project menu.
-Use the cite command for an inline citation, e.g 
-\cite{Kaufman2020, Figueredo:2009dg, Babichev2002, behringer2014manipulating}.
-For data citations of datasets uploaded to e.g 
-\emph{figshare}, please use the \verb|howpublished| option in the bib entry to specify the platform and the link, as in the \verb|Hao:gidmaps:2014| example in the sample bibliography file.
-For journal articles, DOIs should be included for works in press that do not yet have volume or page numbers.
-For other journal articles, DOIs should be included uniformly for all articles or not at all.
-We recommend that you encode all DOIs in your bibtex database as full URLs, e.g.
-https://doi.org/10.1007/s12110-009-9068-2
+\section*{Acknowledgements}
 
-
-\section*{Acknowledgements} (not compulsory)
-
-Acknowledgements should be brief, and should not include thanks to anonymous referees and editors, or effusive comments.
-Grant or contribution numbers may be acknowledged
-
+% Acknowledgements should be brief, and should not include thanks to anonymous referees and editors, or effusive comments.
+% Grant or contribution numbers may be acknowledged
+The authors would like to thank Christopher Loiselle and Jennifer Beauchemin
+for assistance with biospecimen and metadata collection,
+Nisreen Abo-Sido for sample preparation and DNA extraction,
+and Julius Krumbiegel for extensive help with figure generation code. 
+This work was supported by the National Institutes of Health (UH3 ODD023313 and R01 MH087510). 
 
 \section*{Author contributions statement}
 
-Must include all authors, identified by initials, for example:
-A.A.
-conceived the experiment(s), A.A.
-and B.A.
-conducted the experiment(s), C.A.
-and D.A.
-analysed the results.
-All authors reviewed the manuscript 
+% Must include all authors, identified by initials, for example:
+% A.A.
+% conceived the experiment(s), A.A.
+% and B.A.
+% conducted the experiment(s), C.A.
+% and D.A.
+% analysed the results.
 
+KSB, SCLD, VD, and VKC were responsible for study design.
+ARV, KD, SR, and SHM collected and processed biosamples and assisted with study design.
+KSB and VKC performed the analaysis.
+All authors reviewed the manuscript.
 
 \section*{Competing interests} (mandatory statement)
 
@@ -332,50 +320,122 @@ This statement must be included in the submitted article file
 
 \section*{Figures \& Tables}
 
-Figures, tables, and their legends, should be included at the end of the document.
-Figures and tables can be referenced in \LaTeX{} using the ref command, e.g.
-Figure \ref{fig:stream} and Table \ref{tab:example} 
+% Figures, tables, and their legends, should be included at the end of the document.
+% Figures and tables can be referenced in \LaTeX{} using the ref command, e.g.
+% Figure \ref{fig:stream} and Table \ref{tab:example} 
 
 
-Authors are encouraged to provide one or more tables that provide basic information on the main ‘inputs’ to the study (e.g.
-samples, participants, or information sources) and the main data outputs of the study.
-Tables in the manuscript should generally not be used to present primary data (i.e.
-measurements).
-Tables containing primary data should be submitted to an appropriate data repository
+% Authors are encouraged to provide one or more tables that provide basic information on the main ‘inputs’ to the study (e.g.
+% samples, participants, or information sources) and the main data outputs of the study.
+% Tables in the manuscript should generally not be used to present primary data (i.e.
+% measurements).
+% Tables containing primary data should be submitted to an appropriate data repository
 
 
-Tables may be provided within the \LaTeX{} document or as separate files (tab-delimited text or Excel files).
-Legends, where needed, should be included here.
-Generally, a Data Descriptor should have fewer than ten Tables, but more may be allowed when needed.
-Tables may be of any size, but only Tables which fit onto a single printed page will be included in the PDF version of the article (up to a maximum of three) 
+% Tables may be provided within the \LaTeX{} document or as separate files (tab-delimited text or Excel files).
+% Legends, where needed, should be included here.
+% Generally, a Data Descriptor should have fewer than ten Tables, but more may be allowed when needed.
+% Tables may be of any size, but only Tables which fit onto a single printed page will be included in the PDF version of the article (up to a maximum of three) 
 
 
-Due to typesetting constraints, tables that do not fit onto a single A4 page cannot be included in the PDF version of the article and will be made available in the online version only.
-Any such tables must be labelled in the text as ‘Online-only’ tables and numbered separately from the main table list e.g 
-‘Table 1, Table 2, Online-only Table 1’ etc
+% Due to typesetting constraints, tables that do not fit onto a single A4 page cannot be included in the PDF version of the article and will be made available in the online version only.
+% Any such tables must be labelled in the text as ‘Online-only’ tables and numbered separately from the main table list e.g 
+% ‘Table 1, Table 2, Online-only Table 1’ etc
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrr}
+    \hline\hline
+    \textbf{ } & \textbf{Mean} & \textbf{Median} & \textbf{Minimum} & \textbf{Maximum} & \textbf{Total} \\\hline
+    1 and under & 0.446973 & 0.323288 & 0.0767123 & 1.0 & 131 \\
+    1 to 2 & 1.52236 & 1.54795 & 1.01096 & 1.98904 & 53 \\
+    2 and over & 6.58943 & 6.26849 & 2.00822 & 15.2904 & 309 \\\hline\hline
+\end{tabular}
+\caption{
+    Age statistics of children
+}
+\label{tab:agestats}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rr}
+    \hline\hline
+    \textbf{Race} & \textbf{Number} \\\hline
+    Asian  & 9 \\
+    Native American / Alaskan Native & 9 \\
+    African American / Black & 17 \\
+    Unknown & 44 \\
+    Mixed & 93 \\
+    Caucasian / White & 321 \\\hline\hline
+\end{tabular}
+\caption{
+    Race / ethnicity of subjects
+}
+\label{tab:race}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rr}
+    \hline\hline
+    \textbf{Liquid diet} & \textbf{Number} \\\hline
+    mixed & 14 \\
+    exclusive formula & 35 \\
+    exclusive breast & 48 \\
+    missing & 392 \\\hline\hline
+\end{tabular}
+\caption{
+    Breastfeeding counts
+}
+\label{tab:breastfeeding}
+\end{table}
 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\linewidth]{stream}
-\caption{Legend (350 words max).
-Example legend text.}
-\label{fig:stream}
+\includegraphics[width=\linewidth]{../figures/05_data_summaries}
+\caption{
+    Graphical representations of subject and sample-associated metadata.
+    % (a) Ages of children when samples were collected for all children
+    % or just children under 2 years of age (b).
+    % (c) Total number of samples from children or samples at each age (d)
+    % that were exclussively breastfed,
+    % exclussively formula fed, or with a mixed diet.
+    % These values refer to the diet \emph{when on liquid diet},
+    % not necessarily current diet.
+    % (d) Race and ethnicity of participants.
+    % (e) Maternal SES as measured by the Hollingshead Scale.
+    % (f) Age-normalized BMI z-score of children when samples were collected.
+    % (g) Age-normalized cognitive score of children when samples were collected.
+    % (f) Subjects with longitudinal timepoints by first collection.
+    % "Infant": birth to 1 year, "early childhood": 1 year to 6 years,
+    % "middle childhood": 6 years to 12 years, "adolescent": older than 12 years.
+}
+\label{fig:data}
 \end{figure}
 
-\begin{table}[ht]
+\begin{figure}[ht]
 \centering
-\begin{tabular}{|l|l|l|}
-\hline
-Condition & n & p \\
-\hline
-A & 5 & 0.1 \\
-\hline
-B & 10 & 0.01 \\
-\hline
-\end{tabular}
-\caption{\label{tab:example}Legend (350 words max).
-Example legend text.}
-\end{table}
+\includegraphics[width=\linewidth]{../figures/03_taxonomic_profiles}
+\caption{
+    Taxonomic profiles from metagenomic data.
+    (a) Biplot of first two principal coordinate axes, colored by child age.
+    (b) Principal coordinate 1 plotted against child age.
+    (c) Top 10 taxa for each age group.
+}
+\label{fig:taxonomic}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{../figures/04_other_functions}
+    \caption{
+        Functional profiles from metagenomic data.
+        (a-d) Biplots of top principal coordinates for each included functional profile modality.
+        (e-i) Total number of unique gene functions and the percent of gene functions identified for each sample. 
+    }
+    \label{fig:functional}
+    \end{figure}
 
 \end{document}

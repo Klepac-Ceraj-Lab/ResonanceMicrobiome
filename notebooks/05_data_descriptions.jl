@@ -8,7 +8,12 @@ using AbstractPlotting.ColorSchemes
 using Statistics
 using CategoricalArrays
 
+CairoMakie.activate!(type="svg")
 colormap = ColorSchemes.tab20.colors
+
+SplitApplyPlot.default_axis(::Type{Axis}) = NamedTuple()
+SplitApplyPlot.default_axis(::Type{Axis3}) = NamedTuple()
+SplitApplyPlot.default_styles() = NamedTuple()
 
 #-
 
@@ -98,7 +103,8 @@ let specs = data(has_bf) *
             stack=:breastfeeding, 
             color=:breastfeeding) *
         histogram(bins=20)
-    draw!(figure1[2,2], specs; palettes=(;color=colormap[[1,7,9]]))
+    test = draw!(figure1[2,2], specs; palettes=(;color=colormap[[1,7,9]]))
+    tightlimits!(test[1].axis)
 end
 
 let fig = figure1[5,1] = GridLayout()
@@ -162,9 +168,9 @@ barplot!(fig1j, [1,2], [
 fig1j.xticks = ([1,2], ["Cesarean", "Vaginal"])
 fig1j.xticklabelsize = 20
 
+tightlimits!.([fig1a, fig1b, fig1c, fig1e, fig1f, fig1j])
 figure1
-
-CairoMakie.save("figures/05_data_summaries.svg", figure1)
+CairoMakie.save("figures/05_data_summaries.pdf", figure1)
 
 #- 
 
@@ -220,9 +226,8 @@ plot!(fig3b,
 
 figure3b
 
-CairoMakie.save("figures/05_cogscore_age_test.svg", figure3a)
-CairoMakie.save("figures/05_cogscore_age_quant.svg", figure3b)
-
+CairoMakie.save("figures/05_cogscore_age_test.pdf", figure3a)
+CairoMakie.save("figures/05_cogscore_age_quant.pdf", figure3b)
 
 #-
 hasmullen = map(x-> x === "Mullen", kids_metadata.cogAssessment)
@@ -247,37 +252,38 @@ sum(hasbayley)
 
 #- Numbers
 
-@info "Unique subjects:" length(unique(kids_metadata.subject))
-@info "Number of samples:" nrow(kids_metadata)
-@info "Ages min/max (days)" extrema(kids_metadata.correctedAgeDays)
-@info "Ages min/max (years)" extrema(kids_metadata.correctedAgeYears)
 
-#- longitudinal thing
+using Chain
+using Statistics
+using DataFrames.PrettyTables
 
-subj = groupby(kids_metadata, :subject)
-counts = DataFrame(first_tp = ["infant", "early", "middle", "adolescent"],
-                    single = zeros(Int, 4),
-                    multiple = zeros(Int, 4),
-                    infant = zeros(Int, 4),
-                    early = zeros(Int, 4),
-                    middle = zeros(Int, 4),
-                    adolescent = zeros(Int, 4))
-for group in subj
-    subdf = sort(group, :correctedAgeDays)
-    started = ceil(Int, subdf[1,:correctedAgeDays] / 365)
-    row = started <= 1  ? 1 : # infant
-          started <= 6  ? 2 : # early childhood
-          started <= 12 ? 3 : # late childhood
-                          4   # adolescent
-    nrow(subdf) > 1 ? counts[row, 3] += 1 : counts[row, 2] += 1
-    for a in subdf.correctedAgeDays
-        years = ceil(Int, a / 365)
-        col = years <= 1  ? 4 : # infant
-              years <= 6  ? 5 : # early childhood
-              years <= 12 ? 6 : # late childhood
-                            7   # adolescent
-        counts[row, col] += 1
-    end
+@chain kids_metadata begin
+    groupby(:ageLabel)
+    combine(:correctedAgeYears => mean => "Mean", 
+            :correctedAgeYears => median => "Median",
+            :correctedAgeYears => minimum => "Minimum",
+            :correctedAgeYears => maximum => "Maximum",
+            nrow => "Total")
+    sort(:ageLabel)
+    rename(:ageLabel=> " ")
+    pretty_table(String, _; backend=:latex, nosubheader=true)
+    print
 end
 
+@chain kids_metadata begin
+    groupby(:simple_race)
+    combine(nrow=> "Number")
+    sort(:Number)
+    rename(:simple_race=> :Race)
+    pretty_table(String, _; backend=:latex, nosubheader=true)
+    print
+end
 
+@chain unique(kids_metadata) begin
+    groupby(:breastfeeding)
+    combine(nrow=> "Number")
+    sort(:Number)
+    rename(:breastfeeding=> "Liquid diet")
+    pretty_table(String, _; backend=:latex, nosubheader=true)
+    print
+end

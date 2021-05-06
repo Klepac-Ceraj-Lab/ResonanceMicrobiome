@@ -4,7 +4,11 @@ function resonance_metadata(; commonfilter=true)
         filter!(row-> sample_filter(row.sample), samplesdf)
     end    
     clinicaldf = CSV.read(datadep"clinical_metadata/clinical_metadata.csv", DataFrame)
-
+    clinicaldf.simple_race = map(clinicaldf.simple_race) do r
+        occursin(r"[Mm]ixed", r) && return "Mixed"
+        (occursin(r"[Dd]ecline", r) || occursin(r"[Uu]nknown", r)) && return "Unknown"
+        return r
+    end
     return leftjoin(samplesdf, clinicaldf, on=[:subject, :timepoint])
 end
 

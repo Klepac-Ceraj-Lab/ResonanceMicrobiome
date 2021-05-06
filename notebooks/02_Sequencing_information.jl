@@ -200,6 +200,6 @@ violin!(fig_c, repeat([1,2,3], inner=nrow(reads)), [reads.final_frac; reads.trim
 #-
 
 isdir("figures") || mkdir("figures") # make directory if it doesn't exist
-CairoMakie.save("figures/02_read_qc.svg", figure)
+CairoMakie.save("figures/02_read_qc.pdf", figure)
 figure
 #- 

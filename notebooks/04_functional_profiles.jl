@@ -71,7 +71,7 @@ kids_pfams_pco = fit(MDS, kids_pfams_dm, distances=true)
 
 #- 
 
-figure1 = Figure(resolution=(2000,800));
+figure1 = Figure(resolution=(900, 1200));
 
 fig1a = figure1[1,1] = Axis(figure1, xlabel=mds_format(kids_pco, 1), ylabel=mds_format(kids_pco, 2))
 scatter!(fig1a, projection(kids_pco)[:,1] .* -1, projection(kids_pco)[:,2],
@@ -95,7 +95,7 @@ fig1b_legend = figure1[2,2] = Colorbar(figure1, halign=:left, limits=extrema(kid
 figure1[0,1] = Label(figure1, "UniRef90s", textsize=30, tellwidth=false)
 figure1
 
-other_func = figure1[1:3, 3:4] = GridLayout()
+other_func = figure1[4:5, 1:2] = GridLayout()
 
 #-
 
@@ -135,5 +135,5 @@ linkyaxes!(fig2d,fig2e,fig2f)
 figure1
 #-
 
-CairoMakie.save("figures/04_other_functions.svg", figure1)
+CairoMakie.save("figures/04_other_functions.pdf", figure1)
 figure1
