@@ -257,6 +257,8 @@ using Chain
 using Statistics
 using DataFrames.PrettyTables
 
+floatshrinker(v,i,j) = v isa AbstractFloat ? round(v, digits=2) : v
+
 @chain kids_metadata begin
     groupby(:ageLabel)
     combine(:correctedAgeYears => mean => "Mean", 
@@ -266,7 +268,8 @@ using DataFrames.PrettyTables
             nrow => "Total")
     sort(:ageLabel)
     rename(:ageLabel=> " ")
-    pretty_table(String, _; backend=:latex, nosubheader=true)
+    pretty_table(String, _; backend=:latex, nosubheader=true,
+                label="tab:agestats", formatters=floatshrinker)
     print
 end
 
@@ -275,7 +278,7 @@ end
     combine(nrow=> "Number")
     sort(:Number)
     rename(:simple_race=> :Race)
-    pretty_table(String, _; backend=:latex, nosubheader=true)
+    pretty_table(String, _; backend=:latex, nosubheader=true, label="tab:race")
     print
 end
 
@@ -284,6 +287,6 @@ end
     combine(nrow=> "Number")
     sort(:Number)
     rename(:breastfeeding=> "Liquid diet")
-    pretty_table(String, _; backend=:latex, nosubheader=true)
+    pretty_table(String, _; backend=:latex, nosubheader=true, label="tab:breastfeeding")
     print
 end

@@ -223,7 +223,7 @@ A complete data dictionary, including descriptions, type information and expecte
 can be found in the \verb|data_dictionary.csv| file, found in the OSF.io repository,
 or by accessing the \verb|clinical_data_descriptions| variable, exported by \verb|ResonanceMicrobiome.jl|.
 Sequencing records
-Raw sequencing files are available through the Sequence Read Archive (SRA) using BioProject PRJNA695570 {{CITE}}.
+Raw sequencing files are available through the Sequence Read Archive (SRA) using BioProject PRJNA695570 (https://www.ncbi.nlm.nih.gov/bioproject/)..
 
 \subsection*{Amplicon analysis}
 
@@ -243,9 +243,9 @@ A convenience function (\verb|taxonomic_profiles()|) for downloading and loading
 is provided with \verb|ResonanceMicrobiome.jl|.
 Functional profiles obtained from metagenomic sequencing using HUMAnN are available on OSF.io.
 There are several different schemas for identifying protein-coding genes.
-Initial mapping to UniRef90 {{CITE}} gene clusters was performed by HUMAnN,
-with subsequent regrouping into Protein Family (pfam) {{CITE}}, Kegg Orthology (KO) {{CITE}},
-and level 4 Enzyme Commission (EC) groups using the \verb|humann_regroup_tables| command-line utility.
+Initial mapping to UniRef90 \cite{UniProt_Consortium2010-ls} gene clusters was performed by HUMAnN,
+with subsequent regrouping into Protein Family (pfam) \cite{Bateman2004-cz,El-Gebali2019-jh}, Kegg Orthology (KO) \cite{Kanehisa2000-rx,Kanehisa2008-gg},
+and level 4 Enzyme Commission (EC) \cite{Bairoch2000-ot} groups using the \verb|humann_regroup_tables| command-line utility.
 A convenience function (\verb|functional_profiles()|) for downloading and loading these tables in a julia session
 is provided with \verb|ResonanceMicrobiome.jl|.
 
@@ -347,10 +347,10 @@ This statement must be included in the submitted article file
 \begin{tabular}{rrrrrr}
     \hline\hline
     \textbf{ } & \textbf{Mean} & \textbf{Median} & \textbf{Minimum} & \textbf{Maximum} & \textbf{Total} \\\hline
-    1 and under & 0.446973 & 0.323288 & 0.0767123 & 1.0 & 131 \\
-    1 to 2 & 1.52236 & 1.54795 & 1.01096 & 1.98904 & 53 \\
-    2 and over & 6.58943 & 6.26849 & 2.00822 & 15.2904 & 309 \\\hline\hline
-\end{tabular}
+    1 and under & 0.45 & 0.32 & 0.08 & 1.0 & 131 \\
+    1 to 2 & 1.52 & 1.55 & 1.01 & 1.99 & 53 \\
+    2 and over & 6.59 & 6.27 & 2.01 & 15.29 & 309 \\\hline\hline
+  \end{tabular}
 \caption{
     Age statistics of children
 }
