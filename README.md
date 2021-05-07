@@ -12,10 +12,9 @@
 [vanja-badge]: https://img.shields.io/badge/Author-Vanja%20Klepec--Ceraj%2C%20PhD-blueviolet
 [vanja-url]: https://www.vkclab.com/
 [repo-badge]: https://zenodo.org/badge/222533623.svg
-[repo-url]: https://zenodo.org/badge/latestdoi/222533623
+[repo-url]: https://doi.org/10.5281/zenodo.4741462
 [data-badge]: https://zenodo.org/badge/DOI/10.5281/zenodo.3633793.svg
-[data-url]: https://doi.org/10.5281/zenodo.3633793
-
+[data-url]: http://doi.org/10.17605/OSF.IO/YBS32 
 ## Installation Instructions
 
 All analysis code for this project is written in [`julia`][1].
@@ -119,6 +118,14 @@ The `.jl` files are julia files, written in [Literate.jl][5] style.
 are meant to be viewed in order.
 All code is executed with the working directory set
 to the root of this repository.
+
+## Publically avaliable data
+
+| Repository Name | Title | Accession Number | url |
+|-----------------|-------|------------------|-----|
+| Sequence Read Archive | Raw sequencing data | PRJNA695570 | https://www.ncbi.nlm.nih.gov/bioproject/PRJNA695570 |
+| OSF.io | Associated Data and Analysis | ybs32 | http://doi.org/10.17605/OSF.IO/YBS32 |
+| Zenodo | Source code archive | 10.5281/zenodo.4741462 | http://doi.org/10.5281/zenodo.4741462 |
 
 [1]: http://julialang.org
 [2]: https://julialang.org/downloads/
