@@ -56,119 +56,62 @@ for group in subj
 end
 
 
-figure1 = Figure(resolution=(1200,1600))
+figure1 = Figure(resolution=(900,900))
 
-fig1a = Axis(figure1[1,1], title="Child ages", ylabel = "Count", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:5:15, xminorticks=IntervalsBetween(5))
-fig1b = Axis(figure1[1,2], title="Child ages (0-2)", ylabel = "Count", xlabel="Age (months)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:6:24, xminorticks=IntervalsBetween(6))
-fig1c = Axis(figure1[2,1], ylabel = "Count")
+fig1a = Axis(figure1[1,1:2], title="Child ages", ylabel = "Count", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:5:15, xminorticks=IntervalsBetween(5))
+fig1b = Axis(figure1[2,1], title = "WHO BMI", ylabel = "BMI (z-score)", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:1:5, xminorticks=IntervalsBetween(2))
+fig1c = Axis(figure1[2,2], title = "Cognitive score", ylabel = "Score", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:5:15, xminorticks=IntervalsBetween(5))
 fig1c_leg = Legend(figure1[2,3], [
-    MarkerElement(color = colormap[1], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[7], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[3], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[4], marker = :circle, strokecolor = :black),
+    MarkerElement(color = colormap[6], marker = :circle, strokecolor = :black),
     MarkerElement(color = colormap[9], marker = :circle, strokecolor = :black),
-    ], ["Breastmilk", "Formula", "Mixed"], "Diet")
-
-fig1e = Axis(figure1[3,1], title = "Race / ethnicity", ylabel = "Count")
-fig1f = Axis(figure1[3,2], title = "SES", ylabel = "Count")
-fig1g = Axis(figure1[4,1], title = "WHO BMI", ylabel = "BMI (z-score)", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:1:5, xminorticks=IntervalsBetween(2))
-fig1h = Axis(figure1[4,2], title = "Cognitive score", ylabel = "Score", xlabel="Age (Years)", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:5:15, xminorticks=IntervalsBetween(5))
-fig1h_leg = Legend(figure1[4,3], [
-    MarkerElement(color = colormap[10], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[13], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[17], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[19], marker = :circle, strokecolor = :black),
     ], ["Mullen", "Bayleys", "WPPSI", "WISC"], "Assessment")
 # fig1i = Axis(figure1[5,1], title="Child ages 1-2", ylabel = "Count", xminorticksvisible=true, xminorgridvisible=true, xticks = 0:0.5:2, xminorticks=IntervalsBetween(6))
 
-fig1j = Axis(figure1[5,2], ylabel = "Count")
-fig1j_leg = Legend(figure1[5,3], [
-    MarkerElement(color = colormap[end-2], marker = :circle, strokecolor = :black),
-    MarkerElement(color = colormap[end], marker = :circle, strokecolor = :black),
-    ], ["Cesarean", "Vaginal"], "Delivery method")
-    
-
-
 hist!(fig1a, kids_metadata.correctedAgeYears, color=:gray)
-hist!(fig1b, filter(:correctedAgeYears=> <(2), kids_metadata).correctedAgeYears .* 12, color=:gray)
 
-barplot!(fig1c, [1,2,3], [
-    count(x-> x === ("exclusive breast"), all_metadata.breastfeeding),
-                count(x-> x === ("exclusive formula"), all_metadata.breastfeeding),
-                count(x-> x === ("mixed"), all_metadata.breastfeeding)],
-                color = colormap[[1,7,9]])
-fig1c.xticks = ([1,2,3], ["Formula", "Breastmilk", "Mixed"])
-fig1c.xticklabelsize = 20
+hasbmi = .!ismissing.(kids_metadata.WHO_zbmi)
+scatter!(fig1b, collect(skipmissing(kids_metadata[hasbmi, :correctedAgeYears])), collect(skipmissing(kids_metadata[hasbmi, :WHO_zbmi])))
 
-let specs = data(has_bf) * 
-        mapping(:correctedAgeYears=> "Age (Years)", 
-            stack=:breastfeeding, 
-            color=:breastfeeding) *
-        histogram(bins=20)
-    test = draw!(figure1[2,2], specs; palettes=(;color=colormap[[1,7,9]]))
-    tightlimits!(test[1].axis)
-end
+hascog = .!ismissing.(kids_metadata.cogScore)
+scatter!(fig1c, collect(skipmissing(kids_metadata[hascog, :correctedAgeYears])), collect(skipmissing(kids_metadata[hascog, :cogScore])), 
+        color=categorical_colors(kids_metadata[hascog, :cogAssessment], ["Mullen", "Bayleys", "WPPSI", "WISC"], colormap[[3,4,6,9]]))
 
-let fig = figure1[5,1] = GridLayout()
-    ax1 = fig[1,1] = Axis(figure1, ylabel="First timepoint", xlabel="count")
-    stk = stack(counts, [:single,:multiple])
+tightlimits!(fig1a, Bottom())
+figure1
+
+ax1 = Axis(figure1[3,1], ylabel="First timepoint", xlabel="count")
+let stk = stack(counts, [:single,:multiple])
     stk.order = map(x-> x== "single" ? 1 : 2, stk.variable)
-    barplot!(ax1, stk.first_tp, stk.value, stack=stk.order, color=repeat(colormap[[9,14]], inner=4), direction=:x)
+    barplot!(ax1, stk.first_tp, stk.value, stack=stk.order, color=repeat(colormap[[2,8]], inner=4), direction=:x)
     ax1.yticks = (1:4, unique(stk.first_tp))
-    leg = fig[2,1] = Legend(figure1, [
-        MarkerElement(color = colormap[9], marker = :rect, strokecolor = :black),
-        MarkerElement(color = colormap[14], marker = :rect, strokecolor = :black),
+    leg = Legend(figure1[4,1], [
+        MarkerElement(color = colormap[2], marker = :rect, strokecolor = :black),
+        MarkerElement(color = colormap[8], marker = :rect, strokecolor = :black),
         ], ["Single", "Multiple"], "Number of timepoints",
         orientation=:horizontal, tellwidth=false, tellheight=true)
-        tightlimits!(ax1, Left())
- 
-    ax2 = fig[1,2] = Axis(figure1, ylabel="First timepoint", xlabel="count")
-    stk = stack(counts, [:infant, :early, :middle, :adolescent])
+    tightlimits!(ax1, Left())
+end 
+ax2 = Axis(figure1[3,2], ylabel="First timepoint", xlabel="count")
+let stk = stack(counts, [:infant, :early, :middle, :adolescent])
     stk.order = map(x-> x == "infant" ? 1 : 
                         x == "early"  ? 2 :
                         x == "middle" ? 3 :
                                         4, stk.variable)
-    barplot!(ax2, stk.first_tp, stk.value, stack=stk.order, color=repeat(colormap[[11,12,15,16]], inner=4), direction=:x)
+    cs = ColorSchemes.seaborn_colorblind.colors
+    barplot!(ax2, stk.first_tp, stk.value, stack=stk.order, color=repeat(cs[[1,2,3,5]], inner=4), direction=:x)
     hideydecorations!(ax2)
-    leg = fig[2,2] = Legend(figure1, [
-        MarkerElement(color = colormap[11], marker = :rect, strokecolor = :black),
-        MarkerElement(color = colormap[12], marker = :rect, strokecolor = :black),
-        MarkerElement(color = colormap[15], marker = :rect, strokecolor = :black),
-        MarkerElement(color = colormap[16], marker = :rect, strokecolor = :black),
+    leg = Legend(figure1[4,2], [
+        MarkerElement(color = cs[1], marker = :rect, strokecolor = :black),
+        MarkerElement(color = cs[2], marker = :rect, strokecolor = :black),
+        MarkerElement(color = cs[3], marker = :rect, strokecolor = :black),
+        MarkerElement(color = cs[5], marker = :rect, strokecolor = :black),
         ], ["infant", "early", "middle", "adolescent"], "Last timepoint",
         orientation=:horizontal, tellwidth=false, tellheight=true, nbanks=2)
     tightlimits!(ax2, Left())
 end
-
-barplot!(fig1e, 1:6,
-    [count(r-> !ismissing(r) && occursin("White", r), kids_metadata.simple_race),
-    count(r-> !ismissing(r) && occursin("Black", r), kids_metadata.simple_race),
-    count(r-> !ismissing(r) && occursin("Asian", r), kids_metadata.simple_race),
-    count(r-> !ismissing(r) && occursin("Native", r), kids_metadata.simple_race),
-    count(r-> !ismissing(r) && occursin("Mixed", r), kids_metadata.simple_race),
-    count(r-> ismissing(r) || occursin("Unknown", r) || occursin("Decline", r), kids_metadata.simple_race)],
-    )
-
-fig1e.xticks = (1:6, ["White", "Black", "Asian", "Native", "Mixed", "Unknown"])
-fig1e.xticklabelrotation = pi/4
-
-barplot!(fig1f, 3:7, map(n-> count(==(n), skipmissing(kids_metadata.mother_HHS)), 3:7))
-fig1f.xticks = 3:7
-
-hasbmi = .!ismissing.(kids_metadata.WHO_zbmi)
-scatter!(fig1g, collect(skipmissing(kids_metadata[hasbmi, :correctedAgeYears])), collect(skipmissing(kids_metadata[hasbmi, :WHO_zbmi])))
-
-hascog = .!ismissing.(kids_metadata.cogScore)
-scatter!(fig1h, collect(skipmissing(kids_metadata[hascog, :correctedAgeYears])), collect(skipmissing(kids_metadata[hascog, :cogScore])), 
-        color=categorical_colors(kids_metadata[hascog, :cogAssessment], ["Mullen", "Bayleys", "WPPSI", "WISC"], colormap[[10,13,17,19]]))
-
-
-barplot!(fig1j, [1,2], [
-    count(x-> x === ("Cesarean"), unique(all_metadata, :subject).birthType),
-    count(x-> x === ("Vaginal"), unique(all_metadata, :subject).birthType)],
-    color = colormap[[end-2,end]])
-fig1j.xticks = ([1,2], ["Cesarean", "Vaginal"])
-fig1j.xticklabelsize = 20
-
-tightlimits!.([fig1a, fig1b, fig1c, fig1e, fig1f, fig1j])
+        
 figure1
 CairoMakie.save("figures/05_data_summaries.pdf", figure1)
 
@@ -259,21 +202,35 @@ using DataFrames.PrettyTables
 
 floatshrinker(v,i,j) = v isa AbstractFloat ? round(v, digits=2) : v
 
+kids_metadata.agePeriod = map(kids_metadata.correctedAgeDays) do a
+    years = floor(Int, a / 365)
+    years < 1 ? "Infancy" :
+    years < 6 ? "Early childhood" :
+    years < 12 ? "Middle childhood" :
+                 "Adolecence"
+end
+
 @chain kids_metadata begin
-    groupby(:ageLabel)
+    groupby(:agePeriod)
     combine(:correctedAgeYears => mean => "Mean", 
             :correctedAgeYears => median => "Median",
             :correctedAgeYears => minimum => "Minimum",
             :correctedAgeYears => maximum => "Maximum",
             nrow => "Total")
-    sort(:ageLabel)
-    rename(:ageLabel=> " ")
+    sort(:agePeriod, lt=(x,y) -> x == "Infancy" ? true : 
+                                 y == "Infancy" ? false :
+                                 x == "Early childhood" ? true : 
+                                 y == "Early childhood" ? false :
+                                 x == "Middle childhood" ? true : 
+                                 false
+                                 )
+    rename(:agePeriod=> " ")
     pretty_table(String, _; backend=:latex, nosubheader=true,
                 label="tab:agestats", formatters=floatshrinker)
     print
 end
 
-@chain kids_metadata begin
+@chain unique(kids_metadata, :subject) begin
     groupby(:simple_race)
     combine(nrow=> "Number")
     sort(:Number)
@@ -282,11 +239,20 @@ end
     print
 end
 
-@chain unique(kids_metadata) begin
+@chain unique(has_bf, :subject) begin
     groupby(:breastfeeding)
     combine(nrow=> "Number")
     sort(:Number)
     rename(:breastfeeding=> "Liquid diet")
     pretty_table(String, _; backend=:latex, nosubheader=true, label="tab:breastfeeding")
+    print
+end
+
+@chain unique(kids_metadata, :subject) begin
+    groupby(:birthType)
+    combine(nrow=> "Number")
+    sort(:Number)
+    rename(:birthType=> :Delivery)
+    pretty_table(String, _; backend=:latex, nosubheader=true, label="tab:delivery")
     print
 end

@@ -2,6 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lineno}
+\usepackage{adjustbox}
+\usepackage{multirow}
 % \usepackage{hyperref}
 % \usepackage{academicons}
 % \usepackage{xcolor}
@@ -105,7 +107,7 @@ environmental exposures such as lead, and rich demographic, socioeconomic, famil
 From the RESONANCE cohort, 344 typically-developing children
 between the ages of 28 days and 15 years oldwere selected for analysis in this study. 
 
-General participant demographics are provided in Tables \ref{tab:agestats}, \ref{tab:race}, and \ref{tab:breastfeeding} and Figure \ref{fig:data}.
+General participant demographics are provided in Tables \ref{tab:demographics} \ref{tab:agestats} and Figure \ref{fig:data}.
 Complete metadata are available in Data Records (see below), with children being representative of the RI population.
 As a broad background, children in the RESONANCE cohort were born full-term (>37 weeks gestation)
 with height and weight normal for gestational age, and from uncomplicated singleton pregnancies.
@@ -234,8 +236,9 @@ and \verb|datadep”amplicon_taxonomy”| respectively.
 
 \subsection*{Metagenomic analysis}
 
-Taxonomic profiles obtained from metagenomic sequencing using MetaPhlAn are available on OSF.io (\verb|metaphlan_profiles.tar.gz|).
-A single tab-separated values (tsv) file for each sample is provided,
+Taxonomic profiles obtained from metagenomic sequencing using MetaPhlAn are available on OSF.io
+as separate tab-separated values (tsv) files for each sample in \verb|metaphlan_profiles.tar.gz|.
+A single table for each sample is provided,
 with columns corresponding to the taxon name, NCBI Taxonomic ID, relative abundance, and additional species.
 These tables may be merged using the \verb|metaphlan_merge_tables| command line utility provided by the MetaPhlAn package,
 or using other software that can read and join tables.
@@ -314,9 +317,7 @@ All authors reviewed the manuscript.
 
 \section*{Competing interests} (mandatory statement)
 
-The corresponding author is responsible for providing a \href{https://www.nature.com/sdata/policies/editorial-and-publishing-policies#competing}{competing interests statement} on behalf of all authors of the paper.
-This statement must be included in the submitted article file
-
+The authors declare no competing interests.
 
 \section*{Figures \& Tables}
 
@@ -344,51 +345,42 @@ This statement must be included in the submitted article file
 
 \begin{table}[ht]
 \centering
+\begin{tabular}{lrcc}
+    \hline\hline
+    \textbf{ } & \textbf{Category} & \textbf{Number} & \textbf{\%} \\\hline
+    \multirow{6}{*}{Race} & Native American / Alaskan Native & 4 & 1.2\%\\
+                          & Asian  & 6 & 1.7\%\\
+                          & African American / Black & 14 & 4.1\%\\
+                          & Unknown & 43 & 12.5\%\\
+                          & Mixed & 64 & 18.6\%\\
+                          & Caucasian / White & 213 & 61.9\%\\\hline
+    \multirow{3}{*}{Diet} & mixed & 14 & 14.4\%\\
+                          & exclusive formula & 35 & 36.1\%\\
+                          & exclusive breast & 48 & 49.5\%\\\hline
+    \multirow{2}{*}{Delivery} & Cesarean & 98 & 30.5\%\\
+                              & Vaginal & 223 & 69.5\%\\
+    \hline\hline    
+\end{tabular}
+\caption{
+    General demographics
+}
+\label{tab:demographics}
+\end{table}
+
+\begin{table}[ht]
+\centering
 \begin{tabular}{rrrrrr}
     \hline\hline
     \textbf{ } & \textbf{Mean} & \textbf{Median} & \textbf{Minimum} & \textbf{Maximum} & \textbf{Total} \\\hline
-    1 and under & 0.45 & 0.32 & 0.08 & 1.0 & 131 \\
-    1 to 2 & 1.52 & 1.55 & 1.01 & 1.99 & 53 \\
-    2 and over & 6.59 & 6.27 & 2.01 & 15.29 & 309 \\\hline\hline
-  \end{tabular}
+    Infancy & 0.44 & 0.32 & 0.08 & 1.0 & 129 \\
+    Early childhood & 3.23 & 3.03 & 1.0 & 5.99 & 198 \\
+    Middle childhood & 8.61 & 8.38 & 6.01 & 11.9 & 155 \\
+    Adolecence & 13.14 & 13.08 & 12.31 & 15.29 & 11 \\\hline\hline
+\end{tabular}
 \caption{
     Age statistics of children
 }
 \label{tab:agestats}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{rr}
-    \hline\hline
-    \textbf{Race} & \textbf{Number} \\\hline
-    Asian  & 9 \\
-    Native American / Alaskan Native & 9 \\
-    African American / Black & 17 \\
-    Unknown & 44 \\
-    Mixed & 93 \\
-    Caucasian / White & 321 \\\hline\hline
-\end{tabular}
-\caption{
-    Race / ethnicity of subjects
-}
-\label{tab:race}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{rr}
-    \hline\hline
-    \textbf{Liquid diet} & \textbf{Number} \\\hline
-    mixed & 14 \\
-    exclusive formula & 35 \\
-    exclusive breast & 48 \\
-    missing & 392 \\\hline\hline
-\end{tabular}
-\caption{
-    Breastfeeding counts
-}
-\label{tab:breastfeeding}
 \end{table}
 
 
@@ -397,20 +389,10 @@ This statement must be included in the submitted article file
 \includegraphics[width=\linewidth]{../figures/05_data_summaries}
 \caption{
     Graphical representations of subject and sample-associated metadata.
-    % (a) Ages of children when samples were collected for all children
-    % or just children under 2 years of age (b).
-    % (c) Total number of samples from children or samples at each age (d)
-    % that were exclussively breastfed,
-    % exclussively formula fed, or with a mixed diet.
-    % These values refer to the diet \emph{when on liquid diet},
-    % not necessarily current diet.
-    % (d) Race and ethnicity of participants.
-    % (e) Maternal SES as measured by the Hollingshead Scale.
-    % (f) Age-normalized BMI z-score of children when samples were collected.
-    % (g) Age-normalized cognitive score of children when samples were collected.
-    % (f) Subjects with longitudinal timepoints by first collection.
-    % "Infant": birth to 1 year, "early childhood": 1 year to 6 years,
-    % "middle childhood": 6 years to 12 years, "adolescent": older than 12 years.
+    (a) Ages of children when samples were collected.
+    (b) Age-normalized BMI z-score of children when samples were collected.
+    (c) Age-normalized cognitive score of children when samples were collected.
+    (d) Subjects with longitudinal timepoints by first collection.
 }
 \label{fig:data}
 \end{figure}
