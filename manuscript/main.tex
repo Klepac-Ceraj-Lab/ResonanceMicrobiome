@@ -35,9 +35,17 @@
 
 \begin{abstract}
 Early childhood is shaped by numerous genetic and environmental factors.
-Exposures in early life can have profound effects on neural, cognitive, and immunological development, but identifying relationships between exposure and outcome, especially when many factors have small effects, can be challenging.
-Here we provide a partially longitudinal dataset of early childhood gut microbiomes from XXX unique children from birth through adolescence, combined with rich demographic data and cognitive assessments.
-Microbiomes were sequenced using both shotgun metagenomic sequencing as well as 16S rRNA amplicon sequencing, enabling more direct comparisons with existing child microbiome data as well as within-cohort assessment of relationships between the microbiome, demographic background, and cognitive development
+Exposures in early life can have profound effects on neural, cognitive, and immunological development,
+but identifying relationships between exposure and outcome,
+especially when many factors have small effects, can be challenging.
+Here we provide a partially longitudinal dataset of early childhood gut microbiomes
+from 344 unique children from birth through adolescence (493 total samples),
+combined with rich demographic data and cognitive assessments.
+Microbiomes were sequenced using both shotgun metagenomic sequencing
+as well as 16S rRNA amplicon sequencing,
+enabling more direct comparisons with existing child microbiome data
+as well as within-cohort assessment of relationships between the microbiome,
+demographic background, and cognitive development.
 
 \end{abstract}
 \begin{document}
@@ -46,8 +54,9 @@ Microbiomes were sequenced using both shotgun metagenomic sequencing as well as 
 \maketitle
 \thispagestyle{empty}
 
-\noindent Please note: Abbreviations should be introduced at the first mention in the main text – no abbreviations lists or tables should be included.
-Structure of the main text is provided below
+\noindent
+% Please note: Abbreviations should be introduced at the first mention in the main text – no abbreviations lists or tables should be included.
+% Structure of the main text is provided below
 
 
 \section*{Background \& Summary}
@@ -56,7 +65,7 @@ The first years of life are a unique and dynamic period of neurological and cogn
 Throughout childhood, a child’s brain undergoes remarkable anatomical, microstructural, organizational, and functional change.
 By age 5, a child’s brain has reached over 85\% of its adult size,
 has achieved near-adult levels of myelination,
-and the pattern of axonal connections has been established \cite{Silbereis2016-lp}
+and the pattern of axonal connections has been established \cite{Silbereis2016-lp}.
 This development is profoundly affected by the child’s environment and early life exposures \cite{Fox2010-lp}.
 The first years of life also witness dramatic changes in the gut microbiome.
 The gut microbial community is seeded at birth
@@ -65,15 +74,15 @@ dominated by Firmicutes and Proteobacteria,
 to a more diverse, adult-like microbiome upon the introduction of solid food.
 This microbial community development is also shaped by the environment,
 with factors such as mode of delivery and diet
-(breast milk vs formula) known to have lasting effects on community composition \cite{Backhed2015-ko, Dominguez-Bello2010-ti}
+(breast milk vs formula) known to have lasting effects on community composition \cite{Backhed2015-ko, Dominguez-Bello2010-ti}.
 
 The gut, the gut microbiome, and the central nervous system are intricately linked
 through a system known as the gut-microbiome-brain axis \cite{Clarke2013-yu},
 and differences in microbial communities are associated with, and in some cases cause,
-changes in neurocognitive development \cite{Flannery2020-de, Gao2019-je}
+changes in neurocognitive development \cite{Flannery2020-de, Gao2019-je}.
 and the outcome of neurological disorders such as autism \cite{Sharon2019-ak}.
 However, the study of the relationships between environmental exposures, neurocognitive development,
-and the gut microbiome during neurotypical development remains in its infancy \cite{Carlson2018-iw,Sordillo2019-wi}
+and the gut microbiome during neurotypical development remains in its infancy \cite{Carlson2018-iw,Sordillo2019-wi}.
 
 Here, we collected data on microbial taxonomic and functional composition
 of the childhood microbiome paired with demographic information about participants
@@ -107,7 +116,7 @@ environmental exposures such as lead, and rich demographic, socioeconomic, famil
 From the RESONANCE cohort, 344 typically-developing children
 between the ages of 28 days and 15 years oldwere selected for analysis in this study. 
 
-General participant demographics are provided in Tables \ref{tab:demographics} \ref{tab:agestats} and Figure \ref{fig:data}.
+General participant demographics are provided in Tables \ref{tab:demographics} and \ref{tab:agestats} and Figure \ref{fig:data}.
 Complete metadata are available in Data Records (see below), with children being representative of the RI population.
 As a broad background, children in the RESONANCE cohort were born full-term (>37 weeks gestation)
 with height and weight normal for gestational age, and from uncomplicated singleton pregnancies.
@@ -116,7 +125,7 @@ In addition to screening at the time of enrollment,
 on-going screening for worrisome behaviors using validated tools was performed
 to identify at-risk children and remove them from subsequent analysis.
 
-Exclusion criteria included: in utero exposure to alcohol, cigarette or illicit substance exposure;
+Exclusion criteria included: \emph{in utero} exposure to alcohol, cigarette or illicit substance exposure;
 preterm (<37 wks gestation) birth; small for gestational age or less than 1500 g; fetal ultrasound abnormalities;
 preeclampsia, high blood pressure, or gestational diabetes; 5 minute APGAR scores <8;
 NICU admission; neurological disorder (e.g., head injury resulting in loss of consciousness, epilepsy);
@@ -154,7 +163,7 @@ Just as the WISC, it derives a full scale IQ score, which we used to assess over
 
 \subsection*{Stool Sample Collection and Sequencing}
 
-Stool samples (n=493) were collected by parents in OMR-200 tubes (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada),.
+Stool samples (n=493) were collected by parents in OMR-200 tubes (OMNIgene GUT, DNA Genotek, Ottawa, Ontario, Canada).
 immediately stored on ice, and brought within 24 hrs to the lab in RI where they were immediately frozen at -80$^{\circ}$C.
 Stool samples were not collected if the subject had taken antibiotics within the last two weeks.
 DNA extraction was performed at Wellesley College (Wellesley, MA).
@@ -183,20 +192,22 @@ using 300+300 bp paired-end V3 chemistry, producing ~55,000 raw reads per sample
 
 \subsection*{Computational Analysis}
 
-Shotgun metagenomic sequences were analyzed using the bioBakery suite of computational tools (McIver et al. 2018).
+Shotgun metagenomic sequences were analyzed using the bioBakery suite of computational tools \cite{McIver2018-yc}.
 First, \verb|KneadData| (v0.7.7) was used to perform quality control of raw sequence reads,
 such as read trimming and removal of reads matching a human genome reference.
 Next, \verb|MetaPhlAn| (v3.0.7, using database \verb|mpa_v30_CHOCOPhlAn_201901|) was used to generate taxonomic profiles
 by aligning reads to a reference database of marker genes.
 Finally, \verb|HUMAnN| (v3.0.0a4) was used to functionally profile the metagenomes.
 
-Raw amplicon sequences were profiled using Quantitative Insights in Microbial Ecology 2 (QIIME2) v2021.2.0 (Bolyen et al. 2019).
-Briefly, primers flanking V4-V5 were removed from fastq reads using the cutadapt (v3.2) QIIME2 plugin (Martin 2011).
-Raw sequence reads of samples from enrichment cultures were denoised, filtered and clustered into amplicon sequence variants (ASVs) using the Divisive Amplicon Denoising Algorithm (DADA2) plugin in QIIME 2 (Callahan et al. 2016).
+Raw amplicon sequences were profiled using Quantitative Insights in Microbial Ecology 2 (QIIME2) v2021.2.0 \cite{Bolyen2019-qq}.
+Briefly, primers flanking V4-V5 were removed from fastq reads using the cutadapt (v3.2) QIIME2 plugin \cite{Martin2011-zv}.
+Raw sequence reads of samples from enrichment cultures were denoised, filtered and clustered into amplicon sequence variants (ASVs) using the Divisive Amplicon Denoising Algorithm (DADA2) plugin in QIIME 2 \cite{Callahan2016-ol}.
 After denoising and filtering, 16270 total sequences were recovered with a mean length of 373 bases (270-465, standard deviation 13.21).
-Taxonomy was assigned to each ASV using a Naïve-Bayes classifier compared against SILVA v.138 reference database (Yilmaz et al. 2013; Quast et al. 2013) trained on the 515F-806R region of the 16S rRNA gene (Bokulich et al. 2018)
+Taxonomy was assigned to each ASV using a Naïve-Bayes classifier compared against SILVA v.138 reference database \cite{Yilmaz2013-rj,Quast2013-hc}
+trained on the 515F-806R region of the 16S rRNA gene \cite{Bokulich2018-dv}.
 
-Additional data processing, generation of summary statistics, and generation of plots was performed using the julia programming language.
+Additional data processing, generation of summary statistics, 
+and generation of plots was performed using the julia programming language \cite{Bezanson2017-ud}.
 See Code Availability section for additional details.
 
 \section*{Data Records}
@@ -212,7 +223,7 @@ See Code Availability section for additional details.
 
 Data records, other than biological sequence data, can be accessed from the Open Science Foundation (OSF.io) repository \cite{Bonham2021-zy},
 or using the \verb|ResonanceMicrobiome.jl| package in a julia script or interactive session.
-Instructions for using the \verb|ResonanceMicrobiome.jl| package can be found in the README in the code repository on github.com {{CITE}}.
+Instructions for using the \verb|ResonanceMicrobiome.jl| package can be found in the README in the code repository on github.com (https://github.com/Klepac-Ceraj-Lab/ResonanceMicrobiome).
 
 \subsection*{Clinical metadata}
 
@@ -224,14 +235,17 @@ is exported with the \verb|ResonanceMicrobiome.jl| package.
 A complete data dictionary, including descriptions, type information and expected ranges of the data for each column
 can be found in the \verb|data_dictionary.csv| file, found in the OSF.io repository,
 or by accessing the \verb|clinical_data_descriptions| variable, exported by \verb|ResonanceMicrobiome.jl|.
-Sequencing records
-Raw sequencing files are available through the Sequence Read Archive (SRA) using BioProject PRJNA695570 (https://www.ncbi.nlm.nih.gov/bioproject/)..
+
+\subsection*{Sequencing records}
+
+Raw sequencing files are available through the Sequence Read Archive (SRA) using BioProject PRJNA695570
+located at (https://www.ncbi.nlm.nih.gov/bioproject/).
 
 \subsection*{Amplicon analysis}
 
 Amplicon sequence variants (ASV) obtained from DADA2 and mapping to SILVA taxonomy are available on OSF.io
 in the “amplicon-feature-table.tsv” and “amplicon-taxonomy.tsv” files respectively,
-and can be accessed in a julia session with \verb|ResonanceMicrobiome.jl| using \verb|datadep”amplicon_features,”|
+and can be accessed in a julia session with \verb|ResonanceMicrobiome.jl| using \verb|datadep”amplicon_features”|,
 and \verb|datadep”amplicon_taxonomy”| respectively.
 
 \subsection*{Metagenomic analysis}
@@ -275,7 +289,7 @@ For convenience, we have provided profiles using a single computational pipeline
 but users are encouraged to begin with raw sequence reads and use other methods if appropriate.
 
 All analysis code, as well as convenience functions for downloading appropriate data from OSF.io
-can be reproducibly run by instantiating the environment defined in the Project.toml and Manifest.toml
+can be reproducibly run by instantiating the environment defined in the \verb|Project.toml| and \verb|Manifest.toml| files
 provided in the repository described below.
 If you encounter problems with downloading data or running code, you may submit an issue on the github repository.
 
@@ -286,7 +300,7 @@ as well as convenience functions for interacting with the data in a julia intera
 are available on github.
 Instructions for installing julia and this package code are available in the README for the repository.
 Releases made for initial submissions, revisions, and the final manuscript
-are also available on github and archived on Zenodo.
+are also available on github and archived on Zenodo \cite{Bonham2021-gl}
 
 \bibliography{citations}
 
@@ -312,10 +326,10 @@ This work was supported by the National Institutes of Health (UH3 ODD023313 and 
 
 KSB, SCLD, VD, and VKC were responsible for study design.
 ARV, KD, SR, and SHM collected and processed biosamples and assisted with study design.
-KSB and VKC performed the analaysis.
+KSB and VKC performed the analysis.
 All authors reviewed the manuscript.
 
-\section*{Competing interests} (mandatory statement)
+\section*{Competing interests}
 
 The authors declare no competing interests.
 
