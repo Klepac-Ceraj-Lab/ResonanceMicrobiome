@@ -1,6 +1,9 @@
 figures/
 output/
 build/
+manuscript/main.*
+!manuscript/main.tex
+
 .envrc
 *.tsv
 *.csv

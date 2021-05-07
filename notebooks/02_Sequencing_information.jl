@@ -62,16 +62,16 @@ biosample[!, "nucl_acid_ext"]       .= "https://www.qiagen.com/us/resources/reso
 # And now for sample-specific attributes:
 
 ## make DataFrame with same rows as SRA
-samplemeta = DataFrame(sample = replace.(biosample."Sample Name", Ref("-"=>"_")))
-samplemeta = leftjoin(samplemeta, metadata, on=:sample)
 
+samplemeta = DataFrame(sample = replace.(biosample."Sample Name", Ref("-"=>"_")))
+samplemeta = leftjoin(samplemeta, unique(metadata, :sample), on=:sample)
 ## biosample[!, "adapters"]           .=
 ## biosample[!, "mid"]                .= {Multiplex ID}
 biosample[!, "subject_id"] = samplemeta.subject
 biosample[!, "timepoint"] = samplemeta.timepoint
 biosample[!, "collection_date"] = samplemeta.DOC
 biosample[!, "host_age"]        = map(a-> ismissing(a) ? missing : string.(a) .* " days", samplemeta.correctedAgeDays)
-biosample[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Female" : row.childGender, eachrow(samplemeta))
+biosample[!, "host_sex"]        = map(row-> startswith(row.sample, "M") ? "Female" : row.childSex, eachrow(samplemeta))
 
 # Generate output for BioSample Attributes.
 CSV.write("output/02_biosample_attributes.tsv", biosample[!, Not([:file1, :file2])], delim='\t')
@@ -147,7 +147,7 @@ sra_16s[!, "instrument_model"] .= "Illumina MiSeq"
 sra_16s.filename = map(s-> "$(s)_v4v5_pair1.fastq.gz", sra_16s.sample_name)
 sra_16s.filename2 = map(s-> "$(s)_v4v5_pair2.fastq.gz", sra_16s.sample_name)
 
-CSV.write("output/02_sra_amplicon_attributes.tsv", sra_16s[!, Not(["sample_name", "filename1"])], delim='\t')
+CSV.write("output/02_sra_amplicon_attributes.tsv", sra_16s[!, Not(["sample_name", "filename", "filename2"])], delim='\t')
 # ## Visualizing metagenomics read data
 
 using CairoMakie
@@ -177,14 +177,15 @@ reads.final_frac = reads.final ./ reads.total
 figure = Figure(resolution = (1200, 800))
 
 fig_a = figure[1:2,1:2] = Axis(figure, title="Raw vs Final Reads", xlabel="Batch #", ylabel="Reads (n)")
-batch_edges = map(unique(reads.batch)) do b
+batch_ticks = map(unique(reads.batch)) do b
     inds = findall(==(b), reads.batch)
-    center = extrema(inds)
+    edges = extrema(inds)
+    center = sum(edges) / 2
 end
 
 #-
 
-fig_a.xticks = (batch_ticks, string.(1:14))
+fig_a.xticks = (batch_ticks, string.(1:13))
 tightlimits!(fig_a, Bottom())
 
 bar1 = barplot!(fig_a, 1:nrow(reads), reads."total", color=colormap[1], label="total")
@@ -199,7 +200,6 @@ violin!(fig_c, repeat([1,2,3], inner=nrow(reads)), [reads.final_frac; reads.trim
 #-
 
 isdir("figures") || mkdir("figures") # make directory if it doesn't exist
-CairoMakie.save("figures/02_read_qc.svg", figure)
-
+CairoMakie.save("figures/02_read_qc.pdf", figure)
+figure
 #- 
-
